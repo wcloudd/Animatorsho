@@ -1,5 +1,38 @@
 import type { ProfileStatusTone } from '@/lib/profile-data';
 
+export type AdminDashboardSummaryTone = 'warning' | 'danger' | 'neutral';
+
+export type AdminDashboardSummaryCard = {
+    key: string;
+    label: string;
+    count: number;
+    href: string;
+    tone: AdminDashboardSummaryTone;
+};
+
+export type AdminDashboardQueueItem = {
+    id: number;
+    title: string;
+    subtitle: string;
+    meta: string;
+    href: string;
+    badge: { label: string; tone: ProfileStatusTone } | null;
+};
+
+export type AdminDashboardQueue = {
+    key: string;
+    title: string;
+    viewAllHref: string;
+    items: AdminDashboardQueueItem[];
+};
+
+export type AdminDashboardPageProps = {
+    summary: AdminDashboardSummaryCard[];
+    actionQueues: AdminDashboardQueue[];
+    activityQueues: AdminDashboardQueue[];
+    allActionQueuesEmpty: boolean;
+};
+
 export type AdminStatusOption = {
     value: string;
     label: string;

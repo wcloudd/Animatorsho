@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CoursePackageController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\SmsController;
@@ -12,6 +13,7 @@ Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        Route::get('', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('packages', [CoursePackageController::class, 'index'])->name('packages.index');
         Route::get('packages/{package}/edit', [CoursePackageController::class, 'edit'])->name('packages.edit');
         Route::patch('packages/{package}', [CoursePackageController::class, 'update'])->name('packages.update');

@@ -3,13 +3,19 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
+    { href: '/admin', label: 'داشبورد', match: '/admin', exact: true },
     { href: '/admin/packages', label: 'بسته‌ها', match: '/admin/packages' },
     { href: '/admin/orders', label: 'سفارش‌ها', match: '/admin/orders' },
     { href: '/admin/payments', label: 'پرداخت‌ها', match: '/admin/payments' },
     { href: '/admin/licenses', label: 'لایسنس‌ها', match: '/admin/licenses' },
     { href: '/admin/support', label: 'پشتیبانی', match: '/admin/support' },
     { href: '/admin/sms', label: 'پیامک', match: '/admin/sms' },
-] as const;
+] as const satisfies ReadonlyArray<{
+    href: string;
+    label: string;
+    match: string;
+    exact?: boolean;
+}>;
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const { url } = usePage();
@@ -17,7 +23,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return (
         <div className="min-h-dvh bg-bg text-text" dir="rtl">
             <header className="border-b border-purple/10 bg-surface">
-                <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-4">
+                <div className="mx-auto flex w-full max-w-[390px] flex-col gap-4 px-4 py-4 sm:max-w-5xl">
                     <div className="flex items-center justify-between gap-3">
                         <h1 className="font-liana text-lg text-purple">
                             پنل مدیریت انیماتورشو
@@ -31,7 +37,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     </div>
                     <nav className="flex flex-wrap gap-2">
                         {navItems.map((item) => {
-                            const isActive = url.startsWith(item.match);
+                            const isActive = item.exact
+                                ? url === item.match ||
+                                  url === `${item.match}/`
+                                : url.startsWith(item.match);
 
                             return (
                                 <Link
@@ -51,7 +60,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     </nav>
                 </div>
             </header>
-            <main className="mx-auto w-full max-w-5xl px-4 py-6">
+            <main className="mx-auto w-full max-w-[390px] px-4 py-6 sm:max-w-5xl">
                 {children}
             </main>
         </div>
