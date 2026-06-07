@@ -47,7 +47,7 @@ export function AdminOrderCustomerEdit({ order }: AdminOrderCustomerEditProps) {
     return (
         <form
             onSubmit={submit}
-            className="flex w-full flex-col gap-3 rounded-2xl border border-[#e8e0f0] bg-bg p-4"
+            className="flex w-full basis-full flex-col gap-3 rounded-2xl border border-[#e8e0f0] bg-bg p-4"
         >
             <p className="text-sm font-bold text-text">ویرایش اطلاعات تماس سفارش</p>
             <div className="grid gap-2">

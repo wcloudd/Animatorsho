@@ -1,9 +1,9 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
+import { AdminButton } from '@/components/admin/admin-button';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import InputError from '@/components/input-error';
 import { surfaceCardClassName } from '@/components/page-container';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,9 +34,9 @@ export default function AdminPackagesEdit({ package: pkg }: PageProps) {
                 title="ویرایش بسته"
                 description={`${pkg.slug} — ${pkg.ordersCount} سفارش ثبت‌شده`}
                 actions={
-                    <Button asChild variant="outline" size="sm">
+                    <AdminButton asChild size="sm" adminVariant="outline">
                         <Link href="/admin/packages">بازگشت</Link>
-                    </Button>
+                    </AdminButton>
                 }
             />
             <form
@@ -127,13 +127,9 @@ export default function AdminPackagesEdit({ package: pkg }: PageProps) {
                     </div>
                 </div>
 
-                <Button
-                    type="submit"
-                    disabled={processing}
-                    className="bg-purple hover:bg-purple/90"
-                >
+                <AdminButton type="submit" adminVariant="brand" disabled={processing}>
                     ذخیره تغییرات
-                </Button>
+                </AdminButton>
             </form>
         </>
     );

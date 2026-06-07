@@ -1,15 +1,18 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
-import { AdminButton } from '@/components/admin/admin-button';
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
+import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
 import { AdminDetailBadgeRow } from '@/components/admin/admin-detail-badge-row';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
+import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminFilterBar } from '@/components/admin/admin-filter-bar';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminMetaDetails } from '@/components/admin/admin-meta-details';
 import { AdminOrderCustomerEdit } from '@/components/admin/admin-order-customer-edit';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminPagination } from '@/components/admin/admin-pagination';
+import { AdminSearchBar } from '@/components/admin/admin-search-bar';
 import { formatAdminDate } from '@/lib/format-admin-date';
 import type {
     AdminOrderListItem,
@@ -19,7 +22,7 @@ import type {
 
 type PageProps = {
     orders: AdminPaginated<AdminOrderListItem>;
-    filters: { status: string | null };
+    filters: { status: string | null; q: string | null };
     statusOptions: AdminStatusOption[];
 };
 
@@ -28,6 +31,8 @@ export default function AdminOrdersIndex({
     filters,
     statusOptions,
 }: PageProps) {
+    const [confirmKey, setConfirmKey] = useState<string | number | null>(null);
+
     return (
         <>
             <Head title="مدیریت سفارش‌ها" />
@@ -35,10 +40,17 @@ export default function AdminOrdersIndex({
                 title="سفارش‌ها"
                 description="پیگیری عملیاتی سفارش‌ها، وضعیت پرداخت و دسترسی لایسنس"
             />
+            <AdminSearchBar
+                basePath="/admin/orders"
+                placeholder="جستجو بر اساس شماره سفارش، نام، موبایل..."
+                value={filters.q}
+                hiddenParams={{ status: filters.status }}
+            />
             <AdminFilterBar
                 basePath="/admin/orders"
                 options={statusOptions}
                 currentStatus={filters.status}
+                searchQuery={filters.q}
             />
             <div className="flex flex-col gap-3">
                 {orders.data.map((order) => (
@@ -93,32 +105,30 @@ export default function AdminOrdersIndex({
                             <div className="flex flex-wrap gap-2">
                                 <AdminOrderCustomerEdit order={order} />
                                 {order.canMarkPaid ? (
-                                    <AdminButton asChild size="sm" adminVariant="success">
-                                        <Link
-                                            href={`/admin/orders/${order.id}/mark-paid`}
-                                            method="post"
-                                            as="button"
-                                            preserveScroll
-                                        >
-                                            علامت پرداخت‌شده
-                                        </Link>
-                                    </AdminButton>
+                                    <AdminConfirmAction
+                                        actionKey={`mark-paid-${order.id}`}
+                                        activeKey={confirmKey}
+                                        onActivate={setConfirmKey}
+                                        onCancel={() => setConfirmKey(null)}
+                                        triggerLabel="علامت پرداخت‌شده"
+                                        confirmLabel="تأیید پرداخت"
+                                        message="وضعیت سفارش به پرداخت‌شده تغییر می‌کند."
+                                        href={`/admin/orders/${order.id}/mark-paid`}
+                                        triggerVariant="success"
+                                        confirmVariant="success"
+                                    />
                                 ) : null}
                                 {order.canCancel ? (
-                                    <AdminButton
-                                        asChild
-                                        size="sm"
-                                        adminVariant="dangerOutline"
-                                    >
-                                        <Link
-                                            href={`/admin/orders/${order.id}/cancel`}
-                                            method="post"
-                                            as="button"
-                                            preserveScroll
-                                        >
-                                            لغو سفارش
-                                        </Link>
-                                    </AdminButton>
+                                    <AdminConfirmAction
+                                        actionKey={`cancel-${order.id}`}
+                                        activeKey={confirmKey}
+                                        onActivate={setConfirmKey}
+                                        onCancel={() => setConfirmKey(null)}
+                                        triggerLabel="لغو سفارش"
+                                        confirmLabel="تأیید لغو"
+                                        message="سفارش لغو می‌شود."
+                                        href={`/admin/orders/${order.id}/cancel`}
+                                    />
                                 ) : null}
                             </div>
                         </AdminActionRow>
@@ -146,9 +156,10 @@ export default function AdminOrdersIndex({
                     </AdminCommerceCard>
                 ))}
                 {orders.data.length === 0 ? (
-                    <p className="text-center text-sm text-muted">
-                        سفارشی یافت نشد.
-                    </p>
+                    <AdminEmptyState
+                        message="سفارشی یافت نشد."
+                        isSearchActive={Boolean(filters.q)}
+                    />
                 ) : null}
             </div>
             <AdminPagination paginator={orders} />

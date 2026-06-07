@@ -1,7 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
-import { AdminButton } from '@/components/admin/admin-button';
+import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminMetaDetails } from '@/components/admin/admin-meta-details';
@@ -50,6 +51,8 @@ export default function AdminSupportShow({
     recentOrders,
     recentLicenses,
 }: PageProps) {
+    const [confirmKey, setConfirmKey] = useState<string | number | null>(null);
+
     return (
         <>
             <Head title={`پشتیبانی — ${ticket.subject}`} />
@@ -98,31 +101,27 @@ export default function AdminSupportShow({
 
                 <AdminActionRow className="mt-4">
                     {ticket.isClosed ? (
-                        <AdminButton asChild size="sm" adminVariant="success">
-                            <Link
-                                href={`/admin/support/${ticket.id}/reopen`}
-                                method="post"
-                                as="button"
-                                preserveScroll
-                            >
-                                باز کردن تیکت
-                            </Link>
-                        </AdminButton>
+                        <AdminConfirmAction
+                            actionKey="reopen"
+                            activeKey={confirmKey}
+                            onActivate={setConfirmKey}
+                            onCancel={() => setConfirmKey(null)}
+                            triggerLabel="باز کردن تیکت"
+                            confirmLabel="تأیید بازگشایی"
+                            href={`/admin/support/${ticket.id}/reopen`}
+                            triggerVariant="success"
+                            confirmVariant="success"
+                        />
                     ) : (
-                        <AdminButton
-                            asChild
-                            size="sm"
-                            adminVariant="dangerOutline"
-                        >
-                            <Link
-                                href={`/admin/support/${ticket.id}/close`}
-                                method="post"
-                                as="button"
-                                preserveScroll
-                            >
-                                بستن تیکت
-                            </Link>
-                        </AdminButton>
+                        <AdminConfirmAction
+                            actionKey="close"
+                            activeKey={confirmKey}
+                            onActivate={setConfirmKey}
+                            onCancel={() => setConfirmKey(null)}
+                            triggerLabel="بستن تیکت"
+                            confirmLabel="تأیید بستن"
+                            href={`/admin/support/${ticket.id}/close`}
+                        />
                     )}
                 </AdminActionRow>
             </div>

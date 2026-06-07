@@ -28,10 +28,12 @@ class SupportTicketController extends Controller
     {
         $status = $request->string('status')->toString();
         $category = $request->string('category')->toString();
+        $search = $request->string('q')->toString();
 
         return Inertia::render('admin/support/index', $this->ticketList->listForAdmin(
             $status !== '' ? $status : null,
             $category !== '' ? $category : null,
+            $search !== '' ? $search : null,
         ));
     }
 

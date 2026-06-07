@@ -2,13 +2,16 @@
 
 namespace App\Services\Admin;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use App\Services\PaymentReceiptStorageService;
+use App\Support\Admin\AdminListSearch;
 use App\Support\InstallmentTermLabels;
 use App\Support\ProfileStatusLabels;
 use App\Support\TomanFormatter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdminPaymentListService
 {
@@ -20,11 +23,11 @@ class AdminPaymentListService
     /**
      * @return array{
      *     payments: LengthAwarePaginator<int, array<string, mixed>>,
-     *     filters: array{status: ?string},
+     *     filters: array{status: ?string, q: ?string},
      *     statusOptions: list<array{value: string, label: string}>
      * }
      */
-    public function listForAdmin(?string $statusFilter = null): array
+    public function listForAdmin(?string $statusFilter = null, ?string $search = null): array
     {
         $query = Payment::query()
             ->with(['order.user', 'order.coursePackage'])
@@ -33,6 +36,37 @@ class AdminPaymentListService
         if ($statusFilter !== null && $statusFilter !== '') {
             $query->where('status', $statusFilter);
         }
+
+        AdminListSearch::apply($query, $search, function (Builder $searchQuery, string $pattern, string $term): void {
+            $searchQuery
+                ->where('tracking_code', 'like', $pattern)
+                ->orWhere('method', 'like', $pattern)
+                ->orWhereHas('order', function (Builder $orderQuery) use ($pattern): void {
+                    $orderQuery
+                        ->where('order_number', 'like', $pattern)
+                        ->orWhere('customer_name', 'like', $pattern)
+                        ->orWhere('customer_mobile', 'like', $pattern)
+                        ->orWhereHas('user', function (Builder $userQuery) use ($pattern): void {
+                            $userQuery
+                                ->where('name', 'like', $pattern)
+                                ->orWhere('email', 'like', $pattern)
+                                ->orWhere('mobile', 'like', $pattern);
+                        })
+                        ->orWhereHas('coursePackage', fn (Builder $packageQuery) => $packageQuery->where('title', 'like', $pattern));
+                });
+
+            $methodMatch = AdminListSearch::matchesEnumKeyword($term, [
+                'کارت' => PaymentMethod::CardToCard->value,
+                'قسط' => PaymentMethod::Installment->value,
+                'زرین' => PaymentMethod::Zarinpal->value,
+            ]);
+
+            if ($methodMatch !== null) {
+                $searchQuery->orWhere('method', $methodMatch);
+            }
+        });
+
+        $normalizedSearch = AdminListSearch::normalize($search);
 
         $payments = $query
             ->paginate(20)
@@ -43,6 +77,7 @@ class AdminPaymentListService
             'payments' => $payments,
             'filters' => [
                 'status' => $statusFilter,
+                'q' => $normalizedSearch,
             ],
             'statusOptions' => $this->statusOptions(),
         ];

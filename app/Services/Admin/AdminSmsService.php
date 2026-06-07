@@ -6,8 +6,10 @@ use App\Models\SmsMessage;
 use App\Models\SmsTemplate;
 use App\Services\Sms\SmsSettingsService;
 use App\Services\Sms\SmsTemplateService;
+use App\Support\Admin\AdminListSearch;
 use App\Support\SmsStatusLabels;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdminSmsService
 {
@@ -47,18 +49,35 @@ class AdminSmsService
     }
 
     /**
-     * @return array{logs: LengthAwarePaginator<int, array<string, mixed>>}
+     * @return array{
+     *     logs: LengthAwarePaginator<int, array<string, mixed>>,
+     *     filters: array{q: ?string}
+     * }
      */
-    public function logsForAdmin(): array
+    public function logsForAdmin(?string $search = null): array
     {
-        $logs = SmsMessage::query()
-            ->latest()
+        $query = SmsMessage::query()->latest();
+
+        AdminListSearch::apply($query, $search, function (Builder $searchQuery, string $pattern): void {
+            $searchQuery
+                ->where('mobile', 'like', $pattern)
+                ->orWhere('message', 'like', $pattern)
+                ->orWhere('type', 'like', $pattern)
+                ->orWhere('provider', 'like', $pattern);
+        });
+
+        $normalizedSearch = AdminListSearch::normalize($search);
+
+        $logs = $query
             ->paginate(20)
             ->withQueryString()
             ->through(fn (SmsMessage $message): array => $this->toLogItem($message));
 
         return [
             'logs' => $logs,
+            'filters' => [
+                'q' => $normalizedSearch,
+            ],
         ];
     }
 

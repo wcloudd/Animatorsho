@@ -17,7 +17,7 @@ export function AdminDetailBadgeRow({
     return (
         <div className="flex justify-between gap-3 text-sm">
             <dt className="shrink-0 text-muted">{label}</dt>
-            <dd className="text-left">
+            <dd className="min-w-0 text-left">
                 {hasValue && tone ? (
                     <AdminStatusBadge tone={tone}>{value}</AdminStatusBadge>
                 ) : (

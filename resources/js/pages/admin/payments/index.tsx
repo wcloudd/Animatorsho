@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
+import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminFilterBar } from '@/components/admin/admin-filter-bar';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminMetaDetails } from '@/components/admin/admin-meta-details';
@@ -8,6 +9,7 @@ import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminPagination } from '@/components/admin/admin-pagination';
 import { AdminInstallmentReviewPanel } from '@/components/admin/admin-installment-review-panel';
 import { AdminPaymentReviewPanel } from '@/components/admin/admin-payment-review-panel';
+import { AdminSearchBar } from '@/components/admin/admin-search-bar';
 import { formatAdminDate } from '@/lib/format-admin-date';
 import type {
     AdminPaginated,
@@ -17,7 +19,7 @@ import type {
 
 type PageProps = {
     payments: AdminPaginated<AdminPaymentListItem>;
-    filters: { status: string | null };
+    filters: { status: string | null; q: string | null };
     statusOptions: AdminStatusOption[];
 };
 
@@ -33,10 +35,17 @@ export default function AdminPaymentsIndex({
                 title="پرداخت‌ها"
                 description="بررسی مالی، کارت‌به‌کارت و جزئیات تراکنش"
             />
+            <AdminSearchBar
+                basePath="/admin/payments"
+                placeholder="جستجو بر اساس شماره سفارش، کد پیگیری، موبایل..."
+                value={filters.q}
+                hiddenParams={{ status: filters.status }}
+            />
             <AdminFilterBar
                 basePath="/admin/payments"
                 options={statusOptions}
                 currentStatus={filters.status}
+                searchQuery={filters.q}
             />
             <div className="flex flex-col gap-3">
                 {payments.data.map((payment) => (
@@ -134,9 +143,10 @@ export default function AdminPaymentsIndex({
                     </AdminCommerceCard>
                 ))}
                 {payments.data.length === 0 ? (
-                    <p className="text-center text-sm text-muted">
-                        پرداختی یافت نشد.
-                    </p>
+                    <AdminEmptyState
+                        message="پرداختی یافت نشد."
+                        isSearchActive={Boolean(filters.q)}
+                    />
                 ) : null}
             </div>
             <AdminPagination paginator={payments} />

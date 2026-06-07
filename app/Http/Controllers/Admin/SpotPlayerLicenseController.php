@@ -10,6 +10,7 @@ use App\Services\Admin\AdminSpotPlayerLicenseListService;
 use App\Services\Admin\AdminSpotPlayerLicenseService;
 use App\Services\SpotPlayer\SpotPlayerApiProvisioningService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,9 +22,13 @@ class SpotPlayerLicenseController extends Controller
         private readonly SpotPlayerApiProvisioningService $spotPlayerApi,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return Inertia::render('admin/licenses/index', $this->licenseList->listForAdmin());
+        $search = $request->string('q')->toString();
+
+        return Inertia::render('admin/licenses/index', $this->licenseList->listForAdmin(
+            $search !== '' ? $search : null,
+        ));
     }
 
     public function activate(ActivateSpotPlayerLicenseRequest $request, SpotPlayerLicense $license): RedirectResponse

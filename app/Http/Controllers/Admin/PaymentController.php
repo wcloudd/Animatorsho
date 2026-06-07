@@ -27,9 +27,11 @@ class PaymentController extends Controller
     public function index(Request $request): Response
     {
         $status = $request->string('status')->toString();
+        $search = $request->string('q')->toString();
 
         return Inertia::render('admin/payments/index', $this->payments->listForAdmin(
             $status !== '' ? $status : null,
+            $search !== '' ? $search : null,
         ));
     }
 

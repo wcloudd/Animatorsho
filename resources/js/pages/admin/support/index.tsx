@@ -1,9 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
+import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminPagination } from '@/components/admin/admin-pagination';
+import { AdminSearchBar } from '@/components/admin/admin-search-bar';
 import { cn } from '@/lib/utils';
 import type {
     AdminPaginated,
@@ -13,14 +15,14 @@ import type {
 
 type PageProps = {
     tickets: AdminPaginated<AdminSupportTicketListItem>;
-    filters: { status: string | null; category: string | null };
+    filters: { status: string | null; category: string | null; q: string | null };
     statusOptions: AdminStatusOption[];
     categoryOptions: AdminStatusOption[];
 };
 
 function buildFilterHref(
     basePath: string,
-    filters: { status: string | null; category: string | null },
+    filters: { status: string | null; category: string | null; q: string | null },
     updates: Partial<{ status: string | null; category: string | null }>,
 ): string {
     const next = { ...filters, ...updates };
@@ -32,6 +34,10 @@ function buildFilterHref(
 
     if (next.category) {
         params.set('category', next.category);
+    }
+
+    if (next.q) {
+        params.set('q', next.q);
     }
 
     const query = params.toString();
@@ -46,10 +52,10 @@ function StatusFilterBar({
 }: {
     basePath: string;
     options: AdminStatusOption[];
-    filters: { status: string | null; category: string | null };
+    filters: { status: string | null; category: string | null; q: string | null };
 }) {
     return (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
             <Link
                 href={buildFilterHref(basePath, filters, { status: null })}
                 className={cn(
@@ -90,10 +96,10 @@ function CategoryFilterBar({
 }: {
     basePath: string;
     options: AdminStatusOption[];
-    filters: { status: string | null; category: string | null };
+    filters: { status: string | null; category: string | null; q: string | null };
 }) {
     return (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
             <Link
                 href={buildFilterHref(basePath, filters, { category: null })}
                 className={cn(
@@ -142,16 +148,27 @@ export default function AdminSupportIndex({
                 title="پشتیبانی"
                 description="پیگیری تیکت‌های کاربران و پاسخ‌گویی"
             />
-            <StatusFilterBar
+            <AdminSearchBar
                 basePath={basePath}
-                options={statusOptions}
-                filters={filters}
+                placeholder="جستجو بر اساس موضوع، نام، موبایل، متن..."
+                value={filters.q}
+                hiddenParams={{
+                    status: filters.status,
+                    category: filters.category,
+                }}
             />
-            <CategoryFilterBar
-                basePath={basePath}
-                options={categoryOptions}
-                filters={filters}
-            />
+            <div className="mb-4 flex flex-col gap-2">
+                <StatusFilterBar
+                    basePath={basePath}
+                    options={statusOptions}
+                    filters={filters}
+                />
+                <CategoryFilterBar
+                    basePath={basePath}
+                    options={categoryOptions}
+                    filters={filters}
+                />
+            </div>
             <div className="flex flex-col gap-3">
                 {tickets.data.map((ticket) => (
                     <AdminCommerceCard
@@ -192,7 +209,10 @@ export default function AdminSupportIndex({
                     </AdminCommerceCard>
                 ))}
                 {tickets.data.length === 0 ? (
-                    <p className="text-sm text-muted">تیکتی یافت نشد.</p>
+                    <AdminEmptyState
+                        message="تیکتی یافت نشد."
+                        isSearchActive={Boolean(filters.q)}
+                    />
                 ) : null}
             </div>
             <AdminPagination paginator={tickets} />

@@ -1,20 +1,23 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
-import { AdminButton } from '@/components/admin/admin-button';
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
+import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
 import { AdminDetailBadgeRow } from '@/components/admin/admin-detail-badge-row';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
+import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminLicenseActivationPanel } from '@/components/admin/admin-license-activation-panel';
 import { AdminMetaDetails } from '@/components/admin/admin-meta-details';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminPagination } from '@/components/admin/admin-pagination';
+import { AdminSearchBar } from '@/components/admin/admin-search-bar';
 import { formatAdminDate } from '@/lib/format-admin-date';
 import type { AdminLicenseListItem, AdminPaginated } from '@/types/admin';
 
 type PageProps = {
     licenses: AdminPaginated<AdminLicenseListItem>;
+    filters: { q: string | null };
 };
 
 function licenseSubtitle(license: AdminLicenseListItem): string {
@@ -33,10 +36,8 @@ function shouldShowLicenseKey(license: AdminLicenseListItem): boolean {
     return !license.canActivate;
 }
 
-export default function AdminLicensesIndex({ licenses }: PageProps) {
-    const [revokeConfirmId, setRevokeConfirmId] = useState<number | null>(
-        null,
-    );
+export default function AdminLicensesIndex({ licenses, filters }: PageProps) {
+    const [confirmKey, setConfirmKey] = useState<string | number | null>(null);
 
     return (
         <>
@@ -44,6 +45,11 @@ export default function AdminLicensesIndex({ licenses }: PageProps) {
             <AdminPageHeader
                 title="لایسنس‌های SpotPlayer"
                 description="فعال‌سازی، دسترسی و مدیریت کلید لایسنس"
+            />
+            <AdminSearchBar
+                basePath="/admin/licenses"
+                placeholder="جستجو بر اساس کلید لایسنس، شماره سفارش، موبایل..."
+                value={filters.q}
             />
             <div className="flex flex-col gap-3">
                 {licenses.data.map((license) => (
@@ -116,60 +122,31 @@ export default function AdminLicensesIndex({ licenses }: PageProps) {
 
                         {license.canRetryProvision ? (
                             <AdminActionRow>
-                                <AdminButton asChild size="sm" adminVariant="outline">
-                                    <Link
-                                        href={`/admin/licenses/${license.id}/retry-provision`}
-                                        method="post"
-                                        as="button"
-                                        preserveScroll
-                                    >
-                                        تلاش مجدد SpotPlayer API
-                                    </Link>
-                                </AdminButton>
+                                <AdminConfirmAction
+                                    actionKey={`retry-${license.id}`}
+                                    activeKey={confirmKey}
+                                    onActivate={setConfirmKey}
+                                    onCancel={() => setConfirmKey(null)}
+                                    triggerLabel="تلاش مجدد SpotPlayer API"
+                                    confirmLabel="تأیید تلاش مجدد"
+                                    href={`/admin/licenses/${license.id}/retry-provision`}
+                                    triggerVariant="outline"
+                                    confirmVariant="brand"
+                                />
                             </AdminActionRow>
                         ) : null}
 
                         {license.canRevoke ? (
                             <AdminActionRow>
-                                {revokeConfirmId === license.id ? (
-                                    <div className="flex flex-wrap gap-2">
-                                        <AdminButton
-                                            asChild
-                                            size="sm"
-                                            adminVariant="danger"
-                                        >
-                                            <Link
-                                                href={`/admin/licenses/${license.id}/revoke`}
-                                                method="post"
-                                                as="button"
-                                                preserveScroll
-                                            >
-                                                تأیید لغو
-                                            </Link>
-                                        </AdminButton>
-                                        <AdminButton
-                                            type="button"
-                                            size="sm"
-                                            adminVariant="outline"
-                                            onClick={() =>
-                                                setRevokeConfirmId(null)
-                                            }
-                                        >
-                                            انصراف
-                                        </AdminButton>
-                                    </div>
-                                ) : (
-                                    <AdminButton
-                                        type="button"
-                                        size="sm"
-                                        adminVariant="dangerOutline"
-                                        onClick={() =>
-                                            setRevokeConfirmId(license.id)
-                                        }
-                                    >
-                                        لغو لایسنس
-                                    </AdminButton>
-                                )}
+                                <AdminConfirmAction
+                                    actionKey={`revoke-${license.id}`}
+                                    activeKey={confirmKey}
+                                    onActivate={setConfirmKey}
+                                    onCancel={() => setConfirmKey(null)}
+                                    triggerLabel="لغو لایسنس"
+                                    confirmLabel="تأیید لغو"
+                                    href={`/admin/licenses/${license.id}/revoke`}
+                                />
                             </AdminActionRow>
                         ) : null}
 
@@ -260,9 +237,10 @@ export default function AdminLicensesIndex({ licenses }: PageProps) {
                     </AdminCommerceCard>
                 ))}
                 {licenses.data.length === 0 ? (
-                    <p className="text-center text-sm text-muted">
-                        لایسنسی یافت نشد.
-                    </p>
+                    <AdminEmptyState
+                        message="لایسنسی یافت نشد."
+                        isSearchActive={Boolean(filters.q)}
+                    />
                 ) : null}
             </div>
             <AdminPagination paginator={licenses} />

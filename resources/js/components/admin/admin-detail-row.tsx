@@ -14,7 +14,7 @@ export function AdminDetailRow({
     return (
         <div className="flex justify-between gap-3 text-sm">
             <dt className="shrink-0 text-muted">{label}</dt>
-            <dd className={`text-left font-medium ${valueClassName ?? ''}`}>
+            <dd className={`min-w-0 break-words text-left font-medium ${valueClassName ?? ''}`}>
                 {display}
             </dd>
         </div>

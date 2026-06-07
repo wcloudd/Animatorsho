@@ -1,7 +1,8 @@
-import { Link, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
 import { AdminButton } from '@/components/admin/admin-button';
+import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import type { AdminPaymentListItem } from '@/types/admin';
@@ -20,6 +21,7 @@ export function AdminPaymentReviewPanel({
     payment,
 }: AdminPaymentReviewPanelProps) {
     const [showRejectForm, setShowRejectForm] = useState(false);
+    const [confirmKey, setConfirmKey] = useState<string | number | null>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         note: '',
@@ -63,16 +65,18 @@ export function AdminPaymentReviewPanel({
 
             <div className="flex flex-wrap gap-2">
                 {payment.canApprove ? (
-                    <AdminButton asChild size="sm" adminVariant="success">
-                        <Link
-                            href={`/admin/payments/${payment.id}/approve`}
-                            method="post"
-                            as="button"
-                            preserveScroll
-                        >
-                            تأیید رسید
-                        </Link>
-                    </AdminButton>
+                    <AdminConfirmAction
+                        actionKey={`approve-${payment.id}`}
+                        activeKey={confirmKey}
+                        onActivate={setConfirmKey}
+                        onCancel={() => setConfirmKey(null)}
+                        triggerLabel="تأیید رسید"
+                        confirmLabel="تأیید رسید"
+                        message="دسترسی کاربر فعال می‌شود."
+                        href={`/admin/payments/${payment.id}/approve`}
+                        triggerVariant="success"
+                        confirmVariant="success"
+                    />
                 ) : null}
 
                 {payment.canReject ? (

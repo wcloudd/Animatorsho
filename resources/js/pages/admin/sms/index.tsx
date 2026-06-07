@@ -1,9 +1,8 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
+import { AdminButton } from '@/components/admin/admin-button';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import InputError from '@/components/input-error';
-import { surfaceCardClassName } from '@/components/page-container';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -87,9 +86,9 @@ function SmsSettingsForm({ settings }: { settings: AdminSmsSettings }) {
                 <InputError message={errors.admin_mobile} />
             </div>
 
-            <Button type="submit" disabled={processing}>
+            <AdminButton type="submit" adminVariant="brand" disabled={processing}>
                 ذخیره تنظیمات
-            </Button>
+            </AdminButton>
         </form>
     );
 }
@@ -158,9 +157,9 @@ function SmsTemplateForm({ template }: { template: AdminSmsTemplate }) {
                 ) : null}
             </div>
 
-            <Button type="submit" size="sm" disabled={processing}>
+            <AdminButton type="submit" size="sm" adminVariant="brand" disabled={processing}>
                 ذخیره قالب
-            </Button>
+            </AdminButton>
         </form>
     );
 }

@@ -1,5 +1,6 @@
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
+import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminMetaDetails } from '@/components/admin/admin-meta-details';
 import { AdminPagination } from '@/components/admin/admin-pagination';
@@ -8,14 +9,16 @@ import type { AdminPaginated, AdminSmsLogItem } from '@/types/admin';
 
 type SmsLogsListProps = {
     logs: AdminPaginated<AdminSmsLogItem>;
+    isSearchActive?: boolean;
 };
 
-export function SmsLogsList({ logs }: SmsLogsListProps) {
+export function SmsLogsList({ logs, isSearchActive = false }: SmsLogsListProps) {
     if (logs.data.length === 0) {
         return (
-            <p className="rounded-2xl bg-surface px-4 py-6 text-center text-sm text-muted ring-1 ring-border/70">
-                هنوز پیامکی ثبت نشده است.
-            </p>
+            <AdminEmptyState
+                message="هنوز پیامکی ثبت نشده است."
+                isSearchActive={isSearchActive}
+            />
         );
     }
 

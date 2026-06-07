@@ -21,11 +21,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     const { url } = usePage();
 
     return (
-        <div className="min-h-dvh bg-bg text-text" dir="rtl">
-            <header className="border-b border-purple/10 bg-surface">
-                <div className="mx-auto flex w-full max-w-[390px] flex-col gap-4 px-4 py-4 sm:max-w-5xl">
+        <div className="min-h-dvh overflow-x-hidden bg-bg text-text" dir="rtl">
+            <header className="sticky top-0 z-10 border-b border-purple/10 bg-surface">
+                <div className="mx-auto flex w-full max-w-[390px] flex-col gap-3 px-4 py-4 sm:max-w-5xl">
                     <div className="flex items-center justify-between gap-3">
-                        <h1 className="font-liana text-lg text-purple">
+                        <h1 className="min-w-0 truncate font-liana text-lg text-purple">
                             پنل مدیریت انیماتورشو
                         </h1>
                         <Link
@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             بازگشت به سایت
                         </Link>
                     </div>
-                    <nav className="flex flex-wrap gap-2">
+                    <nav className="flex flex-wrap gap-1.5">
                         {navItems.map((item) => {
                             const isActive = item.exact
                                 ? url === item.match ||
@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'rounded-pill px-3 py-1.5 text-sm font-medium transition',
+                                        'rounded-pill px-2.5 py-1 text-xs font-medium transition',
                                         isActive
                                             ? 'bg-purple text-white'
                                             : 'bg-purple-soft text-purple hover:bg-purple/10',

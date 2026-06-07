@@ -6,9 +6,11 @@ use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\SpotPlayerLicense;
+use App\Support\Admin\AdminListSearch;
 use App\Support\ProfileStatusLabels;
 use App\Support\TomanFormatter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdminOrderListService
 {
@@ -36,11 +38,11 @@ class AdminOrderListService
      *         canMarkPaid: bool,
      *         canCancel: bool
      *     }>,
-     *     filters: array{status: ?string},
+     *     filters: array{status: ?string, q: ?string},
      *     statusOptions: list<array{value: string, label: string}>
      * }
      */
-    public function listForAdmin(?string $statusFilter = null): array
+    public function listForAdmin(?string $statusFilter = null, ?string $search = null): array
     {
         $query = Order::query()
             ->with([
@@ -55,6 +57,22 @@ class AdminOrderListService
             $query->where('status', $statusFilter);
         }
 
+        AdminListSearch::apply($query, $search, function (Builder $searchQuery, string $pattern): void {
+            $searchQuery
+                ->where('order_number', 'like', $pattern)
+                ->orWhere('customer_name', 'like', $pattern)
+                ->orWhere('customer_mobile', 'like', $pattern)
+                ->orWhereHas('user', function (Builder $userQuery) use ($pattern): void {
+                    $userQuery
+                        ->where('name', 'like', $pattern)
+                        ->orWhere('email', 'like', $pattern)
+                        ->orWhere('mobile', 'like', $pattern);
+                })
+                ->orWhereHas('coursePackage', fn (Builder $packageQuery) => $packageQuery->where('title', 'like', $pattern));
+        });
+
+        $normalizedSearch = AdminListSearch::normalize($search);
+
         $orders = $query
             ->paginate(20)
             ->withQueryString()
@@ -64,6 +82,7 @@ class AdminOrderListService
             'orders' => $orders,
             'filters' => [
                 'status' => $statusFilter,
+                'q' => $normalizedSearch,
             ],
             'statusOptions' => $this->statusOptions(),
         ];

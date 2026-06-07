@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateSmsTemplateRequest;
 use App\Models\SmsTemplate;
 use App\Services\Admin\AdminSmsService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,9 +23,13 @@ class SmsController extends Controller
         return Inertia::render('admin/sms/index', $this->sms->indexForAdmin());
     }
 
-    public function logs(): Response
+    public function logs(Request $request): Response
     {
-        return Inertia::render('admin/sms/logs', $this->sms->logsForAdmin());
+        $search = $request->string('q')->toString();
+
+        return Inertia::render('admin/sms/logs', $this->sms->logsForAdmin(
+            $search !== '' ? $search : null,
+        ));
     }
 
     public function updateSettings(UpdateSmsSettingsRequest $request): RedirectResponse

@@ -22,9 +22,11 @@ class OrderController extends Controller
     public function index(Request $request): Response
     {
         $status = $request->string('status')->toString();
+        $search = $request->string('q')->toString();
 
         return Inertia::render('admin/orders/index', $this->orderList->listForAdmin(
             $status !== '' ? $status : null,
+            $search !== '' ? $search : null,
         ));
     }
 

@@ -5,19 +5,22 @@ namespace App\Services\Admin;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\Payment;
 use App\Models\SpotPlayerLicense;
+use App\Support\Admin\AdminListSearch;
 use App\Support\ProfileStatusLabels;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdminSpotPlayerLicenseListService
 {
     /**
      * @return array{
-     *     licenses: LengthAwarePaginator<int, array<string, mixed>>
+     *     licenses: LengthAwarePaginator<int, array<string, mixed>>,
+     *     filters: array{q: ?string}
      * }
      */
-    public function listForAdmin(): array
+    public function listForAdmin(?string $search = null): array
     {
-        $licenses = SpotPlayerLicense::query()
+        $query = SpotPlayerLicense::query()
             ->with([
                 'user',
                 'coursePackage',
@@ -25,12 +28,39 @@ class AdminSpotPlayerLicenseListService
                     'payments' => fn ($paymentQuery) => $paymentQuery->latest()->limit(1),
                 ]),
             ])
-            ->latest()
+            ->latest();
+
+        AdminListSearch::apply($query, $search, function (Builder $searchQuery, string $pattern): void {
+            $searchQuery
+                ->where('license_key', 'like', $pattern)
+                ->orWhere('meta->spotplayer_license_id', 'like', $pattern)
+                ->orWhereHas('order', function (Builder $orderQuery) use ($pattern): void {
+                    $orderQuery
+                        ->where('order_number', 'like', $pattern)
+                        ->orWhere('customer_name', 'like', $pattern)
+                        ->orWhere('customer_mobile', 'like', $pattern);
+                })
+                ->orWhereHas('user', function (Builder $userQuery) use ($pattern): void {
+                    $userQuery
+                        ->where('name', 'like', $pattern)
+                        ->orWhere('email', 'like', $pattern)
+                        ->orWhere('mobile', 'like', $pattern);
+                })
+                ->orWhereHas('coursePackage', fn (Builder $packageQuery) => $packageQuery->where('title', 'like', $pattern));
+        });
+
+        $normalizedSearch = AdminListSearch::normalize($search);
+
+        $licenses = $query
             ->paginate(20)
+            ->withQueryString()
             ->through(fn (SpotPlayerLicense $license): array => $this->toListItem($license));
 
         return [
             'licenses' => $licenses,
+            'filters' => [
+                'q' => $normalizedSearch,
+            ],
         ];
     }
 
