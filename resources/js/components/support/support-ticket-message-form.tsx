@@ -1,0 +1,105 @@
+import { useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { formatFileSize } from '@/lib/format-file-size';
+import { cn } from '@/lib/utils';
+
+const textareaClassName = cn(
+    'border-input bg-surface text-text placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm text-start shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 min-h-[100px]',
+);
+
+type SupportTicketMessageFormProps = {
+    action: string;
+    submitLabel?: string;
+    waitingForUserField?: boolean;
+};
+
+export function SupportTicketMessageForm({
+    action,
+    submitLabel = 'ارسال پاسخ',
+    waitingForUserField = false,
+}: SupportTicketMessageFormProps) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        body: '',
+        waiting_for_user: false,
+        attachment: null as File | null,
+    });
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        post(action, {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: () => reset('body', 'waiting_for_user', 'attachment'),
+        });
+    };
+
+    return (
+        <form
+            onSubmit={submit}
+            className="flex flex-col gap-3 rounded-[28px] bg-surface px-5 py-5 shadow-soft ring-1 ring-border"
+        >
+            <div className="grid gap-2">
+                <Label htmlFor="reply-body">متن پاسخ</Label>
+                <textarea
+                    id="reply-body"
+                    value={data.body}
+                    onChange={(event) => setData('body', event.target.value)}
+                    rows={4}
+                    className={textareaClassName}
+                />
+                {errors.body ? (
+                    <p className="text-xs text-red">{errors.body}</p>
+                ) : null}
+            </div>
+
+            <div className="grid gap-2">
+                <Label htmlFor="reply-attachment">پیوست (اختیاری)</Label>
+                <Input
+                    id="reply-attachment"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,.pdf,.zip,image/jpeg,image/png,image/webp,application/pdf,application/zip"
+                    onChange={(event) =>
+                        setData('attachment', event.target.files?.[0] ?? null)
+                    }
+                    className="bg-surface text-text"
+                />
+                <p className="text-xs text-muted">
+                    حداکثر ۵ مگابایت — jpg, png, webp, pdf, zip
+                </p>
+                {data.attachment ? (
+                    <p className="text-xs text-text">
+                        {data.attachment.name} (
+                        {formatFileSize(data.attachment.size)})
+                    </p>
+                ) : null}
+                {errors.attachment ? (
+                    <p className="text-xs text-red">{errors.attachment}</p>
+                ) : null}
+            </div>
+
+            {waitingForUserField ? (
+                <label className="flex items-center gap-2 text-sm text-text">
+                    <input
+                        type="checkbox"
+                        checked={data.waiting_for_user}
+                        onChange={(event) =>
+                            setData('waiting_for_user', event.target.checked)
+                        }
+                        className="size-4 rounded border-border text-purple focus:ring-purple"
+                    />
+                    منتظر پاسخ کاربر
+                </label>
+            ) : null}
+
+            <button
+                type="submit"
+                disabled={processing}
+                className="btn-cta-green flex h-11 w-full items-center justify-center rounded-pill text-sm font-bold text-white disabled:opacity-60"
+            >
+                {submitLabel}
+            </button>
+        </form>
+    );
+}

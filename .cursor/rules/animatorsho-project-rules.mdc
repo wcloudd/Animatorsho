@@ -1,0 +1,156 @@
+---
+description: Compact permanent rules for Animatorsho MVP
+alwaysApply: true
+---
+
+# Animatorsho Project Rules
+
+## Project
+
+Animatorsho is a Persian RTL mobile-first product landing and purchase system for the Animatorsho animation course.
+
+Stack: Laravel + React + Inertia + Tailwind + MySQL.
+
+Main target width: 390px mobile.
+
+Current MVP only includes:
+- Animatorsho product landing page
+- Register / Login
+- Checkout and payment result
+- Zarinpal payment
+- Manual card-to-card payment with admin approval
+- Manual installment request and staged access
+- User profile
+- SpotPlayer license display
+- Support tickets
+- Free consultation form
+- Admin management for users, orders, payments, tickets, consultation requests, and licenses
+
+Do not build articles, forum, exercises, challenges, gamification, or library unless explicitly requested.
+
+## Navigation
+
+Bottom navigation has only 3 items:
+- انیماتورشو
+- پشتیبان
+- پروفایل
+
+The first page is not a generic Home page. It is the Animatorsho product landing page.
+
+## Product Structure
+
+Main course:
+- Course: انیماتورشو
+
+Packages:
+- دوره جامع انیماتورشو
+- فصل اول — ساخت ساده انیمیشن با سیستم
+- فصل دوم — آموزش طراحی
+- فصل سوم — ساخت انیمیشن مثل نیم‌وجبی
+- فصل چهارم — ساخت انیمیشن با گوشی
+
+Installment purchase is a payment option for the comprehensive course, not a separate educational package.
+
+## UI Direction
+
+- Persian RTL everywhere.
+- Mobile-first, polished at 390px.
+- Style: clean, warm, modern, trustworthy, slightly playful, inspired by Duolingo/Brilliant clarity.
+- Use rounded cards, clear spacing, readable text, strong badges, and lightweight video/animation.
+- Product landing should be conversion-focused and not feel like a crowded dashboard.
+- Reserve bottom spacing for fixed bottom navigation.
+- Avoid horizontal overflow.
+
+## Colors
+
+Use design tokens and avoid random hardcoded colors:
+
+```css
+--color-purple: #6037A8;
+--color-purple-soft: #F6EEFB;
+--color-gold: #EBA239;
+--color-gold-soft: #FEF7EB;
+--color-green: #2DA160;
+--color-green-soft: #F2F9F4;
+--color-red: #ED5276;
+--color-blue: #3AB5EC;
+--color-bg: #FFF9F1;
+--color-surface: #FFFFFF;
+--color-text: #2E2442;
+--color-muted: #7E728E;
+```
+
+## Fonts
+
+Use only:
+- IRANYekan for main UI/body/forms/checkout/support/profile/readable text.
+- Liana for hero titles, section titles, short badges, and playful labels.
+
+Do not use Liana for long paragraphs or form-heavy pages.
+
+## Architecture
+
+- Pages: `resources/js/pages`
+- Shared components: `resources/js/components`
+- Keep components small, reusable, typed, and backend-ready.
+- Before creating a component, check if a similar component already exists.
+- UI can start with mock data, but shape it like real Inertia props.
+- Do not add packages, migrations, or architecture changes unless the current slice requires it.
+
+## Deploy-Friendly Rules
+
+Never hardcode:
+- localhost
+- 127.0.0.1
+- Windows paths like `C:\...` or `F:\...`
+- absolute storage URLs
+- environment-specific service URLs
+
+Use env/config/backend helpers when needed.
+
+## Security
+
+- Protect profile, orders, licenses, tickets, and payment pages with auth where needed.
+- Users can only see their own data.
+- Never trust frontend price/package/payment status.
+- Verify Zarinpal callbacks server-side.
+- Card-to-card and installment access must require admin approval.
+- Keep payment, SpotPlayer, and SMS secrets out of React/frontend code.
+- Validate all important forms on the backend.
+- Rate limit login, consultation, and support submissions.
+
+## Cursor Workflow
+
+- Work in small vertical slices.
+- Do not make unexpected changes outside the requested scope.
+- Ask before adding dependencies, changing routes, renaming files, or changing architecture.
+- Keep Cursor credit usage low: read only relevant files and make targeted edits.
+- After important changes, report files touched, commands to run, risks, and next steps.
+
+## Verification
+
+After meaningful slices, suggest:
+
+```powershell
+php artisan optimize:clear
+npm run build
+php artisan test
+```
+
+Vite chunk warning:
+- Do not optimize chunks prematurely during early UI slices.
+- Use lazy loading / dynamic imports for heavy page-level components when the project grows.
+
+## Build Order
+
+1. Fonts and design tokens
+2. App shell with 3-button bottom navigation
+3. Animatorsho product landing
+4. Auth polish
+5. Consultation form
+6. Checkout
+7. Payment result
+8. Profile + licenses + orders
+9. Support tickets
+10. Admin management
+11. Zarinpal / card-to-card / installment / SpotPlayer integrations
