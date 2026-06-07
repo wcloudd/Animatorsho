@@ -119,8 +119,99 @@ test('installment rejected order shows honest preserved down payment copy', func
         ->assertInertia(fn (Assert $page) => $page
             ->has('accessItems', 1)
             ->where('accessItems.0.accessState', 'installment_rejected')
-            ->where('accessItems.0.description', 'درخواست اقساط رد شد، اما پیش‌پرداخت شما ثبت شده است و پیگیری مالی به‌صورت دستی انجام می‌شود.')
+            ->where('accessItems.0.statusLabel', 'درخواست اقساطی رد شد — پیش‌پرداخت ثبت شده')
+            ->where('accessItems.0.description', 'درخواست خرید اقساطی شما رد شد، اما پیش‌پرداخت شما ثبت شده است. وضعیت پیگیری مالی به‌صورت دستی توسط پشتیبانی بررسی می‌شود.')
             ->where('accessItems.0.rejectionReason', 'فعلاً ظرفیت اقساط تکمیل است.')
+        );
+});
+
+test('rejected installment with captured down payment beats revoked license in access section', function () {
+    $this->seed(AnimatorshoCourseSeeder::class);
+
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    $paidOrder = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->paid()
+        ->create();
+
+    Payment::factory()->forOrder($paidOrder)->paid()->create();
+
+    SpotPlayerLicense::factory()
+        ->forOrder($paidOrder)
+        ->revoked()
+        ->create([
+            'user_id' => $user->id,
+            'license_key' => 'SPOT-REVOKED-OLD',
+        ]);
+
+    $rejectedInstallmentOrder = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->installmentRejected()
+        ->create();
+
+    Payment::factory()->forOrder($rejectedInstallmentOrder)->create([
+        'method' => PaymentMethod::Installment,
+        'status' => PaymentStatus::Paid,
+        'paid_at' => now(),
+        'tracking_code' => '555111',
+        'meta' => [
+            'requested_term' => 'one_month',
+            'down_payment_paid_at' => now()->toIso8601String(),
+            'down_payment_ref' => '555111',
+            'rejection_note' => 'در حال حاضر امکان اقساط فعال نیست.',
+            'rejected_at' => now()->toIso8601String(),
+        ],
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('profile'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('accessItems', 1)
+            ->where('accessItems.0.accessState', 'installment_rejected')
+            ->where('accessItems.0.statusLabel', 'درخواست اقساطی رد شد — پیش‌پرداخت ثبت شده')
+            ->where('accessItems.0.description', 'درخواست خرید اقساطی شما رد شد، اما پیش‌پرداخت شما ثبت شده است. وضعیت پیگیری مالی به‌صورت دستی توسط پشتیبانی بررسی می‌شود.')
+            ->where('accessItems.0.rejectionReason', 'در حال حاضر امکان اقساط فعال نیست.')
+            ->where('accessItems.0.licenseKey', null)
+        );
+});
+
+test('rejected installment message is not shown as generic payment failure', function () {
+    $this->seed(AnimatorshoCourseSeeder::class);
+
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->installmentRejected()
+        ->create();
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Installment,
+        'status' => PaymentStatus::Paid,
+        'paid_at' => now(),
+        'meta' => [
+            'down_payment_paid_at' => now()->toIso8601String(),
+            'down_payment_ref' => '123456',
+        ],
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('profile'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('accessItems.0.accessState', 'installment_rejected')
+            ->where('accessItems.0.statusLabel', fn ($label) => $label !== 'پرداخت ناموفق')
+            ->where('accessItems.0.description', fn ($description) => str_contains(
+                $description,
+                'پیش‌پرداخت شما ثبت شده است',
+            ))
         );
 });
 

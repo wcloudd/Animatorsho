@@ -8,6 +8,7 @@ const navItems = [
     { href: '/admin/packages', label: 'بسته‌ها', match: '/admin/packages' },
     { href: '/admin/orders', label: 'سفارش‌ها', match: '/admin/orders' },
     { href: '/admin/payments', label: 'پرداخت‌ها', match: '/admin/payments' },
+    { href: '/admin/installments', label: 'پیگیری اقساط', match: '/admin/installments' },
     { href: '/admin/licenses', label: 'لایسنس‌ها', match: '/admin/licenses' },
     { href: '/admin/support', label: 'پشتیبانی', match: '/admin/support' },
     { href: '/admin/sms', label: 'پیامک', match: '/admin/sms' },

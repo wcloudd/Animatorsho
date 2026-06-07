@@ -141,6 +141,35 @@ export type AdminPaymentInstallmentSnapshot = {
     downPaymentCaptured: boolean;
 };
 
+export type AdminInstallmentListItem = {
+    id: number;
+    orderNumber: string;
+    paymentId: number | null;
+    userName: string;
+    userEmail: string;
+    customerName: string | null;
+    customerMobile: string | null;
+    packageTitle: string;
+    orderStatus: string;
+    orderStatusValue: string;
+    orderStatusTone: AdminStatusTone;
+    paymentStatus: string | null;
+    paymentStatusValue: string | null | undefined;
+    paymentStatusTone: AdminStatusTone | null;
+    installmentRequestedTerm: string | null;
+    installmentNote: string | null;
+    rejectionNote: string | null;
+    trackingCode: string | null;
+    amountToman: number;
+    amountFormatted: string;
+    installment: AdminPaymentInstallmentSnapshot | null;
+    canApprove: boolean;
+    canReject: boolean;
+    createdAt: string | null;
+    paymentReviewHref: string | null;
+    orderHref: string;
+};
+
 export type AdminLicenseListItem = {
     id: number;
     userName: string;

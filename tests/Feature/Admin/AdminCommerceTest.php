@@ -22,6 +22,7 @@ test('guest cannot access admin resources', function () {
     $this->get(route('admin.packages.index'))->assertRedirect(route('login'));
     $this->get(route('admin.orders.index'))->assertRedirect(route('login'));
     $this->get(route('admin.licenses.index'))->assertRedirect(route('login'));
+    $this->get(route('admin.installments.index'))->assertRedirect(route('login'));
 });
 
 test('non-admin cannot access admin resources', function () {
@@ -33,6 +34,10 @@ test('non-admin cannot access admin resources', function () {
 
     $this->actingAs($user)
         ->get(route('admin.orders.index'))
+        ->assertForbidden();
+
+    $this->actingAs($user)
+        ->get(route('admin.installments.index'))
         ->assertForbidden();
 });
 
@@ -53,6 +58,11 @@ test('admin can view package order and license resources', function () {
         ->get(route('admin.payments.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('admin/payments/index'));
+
+    $this->actingAs($admin)
+        ->get(route('admin.installments.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('admin/installments/index'));
 
     $this->actingAs($admin)
         ->get(route('admin.licenses.index'))
@@ -671,5 +681,98 @@ test('admin payments index reads legacy installment_term meta key', function () 
             ->where('payments.data', fn ($payments) => collect($payments)->contains(
                 fn (array $item): bool => $item['id'] === $payment->id
                     && $item['installmentRequestedTerm'] === '۱ ماهه',
+            )));
+});
+
+test('admin installments index lists installment customers with snapshot amounts', function () {
+    $admin = User::factory()->admin()->create();
+    $payment = createReviewingInstallmentPayment();
+    $order = $payment->order;
+
+    $this->actingAs($admin)
+        ->get(route('admin.installments.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/installments/index')
+            ->where('installments.data', fn ($items) => collect($items)->contains(
+                fn (array $item): bool => $item['id'] === $order->id
+                    && $item['paymentId'] === $payment->id
+                    && $item['customerName'] === 'سارا محمدی'
+                    && $item['customerMobile'] === '09129876543'
+                    && $item['installmentRequestedTerm'] === '۲ ماهه'
+                    && $item['installmentNote'] === 'ترجیح تماس بعد از ظهر'
+                    && $item['installment']['cashPriceToman'] === 5_500_000
+                    && $item['installment']['installmentTotalToman'] === 6_500_000
+                    && $item['installment']['downPaymentToman'] === 2_600_000
+                    && $item['installment']['remainingToman'] === 3_900_000
+                    && $item['installment']['downPaymentCaptured'] === true
+                    && $item['canApprove'] === true
+                    && $item['canReject'] === true,
+            )));
+});
+
+test('admin installments index filters awaiting review and rejected requests', function () {
+    $admin = User::factory()->admin()->create();
+    $reviewPayment = createReviewingInstallmentPayment();
+    $reviewOrder = $reviewPayment->order;
+
+    $rejectedOrder = Order::factory()
+        ->for($reviewOrder->user)
+        ->forPackage($reviewOrder->coursePackage)
+        ->installmentRejected()
+        ->create([
+            'customer_name' => 'رد شده',
+            'customer_mobile' => '09121111111',
+        ]);
+
+    Payment::factory()->forOrder($rejectedOrder)->create([
+        'method' => PaymentMethod::Installment,
+        'status' => PaymentStatus::Paid,
+        'paid_at' => now(),
+        'tracking_code' => '999000',
+        'meta' => [
+            'requested_term' => 'one_month',
+            'down_payment_paid_at' => now()->toIso8601String(),
+            'down_payment_ref' => '999000',
+            'rejection_note' => 'رد شد.',
+        ],
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.installments.index', ['status' => 'awaiting_review']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('installments.data', fn ($items) => collect($items)->contains(
+                fn (array $item): bool => $item['id'] === $reviewOrder->id,
+            ))
+            ->where('installments.data', fn ($items) => collect($items)->doesntContain(
+                fn (array $item): bool => $item['id'] === $rejectedOrder->id,
+            )));
+
+    $this->actingAs($admin)
+        ->get(route('admin.installments.index', ['status' => 'rejected']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('installments.data', fn ($items) => collect($items)->contains(
+                fn (array $item): bool => $item['id'] === $rejectedOrder->id
+                    && $item['rejectionNote'] === 'رد شد.',
+            ))
+            ->where('installments.data', fn ($items) => collect($items)->doesntContain(
+                fn (array $item): bool => $item['id'] === $reviewOrder->id,
+            )));
+});
+
+test('admin payments index behavior remains unchanged after installments page', function () {
+    $admin = User::factory()->admin()->create();
+    $payment = createReviewingInstallmentPayment();
+
+    $this->actingAs($admin)
+        ->get(route('admin.payments.index', ['status' => PaymentStatus::Reviewing->value]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/payments/index')
+            ->where('payments.data', fn ($payments) => collect($payments)->contains(
+                fn (array $item): bool => $item['id'] === $payment->id
+                    && $item['canApprove'] === true,
             )));
 });

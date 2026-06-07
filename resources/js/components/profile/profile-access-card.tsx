@@ -26,7 +26,7 @@ const accessStateAccentClassNames: Record<
     payment_reviewing: 'ring-gold/30',
     installment_down_payment_pending: 'ring-gold/30',
     installment_reviewing: 'ring-gold/30',
-    installment_rejected: 'ring-red/25',
+    installment_rejected: 'ring-gold/30',
     paid_license_pending: 'ring-gold/30',
     license_revoked: 'ring-red/25',
     payment_failed: 'ring-red/25',

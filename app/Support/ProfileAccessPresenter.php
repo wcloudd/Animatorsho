@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\Order;
@@ -19,15 +20,17 @@ class ProfileAccessPresenter
 
     private const int PRIORITY_ACTIVE_LICENSE = 1;
 
-    private const int PRIORITY_REVOKED_LICENSE = 2;
+    private const int PRIORITY_INSTALLMENT_REJECTED_WITH_DOWN_PAYMENT = 2;
 
-    private const int PRIORITY_PAID_LICENSE_PENDING = 3;
+    private const int PRIORITY_REVOKED_LICENSE = 3;
 
-    private const int PRIORITY_PAYMENT_REVIEWING = 4;
+    private const int PRIORITY_PAID_LICENSE_PENDING = 4;
 
-    private const int PRIORITY_PAYMENT_PENDING = 5;
+    private const int PRIORITY_PAYMENT_REVIEWING = 5;
 
-    private const int PRIORITY_FAILED_OR_CANCELLED = 6;
+    private const int PRIORITY_PAYMENT_PENDING = 6;
+
+    private const int PRIORITY_FAILED_OR_CANCELLED = 7;
 
     /**
      * @param  Collection<int, Order>  $orders
@@ -250,8 +253,12 @@ class ProfileAccessPresenter
         }
 
         if ($order->status === OrderStatus::InstallmentRejected) {
+            $hasCapturedDownPayment = $this->hasCapturedInstallmentDownPayment($payment);
+
             return $this->candidate(
-                self::PRIORITY_FAILED_OR_CANCELLED,
+                $hasCapturedDownPayment
+                    ? self::PRIORITY_INSTALLMENT_REJECTED_WITH_DOWN_PAYMENT
+                    : self::PRIORITY_FAILED_OR_CANCELLED,
                 'installment_rejected',
                 $sortTimestamp,
                 $order->id,
@@ -554,9 +561,9 @@ class ProfileAccessPresenter
                 'description' => 'پیش‌پرداخت ۴۰٪ شما با موفقیت ثبت شد و درخواست اقساطی شما در حال بررسی توسط پشتیبانی است.',
             ],
             'installment_rejected' => [
-                'statusLabel' => 'درخواست اقساط رد شد',
-                'statusTone' => 'neutral',
-                'description' => 'درخواست اقساط رد شد، اما پیش‌پرداخت شما ثبت شده است و پیگیری مالی به‌صورت دستی انجام می‌شود.',
+                'statusLabel' => 'درخواست اقساطی رد شد — پیش‌پرداخت ثبت شده',
+                'statusTone' => 'warning',
+                'description' => 'درخواست خرید اقساطی شما رد شد، اما پیش‌پرداخت شما ثبت شده است. وضعیت پیگیری مالی به‌صورت دستی توسط پشتیبانی بررسی می‌شود.',
             ],
             'payment_reviewing' => [
                 'statusLabel' => 'در انتظار بررسی پرداخت',
@@ -702,5 +709,20 @@ class ProfileAccessPresenter
         $note = trim($note);
 
         return $note === '' ? null : $note;
+    }
+
+    private function hasCapturedInstallmentDownPayment(?Payment $payment): bool
+    {
+        if ($payment === null || $payment->method !== PaymentMethod::Installment) {
+            return false;
+        }
+
+        $meta = $payment->meta ?? [];
+
+        if (($meta['down_payment_paid_at'] ?? null) !== null) {
+            return true;
+        }
+
+        return $payment->status === PaymentStatus::Paid;
     }
 }

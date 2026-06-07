@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CoursePackageController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InstallmentController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\SmsController;
@@ -27,6 +28,8 @@ Route::middleware(['auth', 'admin'])
         Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');
         Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject');
         Route::get('payments/{payment}/receipt', [PaymentController::class, 'receipt'])->name('payments.receipt');
+
+        Route::get('installments', [InstallmentController::class, 'index'])->name('installments.index');
 
         Route::get('licenses', [SpotPlayerLicenseController::class, 'index'])->name('licenses.index');
         Route::post('licenses/{license}/activate', [SpotPlayerLicenseController::class, 'activate'])->name('licenses.activate');
