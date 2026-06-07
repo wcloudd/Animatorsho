@@ -6,6 +6,7 @@ use App\Enums\CoursePackageType;
 use App\Services\AnimatorshoCatalogService;
 use App\Services\CheckoutOrderService;
 use App\Services\PaymentReceiptStorageService;
+use App\Services\SiteSettingsService;
 use App\Services\UserPackagePurchaseGuard;
 use App\Support\InstallmentPricing;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,7 @@ class CheckoutController extends Controller
         private readonly PaymentReceiptStorageService $receipts,
         private readonly CheckoutOrderService $checkoutOrders,
         private readonly UserPackagePurchaseGuard $purchaseGuard,
+        private readonly SiteSettingsService $siteSettings,
     ) {}
 
     public function index(): Response|RedirectResponse
@@ -30,7 +32,10 @@ class CheckoutController extends Controller
             return redirect()->route('home');
         }
 
-        return Inertia::render('checkout/index', $catalog);
+        return Inertia::render('checkout/index', [
+            ...$catalog,
+            ...$this->purchaseLockProps(),
+        ]);
     }
 
     public function confirm(Request $request): Response|RedirectResponse
@@ -153,11 +158,12 @@ class CheckoutController extends Controller
                 : null,
             'duplicatePurchaseBlocked' => $duplicatePurchaseBlocked,
             'duplicatePurchaseMessage' => $duplicatePurchaseMessage,
+            ...$this->purchaseLockProps(),
             'cardToCardAvailable' => $this->receipts->isConfigured(),
             'cardToCardTransfer' => $this->receipts->isConfigured()
                 ? [
-                    'cardNumber' => (string) config('card_to_card.card_number'),
-                    'cardOwnerName' => (string) config('card_to_card.card_owner_name'),
+                    'cardNumber' => (string) $this->receipts->cardNumber(),
+                    'cardOwnerName' => (string) $this->receipts->cardOwnerName(),
                 ]
                 : null,
             'cardToCardUnavailableMessage' => $this->receipts->isConfigured()
@@ -256,6 +262,17 @@ class CheckoutController extends Controller
             'description' => 'یکی از فصل‌های دوره را انتخاب کن و فقط همان بخش را شروع کن.',
             'primaryCtaLabel' => 'انتخاب روش پرداخت',
             'primaryCtaHref' => '#payment-methods',
+        ];
+    }
+
+    /**
+     * @return array{purchasesDisabled: bool, purchasesDisabledMessage: string}
+     */
+    private function purchaseLockProps(): array
+    {
+        return [
+            'purchasesDisabled' => ! $this->siteSettings->arePurchasesEnabled(),
+            'purchasesDisabledMessage' => SiteSettingsService::PURCHASES_DISABLED_MESSAGE,
         ];
     }
 }

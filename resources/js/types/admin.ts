@@ -213,6 +213,27 @@ export type AdminSmsSettings = {
     driverConfigured: boolean;
 };
 
+export type AdminSiteSettings = {
+    purchasesEnabled: boolean;
+    maintenanceModeEnabled: boolean;
+    maintenanceTitle: string;
+    maintenanceMessage: string;
+    purchasesDisabledMessage: string;
+};
+
+export type AdminCardToCardDisplay = {
+    configured: boolean;
+    source: string;
+    cardNumber: string;
+    cardOwnerName: string;
+};
+
+export type AdminIntegrationStatus = {
+    zarinpalConfigured: boolean;
+    farazSmsConfigured: boolean;
+    spotPlayerConfigured: boolean;
+};
+
 export type AdminSmsTemplate = {
     id: number;
     key: string;

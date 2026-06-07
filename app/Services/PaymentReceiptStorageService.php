@@ -14,11 +14,25 @@ class PaymentReceiptStorageService
 
     public function isConfigured(): bool
     {
-        $cardNumber = config('card_to_card.card_number');
-        $cardOwnerName = config('card_to_card.card_owner_name');
+        $cardNumber = $this->cardNumber();
+        $cardOwnerName = $this->cardOwnerName();
 
         return is_string($cardNumber) && $cardNumber !== ''
             && is_string($cardOwnerName) && $cardOwnerName !== '';
+    }
+
+    public function cardNumber(): ?string
+    {
+        $value = config('card_to_card.card_number');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    public function cardOwnerName(): ?string
+    {
+        $value = config('card_to_card.card_owner_name');
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     /**

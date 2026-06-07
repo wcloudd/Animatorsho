@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -20,10 +21,16 @@ function isPublicTabPage(name: string): boolean {
     );
 }
 
+function PassthroughLayout({ children }: { children: ReactNode }) {
+    return children;
+}
+
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
+            case name.startsWith('maintenance/'):
+                return PassthroughLayout;
             case isPublicTabPage(name):
                 return PublicAppLayout;
             case name.startsWith('auth/'):

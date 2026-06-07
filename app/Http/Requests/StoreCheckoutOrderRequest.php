@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Concerns\CustomerValidationRules;
 use App\Services\CheckoutOrderService;
 use App\Services\PaymentReceiptStorageService;
+use App\Services\SiteSettingsService;
 use App\Services\UserPackagePurchaseGuard;
 use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\Validator;
@@ -82,6 +83,15 @@ class StoreCheckoutOrderRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            if (! app(SiteSettingsService::class)->arePurchasesEnabled()) {
+                $validator->errors()->add(
+                    'package',
+                    SiteSettingsService::PURCHASES_DISABLED_MESSAGE,
+                );
+
                 return;
             }
 

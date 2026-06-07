@@ -22,6 +22,7 @@ class CheckoutOrderService
     public function __construct(
         private readonly AnimatorshoCatalogService $catalog,
         private readonly UserPackagePurchaseGuard $purchaseGuard,
+        private readonly SiteSettingsService $siteSettings,
         private readonly SmsNotifier $smsNotifier,
     ) {}
 
@@ -40,6 +41,12 @@ class CheckoutOrderService
         string $paymentChannel = 'online',
     ): array {
         $coursePackage = $this->resolvePackage($package, $payment, $chapterSlug);
+
+        if (! $this->siteSettings->arePurchasesEnabled()) {
+            throw ValidationException::withMessages([
+                'package' => SiteSettingsService::PURCHASES_DISABLED_MESSAGE,
+            ]);
+        }
 
         if ($this->purchaseGuard->hasBlockingAccess($user, $coursePackage)) {
             throw ValidationException::withMessages([

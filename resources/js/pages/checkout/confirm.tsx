@@ -5,6 +5,7 @@ import { CheckoutOrderForm } from '@/components/checkout/checkout-order-form';
 import { ConfirmPageHeader } from '@/components/checkout/confirm-page-header';
 import { CustomerInfoFields } from '@/components/checkout/customer-info-fields';
 import { DuplicatePurchaseNotice } from '@/components/checkout/duplicate-purchase-notice';
+import { PurchasesDisabledNotice } from '@/components/checkout/purchases-disabled-notice';
 import { InstallmentFormFields } from '@/components/checkout/installment-form-preview';
 import { OrderSummaryCard } from '@/components/checkout/order-summary-card';
 import { OrderSummaryFallbackCard } from '@/components/checkout/order-summary-fallback-card';
@@ -29,6 +30,8 @@ type CheckoutConfirmProps = {
     customerDefaults: { name: string } | null;
     duplicatePurchaseBlocked: boolean;
     duplicatePurchaseMessage: string | null;
+    purchasesDisabled: boolean;
+    purchasesDisabledMessage: string;
     cardToCardAvailable: boolean;
     cardToCardTransfer: CardToCardTransferDetails | null;
     cardToCardUnavailableMessage: string | null;
@@ -44,6 +47,8 @@ export default function CheckoutConfirm({
     customerDefaults,
     duplicatePurchaseBlocked,
     duplicatePurchaseMessage,
+    purchasesDisabled,
+    purchasesDisabledMessage,
     cardToCardAvailable,
     cardToCardTransfer,
     cardToCardUnavailableMessage,
@@ -55,7 +60,8 @@ export default function CheckoutConfirm({
         isAuthenticated &&
         orderContext !== null &&
         !showChapterSelector &&
-        !duplicatePurchaseBlocked;
+        !duplicatePurchaseBlocked &&
+        !purchasesDisabled;
     const [selectedPaymentMethod, setSelectedPaymentMethod] =
         useState<CheckoutPaymentMethodId>('online');
 
@@ -71,7 +77,22 @@ export default function CheckoutConfirm({
                     <ConfirmPageHeader />
 
                     {summary ? (
-                        duplicatePurchaseBlocked ? (
+                        purchasesDisabled ? (
+                            <>
+                                <OrderSummaryCard
+                                    summary={summary}
+                                    showChapterSelector={showChapterSelector}
+                                    chapterPackages={chapterPackages}
+                                    cardToCardAvailable={cardToCardAvailable}
+                                    cardToCardUnavailableMessage={
+                                        cardToCardUnavailableMessage
+                                    }
+                                />
+                                <PurchasesDisabledNotice
+                                    message={purchasesDisabledMessage}
+                                />
+                            </>
+                        ) : duplicatePurchaseBlocked ? (
                             <>
                                 <OrderSummaryCard
                                     summary={summary}

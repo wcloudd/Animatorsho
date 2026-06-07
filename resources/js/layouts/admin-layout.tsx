@@ -12,6 +12,7 @@ const navItems = [
     { href: '/admin/licenses', label: 'لایسنس‌ها', match: '/admin/licenses' },
     { href: '/admin/support', label: 'پشتیبانی', match: '/admin/support' },
     { href: '/admin/sms', label: 'پیامک', match: '/admin/sms' },
+    { href: '/admin/site-settings', label: 'تنظیمات سایت', match: '/admin/site-settings' },
 ] as const satisfies ReadonlyArray<{
     href: string;
     label: string;
