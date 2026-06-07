@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { AdminTextLink } from '@/components/admin/admin-text-link';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -22,20 +23,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
     return (
         <div className="min-h-dvh overflow-x-hidden bg-bg text-text" dir="rtl">
-            <header className="sticky top-0 z-10 border-b border-purple/10 bg-surface">
+            <header className="sticky top-0 z-10 border-b border-purple/10 bg-surface/95 shadow-soft backdrop-blur-sm">
                 <div className="mx-auto flex w-full max-w-[390px] flex-col gap-3 px-4 py-4 sm:max-w-5xl">
                     <div className="flex items-center justify-between gap-3">
-                        <h1 className="min-w-0 truncate font-liana text-lg text-purple">
-                            پنل مدیریت انیماتورشو
+                        <h1 className="min-w-0 truncate font-display text-lg text-purple">
+                            مدیریت
                         </h1>
-                        <Link
-                            href="/"
-                            className="text-sm text-muted transition hover:text-purple"
-                        >
+                        <AdminTextLink href="/" variant="subtle">
                             بازگشت به سایت
-                        </Link>
+                        </AdminTextLink>
                     </div>
-                    <nav className="flex flex-wrap gap-1.5">
+                    <nav className="-mx-0.5 flex flex-wrap gap-2">
                         {navItems.map((item) => {
                             const isActive = item.exact
                                 ? url === item.match ||
@@ -47,10 +45,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'rounded-pill px-2.5 py-1 text-xs font-medium transition',
+                                        'rounded-pill px-3 py-1.5 text-xs font-medium transition',
                                         isActive
-                                            ? 'bg-purple text-white'
-                                            : 'bg-purple-soft text-purple hover:bg-purple/10',
+                                            ? 'bg-purple text-white shadow-xs ring-1 ring-purple/20'
+                                            : 'bg-purple-soft text-purple ring-1 ring-purple/10 hover:bg-purple/10',
                                     )}
                                 >
                                     {item.label}

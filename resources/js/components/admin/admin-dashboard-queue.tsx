@@ -1,39 +1,67 @@
 import { Link } from '@inertiajs/react';
+import { ChevronLeft } from 'lucide-react';
+import { AdminSectionTitle } from '@/components/admin/admin-section-title';
 import { AdminStatusBadge } from '@/components/admin/admin-status-badge';
+import { AdminTextLink } from '@/components/admin/admin-text-link';
 import { surfaceCardClassName } from '@/components/page-container';
 import type { AdminDashboardQueue } from '@/types/admin';
-import type { ProfileStatusTone } from '@/lib/profile-data';
+import type { AdminStatusTone } from '@/components/admin/admin-status-badge';
 import { cn } from '@/lib/utils';
 
 type AdminDashboardQueueSectionProps = {
     queue: AdminDashboardQueue;
     compact?: boolean;
+    urgent?: boolean;
 };
 
 function QueueItemBadge({
     badge,
 }: {
-    badge: { label: string; tone: ProfileStatusTone };
+    badge: { label: string; tone: AdminStatusTone };
 }) {
     return (
         <AdminStatusBadge tone={badge.tone}>{badge.label}</AdminStatusBadge>
     );
 }
 
+const queueItemToneStyles: Partial<Record<AdminStatusTone, string>> = {
+    danger:
+        'bg-red-soft/50 ring-red/20 hover:bg-red-soft/70 hover:ring-red/30',
+    warning:
+        'bg-gold-soft/50 ring-gold/20 hover:bg-gold-soft/70 hover:ring-gold/30',
+};
+
+function queueItemClassName(
+    tone: AdminStatusTone | undefined,
+    compact: boolean,
+): string {
+    return cn(
+        'group flex flex-col gap-1.5 rounded-xl px-3 ring-1 transition',
+        tone && queueItemToneStyles[tone]
+            ? queueItemToneStyles[tone]
+            : 'bg-bg ring-border/80 hover:bg-purple-soft/40 hover:ring-purple/20',
+        compact ? 'py-2.5' : 'py-3',
+    );
+}
+
 export function AdminDashboardQueueSection({
     queue,
     compact = false,
+    urgent = false,
 }: AdminDashboardQueueSectionProps) {
     return (
-        <section className={cn(surfaceCardClassName, 'flex flex-col gap-3')}>
+        <section
+            className={cn(
+                surfaceCardClassName,
+                'flex flex-col gap-3 p-4',
+                urgent && 'ring-gold/30',
+            )}
+        >
             <div className="flex items-start justify-between gap-3">
-                <h3 className="font-bold text-text">{queue.title}</h3>
-                <Link
-                    href={queue.viewAllHref}
-                    className="shrink-0 text-xs font-bold text-purple underline-offset-2 hover:underline"
-                >
+                <AdminSectionTitle className="mb-0">{queue.title}</AdminSectionTitle>
+                <AdminTextLink href={queue.viewAllHref} className="text-xs">
                     مشاهده همه
-                </Link>
+                </AdminTextLink>
             </div>
 
             <ul className="flex flex-col gap-2">
@@ -41,9 +69,9 @@ export function AdminDashboardQueueSection({
                     <li key={item.id}>
                         <Link
                             href={item.href}
-                            className={cn(
-                                'flex flex-col gap-1.5 rounded-xl bg-bg px-3 ring-1 ring-border transition hover:bg-purple-soft/30',
-                                compact ? 'py-2.5' : 'py-3',
+                            className={queueItemClassName(
+                                item.badge?.tone,
+                                compact,
                             )}
                         >
                             <div className="flex items-start justify-between gap-2">
@@ -62,8 +90,12 @@ export function AdminDashboardQueueSection({
                             <p className="truncate text-xs text-muted">
                                 {item.meta}
                             </p>
-                            <span className="text-xs font-bold text-purple">
+                            <span className="flex items-center gap-1 text-xs font-bold text-purple">
                                 بررسی
+                                <ChevronLeft
+                                    className="size-3.5 transition group-hover:-translate-x-0.5"
+                                    aria-hidden
+                                />
                             </span>
                         </Link>
                     </li>

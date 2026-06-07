@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { SmsLogsList } from '@/components/admin/sms-logs-list';
+import { AdminButton } from '@/components/admin/admin-button';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminSearchBar } from '@/components/admin/admin-search-bar';
 import type { AdminPaginated, AdminSmsLogItem } from '@/types/admin';
@@ -17,12 +18,9 @@ export default function AdminSmsLogsIndex({ logs, filters }: PageProps) {
                 title="گزارش پیامک‌ها"
                 description="لیست ارسال و وضعیت پیامک‌های ثبت‌شده"
                 actions={
-                    <Link
-                        href="/admin/sms"
-                        className="text-sm font-medium text-purple underline-offset-2 hover:underline"
-                    >
-                        بازگشت به تنظیمات
-                    </Link>
+                    <AdminButton asChild size="sm" adminVariant="outline">
+                        <Link href="/admin/sms">بازگشت به تنظیمات</Link>
+                    </AdminButton>
                 }
             />
 

@@ -1,10 +1,11 @@
 import { AdminStatusBadge } from '@/components/admin/admin-status-badge';
-import type { ProfileStatusTone } from '@/lib/profile-data';
+import type { AdminStatusTone } from '@/components/admin/admin-status-badge';
+import { cn } from '@/lib/utils';
 
 type AdminDetailBadgeRowProps = {
     label: string;
     value: string | null | undefined;
-    tone: ProfileStatusTone | null | undefined;
+    tone: AdminStatusTone | null | undefined;
 };
 
 export function AdminDetailBadgeRow({
@@ -15,7 +16,7 @@ export function AdminDetailBadgeRow({
     const hasValue = value && value.trim() !== '';
 
     return (
-        <div className="flex justify-between gap-3 text-sm">
+        <div className="flex justify-between gap-3 border-b border-purple/5 py-1.5 text-sm last:border-b-0">
             <dt className="shrink-0 text-muted">{label}</dt>
             <dd className="min-w-0 text-left">
                 {hasValue && tone ? (

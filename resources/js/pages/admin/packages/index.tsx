@@ -1,6 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { AdminButton } from '@/components/admin/admin-button';
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
+import { AdminDetailRow } from '@/components/admin/admin-detail-row';
+import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminPagination } from '@/components/admin/admin-pagination';
@@ -39,30 +41,24 @@ export default function AdminPackagesIndex({ packages }: PageProps) {
                         }
                     >
                         <AdminInfoGrid>
-                            <div>
-                                <dt className="text-xs text-muted">قیمت</dt>
-                                <dd className="mt-0.5 text-base font-bold text-text">
-                                    {pkg.priceFormatted}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-xs text-muted">
-                                    ترتیب نمایش
-                                </dt>
-                                <dd className="mt-0.5 text-base font-bold text-text">
-                                    {pkg.displayOrder}
-                                </dd>
-                            </div>
+                            <AdminDetailRow
+                                label="قیمت"
+                                value={pkg.priceFormatted}
+                                valueClassName="font-bold text-purple"
+                            />
+                            <AdminDetailRow
+                                label="ترتیب نمایش"
+                                value={String(pkg.displayOrder)}
+                            />
+                            <AdminDetailRow
+                                label="سفارش‌های ثبت‌شده"
+                                value={String(pkg.ordersCount)}
+                            />
                         </AdminInfoGrid>
-                        <p className="text-xs text-muted">
-                            {pkg.ordersCount} سفارش ثبت‌شده
-                        </p>
                     </AdminCommerceCard>
                 ))}
                 {packages.data.length === 0 ? (
-                    <p className="text-center text-sm text-muted">
-                        بسته‌ای یافت نشد.
-                    </p>
+                    <AdminEmptyState message="هنوز بسته‌ای تعریف نشده است." />
                 ) : null}
             </div>
             <AdminPagination paginator={packages} />

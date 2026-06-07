@@ -10,6 +10,7 @@ use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\Sms\SmsNotifier;
 use App\Services\SupportTicketAttachmentStorageService;
+use App\Support\AdminStatusLabels;
 use App\Support\ProfileStatusLabels;
 use App\Support\SupportTicketStatusLabels;
 use Illuminate\Http\UploadedFile;
@@ -175,7 +176,7 @@ class AdminSupportTicketService
                 'id' => $order->id,
                 'orderNumber' => $order->order_number,
                 'status' => ProfileStatusLabels::orderStatus($order->status),
-                'statusTone' => ProfileStatusLabels::orderStatusTone($order->status),
+                'statusTone' => AdminStatusLabels::orderStatusTone($order->status),
                 'packageTitle' => $order->coursePackage?->title ?? '',
             ])
             ->all();
@@ -199,7 +200,7 @@ class AdminSupportTicketService
                 'id' => $license->id,
                 'packageTitle' => $license->coursePackage?->title ?? '',
                 'status' => ProfileStatusLabels::licenseStatus($license->status),
-                'statusTone' => ProfileStatusLabels::licenseStatusTone($license->status),
+                'statusTone' => AdminStatusLabels::licenseStatusTone($license->status),
             ])
             ->all();
     }

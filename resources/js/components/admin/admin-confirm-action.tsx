@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { AdminButton } from '@/components/admin/admin-button';
+import { adminCalloutStyles } from '@/components/admin/admin-callout';
 import type { AdminButtonStyle } from '@/lib/admin-button-styles';
+import { cn } from '@/lib/utils';
 
 type AdminConfirmActionProps = {
     actionKey: string | number;
@@ -49,11 +51,14 @@ export function AdminConfirmAction({
     }
 
     return (
-        <div className="flex w-full basis-full flex-col gap-2 rounded-xl bg-red-soft/40 p-3 ring-1 ring-red/20">
+        <div
+            className={cn(
+                'flex w-full basis-full flex-col gap-2 p-3',
+                adminCalloutStyles.error.box,
+            )}
+        >
             {message ? (
-                <p className="text-xs font-medium leading-relaxed text-text">
-                    {message}
-                </p>
+                <p className={adminCalloutStyles.error.title}>{message}</p>
             ) : null}
             <div className="flex flex-wrap gap-2">
                 <AdminButton asChild size={size} adminVariant={confirmVariant}>

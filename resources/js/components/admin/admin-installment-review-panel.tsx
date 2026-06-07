@@ -7,6 +7,7 @@ import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import type { AdminPaymentListItem } from '@/types/admin';
 import { cn } from '@/lib/utils';
+import { adminCalloutStyles } from '@/components/admin/admin-callout';
 
 const rejectNoteClassName = cn(
     'flex w-full rounded-md border border-[#e8e0f0] bg-surface px-3 py-2 text-sm text-start text-text shadow-xs outline-none placeholder:text-muted focus-visible:ring-[3px] focus-visible:ring-purple/30 disabled:cursor-not-allowed disabled:opacity-50',
@@ -96,7 +97,10 @@ export function AdminInstallmentReviewPanel({
                             },
                         });
                     }}
-                    className="flex flex-col gap-2 rounded-xl bg-red-soft/40 p-3 ring-1 ring-red/20"
+                    className={cn(
+                        'flex flex-col gap-2 p-3',
+                        adminCalloutStyles.error.box,
+                    )}
                 >
                     <Label htmlFor={`installment_reject_note_${payment.id}`}>
                         دلیل رد (اختیاری)

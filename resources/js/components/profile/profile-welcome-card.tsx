@@ -1,12 +1,18 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import admin from '@/routes/admin';
 import type { ProfileUser } from '@/lib/profile-data';
 import { resolvePresetAvatar } from '@/lib/resolve-preset-avatar';
 import { ProfileUserAvatar } from '@/components/profile/profile-user-avatar';
-import { Button } from '@/components/ui/button';
+import type { Auth } from '@/types/auth';
+import { cn } from '@/lib/utils';
 
 type ProfileWelcomeCardProps = {
     user: ProfileUser;
 };
+
+const actionLinkClassName = cn(
+    'flex h-11 w-full items-center justify-center rounded-pill text-sm font-bold transition-colors',
+);
 
 function firstNameFromDisplayName(displayName: string): string {
     const parts = displayName.trim().split(/\s+/).filter(Boolean);
@@ -27,6 +33,7 @@ function contactLine(user: ProfileUser): string {
 }
 
 export function ProfileWelcomeCard({ user }: ProfileWelcomeCardProps) {
+    const { auth } = usePage<{ auth: Auth }>().props;
     const firstName = firstNameFromDisplayName(user.displayName);
     const resolved = resolvePresetAvatar(user.avatarPreset, user.displayName);
     const contact = contactLine(user);
@@ -62,7 +69,7 @@ export function ProfileWelcomeCard({ user }: ProfileWelcomeCardProps) {
                             سلام، {firstName}!
                         </h1>
                         <p
-                            className="truncate text-xs font-medium text-muted"
+                            className="truncate text-sm font-medium text-muted"
                             dir={user.email ? 'ltr' : undefined}
                             title={contact}
                         >
@@ -76,14 +83,31 @@ export function ProfileWelcomeCard({ user }: ProfileWelcomeCardProps) {
                     داده می‌شود.
                 </p>
 
-                <Button
-                    asChild
-                    variant="outline"
-                    className="w-full border-border bg-surface text-text hover:bg-purple-soft"
-                    data-test="profile-settings-link"
-                >
-                    <Link href={user.settingsUrl}>تنظیمات حساب</Link>
-                </Button>
+                <div className="flex flex-col gap-2">
+                    <Link
+                        href={user.settingsUrl}
+                        data-test="profile-settings-link"
+                        className={cn(
+                            actionLinkClassName,
+                            'bg-surface text-text ring-1 ring-border hover:bg-purple-soft',
+                        )}
+                    >
+                        تنظیمات حساب
+                    </Link>
+
+                    {auth.isAdmin ? (
+                        <Link
+                            href={admin.dashboard()}
+                            data-test="profile-admin-link"
+                            className={cn(
+                                actionLinkClassName,
+                                'bg-purple-soft text-purple ring-1 ring-purple/20 hover:bg-purple/10',
+                            )}
+                        >
+                            پنل مدیریت
+                        </Link>
+                    ) : null}
+                </div>
             </div>
         </article>
     );

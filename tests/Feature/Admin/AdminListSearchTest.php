@@ -138,3 +138,29 @@ test('admin list search ignores empty query', function () {
             ->where('filters.q', null)
             ->has('orders.data', 2));
 });
+
+test('admin licenses focus filter shows only targeted license', function () {
+    $target = SpotPlayerLicense::factory()->active()->create();
+    SpotPlayerLicense::factory()->active()->create();
+
+    $this->actingAs($this->admin)
+        ->get(route('admin.licenses.index', ['focus' => $target->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('licenses.data', 1)
+            ->where('licenses.data.0.id', $target->id)
+            ->where('filters.focus', $target->id));
+});
+
+test('admin payments focus filter shows only targeted payment', function () {
+    $target = Payment::factory()->create();
+    Payment::factory()->create();
+
+    $this->actingAs($this->admin)
+        ->get(route('admin.payments.index', ['focus' => $target->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('payments.data', 1)
+            ->where('payments.data.0.id', $target->id)
+            ->where('filters.focus', $target->id));
+});

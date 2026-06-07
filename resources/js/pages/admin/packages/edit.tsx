@@ -41,7 +41,7 @@ export default function AdminPackagesEdit({ package: pkg }: PageProps) {
             />
             <form
                 onSubmit={submit}
-                className={`${surfaceCardClassName} flex flex-col gap-5`}
+                className={`${surfaceCardClassName} flex flex-col gap-5 p-4 sm:p-5`}
             >
                 <div className="grid gap-2">
                     <Label htmlFor="title">عنوان</Label>
@@ -97,7 +97,7 @@ export default function AdminPackagesEdit({ package: pkg }: PageProps) {
                 <InputError message={errors.is_active} />
 
                 <div className="rounded-xl bg-purple-soft/40 p-4 ring-1 ring-purple/15">
-                    <h2 className="font-display text-base font-bold text-text">
+                    <h2 className="font-liana text-base text-purple">
                         تنظیمات SpotPlayer
                     </h2>
                     <p className="mt-1 text-xs text-muted">

@@ -17,6 +17,20 @@ type ProfileAccessCardProps = {
     accessItems: ProfileAccessItem[];
 };
 
+const accessStateAccentClassNames: Record<
+    ProfileAccessItem['accessState'],
+    string
+> = {
+    access_active: 'ring-green/25',
+    payment_pending: 'ring-gold/30',
+    payment_reviewing: 'ring-gold/30',
+    installment_reviewing: 'ring-gold/30',
+    paid_license_pending: 'ring-gold/30',
+    license_revoked: 'ring-red/25',
+    payment_failed: 'ring-red/25',
+    cancelled: 'ring-border/70',
+};
+
 function AccessItemAction({
     nextAction,
 }: {
@@ -85,7 +99,7 @@ function AccessItemCancelAction({
             <button
                 type="button"
                 onClick={() => setConfirming(true)}
-                className="flex h-11 w-full items-center justify-center rounded-pill bg-surface px-4 text-sm font-bold text-red ring-1 ring-red/30 transition-opacity hover:opacity-95"
+                className="flex h-10 w-full items-center justify-center rounded-pill bg-surface px-4 text-sm font-bold text-red ring-1 ring-red/30 transition-opacity hover:opacity-95"
             >
                 {action.label}
             </button>
@@ -138,15 +152,15 @@ function LicenseKeyCopyField({ licenseKey }: { licenseKey: string }) {
     };
 
     return (
-        <div className="flex min-w-0 w-full flex-col gap-2">
-            <span className="text-xs font-medium text-muted">
+        <div className="flex min-w-0 w-full flex-col gap-2 rounded-xl bg-green-soft/60 p-3 ring-1 ring-green/20">
+            <span className="text-xs font-bold text-green">
                 کد لایسنس SpotPlayer
             </span>
             <div
                 dir="ltr"
-                className="max-h-24 min-w-0 overflow-x-hidden overflow-y-auto rounded-xl bg-surface px-3 py-2 ring-1 ring-border"
+                className="max-h-28 min-w-0 overflow-x-hidden overflow-y-auto rounded-xl bg-surface px-3 py-2.5 ring-1 ring-border"
             >
-                <p className="break-all text-left font-mono text-[11px] leading-relaxed text-text">
+                <p className="break-all text-left font-mono text-xs leading-relaxed text-text">
                     {licenseKey}
                 </p>
             </div>
@@ -163,6 +177,37 @@ function LicenseKeyCopyField({ licenseKey }: { licenseKey: string }) {
             >
                 {copied ? 'در کلیپ‌بورد ذخیره شد' : 'کپی کد لایسنس'}
             </button>
+        </div>
+    );
+}
+
+function AccessItemActions({ item }: { item: ProfileAccessItem }) {
+    const hasPrimary = item.primaryAction !== null;
+    const hasSecondary = item.secondaryAction !== null;
+    const hasNext = item.nextAction !== null;
+
+    if (!hasPrimary && !hasSecondary && !hasNext) {
+        return null;
+    }
+
+    return (
+        <div className="flex flex-col gap-2 border-t border-border/60 pt-3">
+            {(hasPrimary || hasSecondary) && (hasNext || hasPrimary) ? (
+                <span className="text-xs font-bold text-muted">اقدامات</span>
+            ) : null}
+
+            {hasPrimary ? (
+                <AccessItemPostAction
+                    action={item.primaryAction!}
+                    variant="primary"
+                />
+            ) : null}
+
+            {hasSecondary ? (
+                <AccessItemCancelAction action={item.secondaryAction!} />
+            ) : null}
+
+            {hasNext ? <AccessItemAction nextAction={item.nextAction} /> : null}
         </div>
     );
 }
@@ -197,10 +242,13 @@ export function ProfileAccessCard({ accessItems }: ProfileAccessCardProps) {
                     {accessItems.map((item) => (
                         <li
                             key={item.id}
-                            className="flex min-w-0 flex-col gap-3 rounded-2xl bg-surface-warm p-4 ring-1 ring-border/70"
+                            className={cn(
+                                'flex min-w-0 flex-col gap-3 rounded-2xl bg-surface-warm p-4 ring-2 ring-border/70',
+                                accessStateAccentClassNames[item.accessState],
+                            )}
                         >
-                            <div className="flex items-start justify-between gap-3">
-                                <h3 className="text-sm font-bold text-text">
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                                <h3 className="min-w-0 flex-1 text-sm font-bold text-text">
                                     {item.title}
                                 </h3>
                                 <ProfileStatusBadge tone={item.statusTone}>
@@ -255,20 +303,7 @@ export function ProfileAccessCard({ accessItems }: ProfileAccessCardProps) {
                                 />
                             ) : null}
 
-                            {item.primaryAction !== null ? (
-                                <AccessItemPostAction
-                                    action={item.primaryAction}
-                                    variant="primary"
-                                />
-                            ) : null}
-
-                            {item.secondaryAction !== null ? (
-                                <AccessItemCancelAction
-                                    action={item.secondaryAction}
-                                />
-                            ) : null}
-
-                            <AccessItemAction nextAction={item.nextAction} />
+                            <AccessItemActions item={item} />
                         </li>
                     ))}
                 </ul>

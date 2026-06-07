@@ -1,12 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
+import { AdminButton } from '@/components/admin/admin-button';
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
+import { AdminFilterBar } from '@/components/admin/admin-filter-bar';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminPagination } from '@/components/admin/admin-pagination';
 import { AdminSearchBar } from '@/components/admin/admin-search-bar';
-import { cn } from '@/lib/utils';
 import type {
     AdminPaginated,
     AdminStatusOption,
@@ -19,119 +20,6 @@ type PageProps = {
     statusOptions: AdminStatusOption[];
     categoryOptions: AdminStatusOption[];
 };
-
-function buildFilterHref(
-    basePath: string,
-    filters: { status: string | null; category: string | null; q: string | null },
-    updates: Partial<{ status: string | null; category: string | null }>,
-): string {
-    const next = { ...filters, ...updates };
-    const params = new URLSearchParams();
-
-    if (next.status) {
-        params.set('status', next.status);
-    }
-
-    if (next.category) {
-        params.set('category', next.category);
-    }
-
-    if (next.q) {
-        params.set('q', next.q);
-    }
-
-    const query = params.toString();
-
-    return query ? `${basePath}?${query}` : basePath;
-}
-
-function StatusFilterBar({
-    basePath,
-    options,
-    filters,
-}: {
-    basePath: string;
-    options: AdminStatusOption[];
-    filters: { status: string | null; category: string | null; q: string | null };
-}) {
-    return (
-        <div className="flex flex-wrap gap-2">
-            <Link
-                href={buildFilterHref(basePath, filters, { status: null })}
-                className={cn(
-                    'rounded-pill px-3 py-1 text-xs font-medium transition',
-                    !filters.status
-                        ? 'bg-purple text-white'
-                        : 'bg-surface text-muted ring-1 ring-purple/10 hover:text-purple',
-                )}
-                preserveState
-            >
-                همه
-            </Link>
-            {options.map((option) => (
-                <Link
-                    key={option.value}
-                    href={buildFilterHref(basePath, filters, {
-                        status: option.value,
-                    })}
-                    className={cn(
-                        'rounded-pill px-3 py-1 text-xs font-medium transition',
-                        filters.status === option.value
-                            ? 'bg-purple text-white'
-                            : 'bg-surface text-muted ring-1 ring-purple/10 hover:text-purple',
-                    )}
-                    preserveState
-                >
-                    {option.label}
-                </Link>
-            ))}
-        </div>
-    );
-}
-
-function CategoryFilterBar({
-    basePath,
-    options,
-    filters,
-}: {
-    basePath: string;
-    options: AdminStatusOption[];
-    filters: { status: string | null; category: string | null; q: string | null };
-}) {
-    return (
-        <div className="flex flex-wrap gap-2">
-            <Link
-                href={buildFilterHref(basePath, filters, { category: null })}
-                className={cn(
-                    'rounded-pill px-3 py-1 text-xs font-medium transition',
-                    !filters.category
-                        ? 'bg-purple text-white'
-                        : 'bg-surface text-muted ring-1 ring-purple/10 hover:text-purple',
-                )}
-                preserveState
-            >
-                همه دسته‌ها
-            </Link>
-            {options.map((option) => (
-                <Link
-                    key={option.value}
-                    href={buildFilterHref(basePath, filters, {
-                        category: option.value,
-                    })}
-                    className={cn(
-                        'rounded-pill px-3 py-1 text-xs font-medium transition',
-                        filters.category === option.value
-                            ? 'bg-purple text-white'
-                            : 'bg-surface text-muted ring-1 ring-purple/10 hover:text-purple',
-                    )}
-                    preserveState
-                >
-                    {option.label}
-                </Link>
-            ))}
-        </div>
-    );
-}
 
 export default function AdminSupportIndex({
     tickets,
@@ -156,19 +44,29 @@ export default function AdminSupportIndex({
                     status: filters.status,
                     category: filters.category,
                 }}
+                filters={
+                    <>
+                        <AdminFilterBar
+                            basePath={basePath}
+                            options={statusOptions}
+                            currentStatus={filters.status}
+                            searchQuery={filters.q}
+                            extraParams={{ category: filters.category }}
+                            label="وضعیت"
+                        />
+                        <AdminFilterBar
+                            basePath={basePath}
+                            options={categoryOptions}
+                            currentStatus={filters.category}
+                            paramKey="category"
+                            allLabel="همه دسته‌ها"
+                            searchQuery={filters.q}
+                            extraParams={{ status: filters.status }}
+                            label="دسته‌بندی"
+                        />
+                    </>
+                }
             />
-            <div className="mb-4 flex flex-col gap-2">
-                <StatusFilterBar
-                    basePath={basePath}
-                    options={statusOptions}
-                    filters={filters}
-                />
-                <CategoryFilterBar
-                    basePath={basePath}
-                    options={categoryOptions}
-                    filters={filters}
-                />
-            </div>
             <div className="flex flex-col gap-3">
                 {tickets.data.map((ticket) => (
                     <AdminCommerceCard
@@ -180,18 +78,18 @@ export default function AdminSupportIndex({
                             tone: ticket.statusTone,
                         }}
                         headerAction={
-                            <Link
-                                href={`/admin/support/${ticket.id}`}
-                                className="text-xs font-medium text-purple hover:underline"
-                            >
-                                مشاهده
-                            </Link>
+                            <AdminButton asChild size="sm" adminVariant="outline">
+                                <Link href={`/admin/support/${ticket.id}`}>
+                                    مشاهده
+                                </Link>
+                            </AdminButton>
                         }
                     >
                         <AdminInfoGrid>
                             <AdminDetailRow
                                 label="نام مشتری"
                                 value={ticket.customerName}
+                                truncateValue
                             />
                             <AdminDetailRow
                                 label="موبایل"
@@ -200,6 +98,7 @@ export default function AdminSupportIndex({
                             <AdminDetailRow
                                 label="ایمیل کاربر"
                                 value={ticket.userEmail}
+                                truncateValue
                             />
                             <AdminDetailRow
                                 label="تاریخ ثبت"
@@ -210,7 +109,7 @@ export default function AdminSupportIndex({
                 ))}
                 {tickets.data.length === 0 ? (
                     <AdminEmptyState
-                        message="تیکتی یافت نشد."
+                        message="تیکت باز یا بسته‌ای ثبت نشده است."
                         isSearchActive={Boolean(filters.q)}
                     />
                 ) : null}

@@ -1,4 +1,6 @@
 import { Head } from '@inertiajs/react';
+import { useAdminListFocus } from '@/hooks/use-admin-list-focus';
+import { AdminCallout } from '@/components/admin/admin-callout';
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
@@ -19,15 +21,21 @@ import type {
 
 type PageProps = {
     payments: AdminPaginated<AdminPaymentListItem>;
-    filters: { status: string | null; q: string | null };
+    filters: { status: string | null; q: string | null; focus: number | null };
     statusOptions: AdminStatusOption[];
 };
+
+function paymentNeedsAttention(payment: AdminPaymentListItem): boolean {
+    return payment.canApprove || payment.canReject;
+}
 
 export default function AdminPaymentsIndex({
     payments,
     filters,
     statusOptions,
 }: PageProps) {
+    useAdminListFocus(filters.focus);
+
     return (
         <>
             <Head title="مدیریت پرداخت‌ها" />
@@ -40,23 +48,29 @@ export default function AdminPaymentsIndex({
                 placeholder="جستجو بر اساس شماره سفارش، کد پیگیری، موبایل..."
                 value={filters.q}
                 hiddenParams={{ status: filters.status }}
-            />
-            <AdminFilterBar
-                basePath="/admin/payments"
-                options={statusOptions}
-                currentStatus={filters.status}
-                searchQuery={filters.q}
+                filters={
+                    <AdminFilterBar
+                        basePath="/admin/payments"
+                        options={statusOptions}
+                        currentStatus={filters.status}
+                        searchQuery={filters.q}
+                        label="فیلتر وضعیت"
+                    />
+                }
             />
             <div className="flex flex-col gap-3">
                 {payments.data.map((payment) => (
                     <AdminCommerceCard
                         key={payment.id}
+                        itemId={payment.id}
                         title={payment.orderNumber}
                         subtitle={payment.packageTitle}
                         badge={{
                             label: payment.status,
                             tone: payment.statusTone,
                         }}
+                        highlight={paymentNeedsAttention(payment)}
+                        focused={filters.focus === payment.id}
                     >
                         {payment.methodValue === 'installment' &&
                         (payment.canApprove || payment.canReject) ? (
@@ -69,24 +83,25 @@ export default function AdminPaymentsIndex({
                         ) : null}
 
                         {payment.rejectionNote ? (
-                            <div className="rounded-xl bg-red-soft/60 px-3 py-2 ring-1 ring-red/20">
-                                <p className="text-xs font-medium text-muted">
-                                    دلیل رد
-                                </p>
-                                <p className="mt-1 text-sm font-medium text-text">
-                                    {payment.rejectionNote}
-                                </p>
-                            </div>
+                            <AdminCallout title="دلیل رد" variant="error">
+                                {payment.rejectionNote}
+                            </AdminCallout>
                         ) : null}
 
                         <AdminInfoGrid>
                             <AdminDetailRow
                                 label="نام مشتری"
                                 value={payment.customerName}
+                                truncateValue
                             />
                             <AdminDetailRow
                                 label="موبایل مشتری"
                                 value={payment.customerMobile}
+                            />
+                            <AdminDetailRow
+                                label="مبلغ"
+                                value={payment.amountFormatted}
+                                valueClassName="font-bold text-purple"
                             />
                             <AdminDetailRow
                                 label="روش پرداخت"
@@ -105,13 +120,9 @@ export default function AdminPaymentsIndex({
                                 />
                             ) : null}
                             <AdminDetailRow
-                                label="مبلغ"
-                                value={payment.amountFormatted}
-                                valueClassName="font-bold text-purple"
-                            />
-                            <AdminDetailRow
                                 label="کد پیگیری"
                                 value={payment.trackingCode}
+                                truncateValue
                             />
                             <AdminDetailRow
                                 label="تاریخ پرداخت"
@@ -144,7 +155,7 @@ export default function AdminPaymentsIndex({
                 ))}
                 {payments.data.length === 0 ? (
                     <AdminEmptyState
-                        message="پرداختی یافت نشد."
+                        message="هنوز پرداختی ثبت نشده است."
                         isSearchActive={Boolean(filters.q)}
                     />
                 ) : null}

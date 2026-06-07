@@ -12,7 +12,7 @@ export function ProfilePresetAvatarGrid({
     onChange,
 }: ProfilePresetAvatarGridProps) {
     return (
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {AVATAR_PRESET_KEYS.map((presetKey) => (
                 <ProfilePresetAvatarCard
                     key={presetKey}

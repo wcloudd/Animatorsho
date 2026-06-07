@@ -28,10 +28,12 @@ class PaymentController extends Controller
     {
         $status = $request->string('status')->toString();
         $search = $request->string('q')->toString();
+        $focus = $request->has('focus') ? $request->integer('focus') : null;
 
         return Inertia::render('admin/payments/index', $this->payments->listForAdmin(
             $status !== '' ? $status : null,
             $search !== '' ? $search : null,
+            $focus,
         ));
     }
 

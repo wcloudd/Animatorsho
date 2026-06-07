@@ -1,11 +1,16 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import { ChevronLeft } from 'lucide-react';
 import type { FormEvent } from 'react';
+import { AdminCallout } from '@/components/admin/admin-callout';
 import { AdminButton } from '@/components/admin/admin-button';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
+import { AdminSectionTitle } from '@/components/admin/admin-section-title';
 import InputError from '@/components/input-error';
+import { surfaceCardClassName } from '@/components/page-container';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import type { AdminSmsSettings, AdminSmsTemplate } from '@/types/admin';
 
 type PageProps = {
@@ -28,23 +33,30 @@ function SmsSettingsForm({ settings }: { settings: AdminSmsSettings }) {
     return (
         <form
             onSubmit={submit}
-            className={`${surfaceCardClassName} flex flex-col gap-5`}
+            className={cn(surfaceCardClassName, 'flex flex-col gap-5 p-4 sm:p-5')}
         >
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 border-b border-purple/8 pb-3">
                 <h2 className="font-liana text-base text-purple">
                     تنظیمات پیامک
                 </h2>
-            <div className="flex flex-col items-end gap-1">
-                <span className="rounded-pill bg-purple-soft px-3 py-1 text-xs font-medium text-purple">
-                    درایور فعلی: {settings.driverLabel}
-                </span>
-                {!settings.driverConfigured && (
-                    <span className="text-xs text-red">
-                        تنظیمات env ناقص است
+                <div className="flex flex-col items-end gap-1">
+                    <span className="rounded-pill bg-purple-soft px-3 py-1 text-xs font-medium text-purple ring-1 ring-purple/10">
+                        درایور فعلی: {settings.driverLabel}
                     </span>
-                )}
+                    {!settings.driverConfigured && (
+                        <span className="text-xs text-red/75">
+                            env ناقص
+                        </span>
+                    )}
+                </div>
             </div>
-            </div>
+
+            {!settings.driverConfigured ? (
+                <AdminCallout variant="warning">
+                    تنظیمات env ناقص است. ارسال پیامک ممکن است با خطا مواجه
+                    شود.
+                </AdminCallout>
+            ) : null}
 
             <label className="flex items-center gap-2 text-sm text-text">
                 <Checkbox
@@ -108,14 +120,16 @@ function SmsTemplateForm({ template }: { template: AdminSmsTemplate }) {
     return (
         <form
             onSubmit={submit}
-            className={`${surfaceCardClassName} flex flex-col gap-4`}
+            className={cn(surfaceCardClassName, 'flex flex-col gap-4 p-4 sm:p-5')}
         >
-            <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-purple/8 pb-3">
                 <div>
                     <h3 className="text-sm font-bold text-text">
                         {template.title}
                     </h3>
-                    <p className="mt-1 text-xs text-muted">{template.key}</p>
+                    <p className="mt-1 font-mono text-xs text-muted">
+                        {template.key}
+                    </p>
                 </div>
                 <label className="flex items-center gap-2 text-xs text-text">
                     <Checkbox
@@ -178,7 +192,10 @@ export default function AdminSmsIndex({ settings, templates }: PageProps) {
 
                 <Link
                     href="/admin/sms/logs"
-                    className={`${surfaceCardClassName} flex items-center justify-between gap-3 transition hover:ring-purple/30`}
+                    className={cn(
+                        surfaceCardClassName,
+                        'group flex items-center justify-between gap-3 p-4 transition hover:ring-purple/25 sm:p-5',
+                    )}
                 >
                     <div>
                         <p className="text-sm font-bold text-text">
@@ -188,15 +205,16 @@ export default function AdminSmsIndex({ settings, templates }: PageProps) {
                             تاریخچه ارسال، وضعیت و جزئیات فنی
                         </p>
                     </div>
-                    <span className="text-sm text-purple" aria-hidden>
-                        ←
-                    </span>
+                    <ChevronLeft
+                        className="size-5 shrink-0 text-purple transition group-hover:-translate-x-0.5"
+                        aria-hidden
+                    />
                 </Link>
 
                 <section className="flex flex-col gap-3">
-                    <h2 className="font-liana text-base text-purple">
+                    <AdminSectionTitle className="mb-0">
                         قالب پیام‌ها
-                    </h2>
+                    </AdminSectionTitle>
                     {templates.map((template) => (
                         <SmsTemplateForm key={template.id} template={template} />
                     ))}

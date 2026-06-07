@@ -154,10 +154,15 @@ test('admin dashboard exposes pending actionable items in props', function () {
             ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'open_support_tickets', 1))
             ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'sms_issues', 1))
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'pending_card_to_card', $cardToCardPayment->id))
+            ->where('actionQueues', fn ($queues): bool => queueItemHrefContainsFocus($queues, 'pending_card_to_card', $cardToCardPayment->id))
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'pending_installment', $installmentPayment->id))
+            ->where('actionQueues', fn ($queues): bool => queueItemHrefContainsFocus($queues, 'pending_installment', $installmentPayment->id))
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'pending_licenses', $pendingLicense->id))
+            ->where('actionQueues', fn ($queues): bool => queueItemHrefContainsFocus($queues, 'pending_licenses', $pendingLicense->id))
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'license_api_failures', $failedLicense->id))
+            ->where('actionQueues', fn ($queues): bool => queueItemHrefContainsFocus($queues, 'license_api_failures', $failedLicense->id))
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'open_support_tickets', $openTicket->id))
+            ->where('actionQueues', fn ($queues): bool => queueItemHrefContains($queues, 'open_support_tickets', route('admin.support.show', $openTicket)))
             ->where('actionQueues', fn ($queues): bool => ! queueKeyExists($queues, 'recent_orders'))
             ->where('activityQueues', fn ($queues): bool => queueContainsItemId($queues, 'recent_sms_issues', $failedSms->id)));
 });
@@ -193,6 +198,39 @@ function queueContainsItemId(mixed $queues, string $key, int $id): bool
 
     return collect($queue['items'] ?? [])->contains(
         fn (array $item): bool => ($item['id'] ?? null) === $id,
+    );
+}
+
+function queueItemHrefContainsFocus(mixed $queues, string $key, int $id): bool
+{
+    $queue = collect($queues)->firstWhere('key', $key);
+
+    if (! is_array($queue)) {
+        return false;
+    }
+
+    $item = collect($queue['items'] ?? [])->firstWhere('id', $id);
+
+    if (! is_array($item)) {
+        return false;
+    }
+
+    $href = $item['href'] ?? '';
+
+    return is_string($href)
+        && str_contains($href, 'focus='.$id);
+}
+
+function queueItemHrefContains(mixed $queues, string $key, string $href): bool
+{
+    $queue = collect($queues)->firstWhere('key', $key);
+
+    if (! is_array($queue)) {
+        return false;
+    }
+
+    return collect($queue['items'] ?? [])->contains(
+        fn (array $item): bool => ($item['href'] ?? null) === $href,
     );
 }
 

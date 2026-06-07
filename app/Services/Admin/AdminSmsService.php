@@ -7,6 +7,7 @@ use App\Models\SmsTemplate;
 use App\Services\Sms\SmsSettingsService;
 use App\Services\Sms\SmsTemplateService;
 use App\Support\Admin\AdminListSearch;
+use App\Support\AdminStatusLabels;
 use App\Support\SmsStatusLabels;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -116,7 +117,7 @@ class AdminSmsService
             'typeValue' => $message->type,
             'status' => $status !== null ? SmsStatusLabels::status($status) : '—',
             'statusValue' => $status?->value,
-            'statusTone' => $status !== null ? SmsStatusLabels::statusTone($status) : 'neutral',
+            'statusTone' => $status !== null ? AdminStatusLabels::smsStatusTone($status) : 'neutral',
             'provider' => $message->provider,
             'messagePreview' => mb_strlen($message->message) > 120
                 ? mb_substr($message->message, 0, 120).'…'

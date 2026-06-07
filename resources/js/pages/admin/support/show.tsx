@@ -2,14 +2,18 @@ import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
+import { AdminButton } from '@/components/admin/admin-button';
 import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
 import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
 import { AdminMetaDetails } from '@/components/admin/admin-meta-details';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { ProfileStatusBadge } from '@/components/profile/profile-status-badge';
+import { AdminSectionTitle } from '@/components/admin/admin-section-title';
+import { AdminStatusBadge } from '@/components/admin/admin-status-badge';
+import { surfaceCardClassName } from '@/components/page-container';
 import { SupportTicketConversation } from '@/components/support/support-ticket-conversation';
 import { SupportTicketMessageForm } from '@/components/support/support-ticket-message-form';
+import { cn } from '@/lib/utils';
 import type {
     AdminSupportLicenseContext,
     AdminSupportOrderContext,
@@ -39,7 +43,7 @@ function ContextList({
 
     return (
         <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-bold text-text">{title}</h3>
+            <AdminSectionTitle className="mb-0">{title}</AdminSectionTitle>
             <ul className="flex flex-col gap-2">{items.map(renderItem)}</ul>
         </div>
     );
@@ -60,21 +64,20 @@ export default function AdminSupportShow({
                 title={ticket.subject}
                 description={`${ticket.userName} · ${ticket.category}`}
                 actions={
-                    <Link
-                        href="/admin/support"
-                        className="text-sm text-purple hover:underline"
-                    >
-                        بازگشت به لیست
-                    </Link>
+                    <AdminButton asChild size="sm" adminVariant="outline">
+                        <Link href="/admin/support">بازگشت به لیست</Link>
+                    </AdminButton>
                 }
             />
 
-            <div className="mb-4 rounded-[24px] bg-surface p-5 ring-1 ring-purple/10">
+            <div
+                className={cn(
+                    surfaceCardClassName,
+                    'mb-4 flex flex-col gap-4 p-4 sm:p-5',
+                )}
+            >
                 <AdminInfoGrid>
-                    <AdminDetailRow
-                        label="وضعیت"
-                        value={ticket.status}
-                    />
+                    <AdminDetailRow label="وضعیت" value={ticket.status} />
                     <AdminDetailRow
                         label="نام مشتری"
                         value={ticket.customerName}
@@ -86,6 +89,7 @@ export default function AdminSupportShow({
                     <AdminDetailRow
                         label="ایمیل کاربر"
                         value={ticket.userEmail}
+                        truncateValue
                     />
                     <AdminDetailRow
                         label="تاریخ ثبت"
@@ -99,7 +103,7 @@ export default function AdminSupportShow({
                     ) : null}
                 </AdminInfoGrid>
 
-                <AdminActionRow className="mt-4">
+                <AdminActionRow>
                     {ticket.isClosed ? (
                         <AdminConfirmAction
                             actionKey="reopen"
@@ -134,14 +138,14 @@ export default function AdminSupportShow({
                         renderItem={(order) => (
                             <li
                                 key={order.id}
-                                className="flex flex-wrap items-center justify-between gap-2 rounded-[16px] bg-bg px-3 py-2"
+                                className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-bg px-3 py-2 ring-1 ring-border/70"
                             >
-                                <span className="text-sm text-text">
+                                <span className="min-w-0 truncate text-sm text-text">
                                     {order.orderNumber} · {order.packageTitle}
                                 </span>
-                                <ProfileStatusBadge tone={order.statusTone}>
+                                <AdminStatusBadge tone={order.statusTone}>
                                     {order.status}
-                                </ProfileStatusBadge>
+                                </AdminStatusBadge>
                             </li>
                         )}
                     />
@@ -151,22 +155,27 @@ export default function AdminSupportShow({
                         renderItem={(license) => (
                             <li
                                 key={license.id}
-                                className="flex flex-wrap items-center justify-between gap-2 rounded-[16px] bg-bg px-3 py-2"
+                                className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-bg px-3 py-2 ring-1 ring-border/70"
                             >
-                                <span className="text-sm text-text">
+                                <span className="min-w-0 truncate text-sm text-text">
                                     {license.packageTitle}
                                 </span>
-                                <ProfileStatusBadge tone={license.statusTone}>
+                                <AdminStatusBadge tone={license.statusTone}>
                                     {license.status}
-                                </ProfileStatusBadge>
+                                </AdminStatusBadge>
                             </li>
                         )}
                     />
                 </div>
             </AdminMetaDetails>
 
-            <section className="my-4 rounded-[24px] bg-surface p-5 ring-1 ring-purple/10">
-                <h2 className="mb-4 text-base font-bold text-text">گفتگو</h2>
+            <section
+                className={cn(
+                    surfaceCardClassName,
+                    'my-4 p-4 sm:p-5',
+                )}
+            >
+                <AdminSectionTitle className="mb-4">گفتگو</AdminSectionTitle>
                 <SupportTicketConversation messages={messages} />
             </section>
 
@@ -176,7 +185,9 @@ export default function AdminSupportShow({
                     waitingForUserField
                 />
             ) : (
-                <p className="text-sm text-muted">این تیکت بسته شده است.</p>
+                <p className="rounded-xl bg-purple-soft/40 px-4 py-3 text-sm text-muted ring-1 ring-purple/10">
+                    این تیکت بسته شده است.
+                </p>
             )}
         </>
     );

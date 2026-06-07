@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Models\SmsMessage;
 use App\Models\SpotPlayerLicense;
 use App\Models\SupportTicket;
+use App\Support\AdminStatusLabels;
 use App\Support\ProfileStatusLabels;
 use App\Support\SupportTicketStatusLabels;
 use App\Support\TomanFormatter;
@@ -216,7 +217,7 @@ class AdminDashboardService
             ->get()
             ->map(fn (Payment $payment): array => $this->paymentQueueItem(
                 $payment,
-                route('admin.payments.index', ['status' => PaymentStatus::Reviewing->value]),
+                $this->paymentFocusHref($payment),
             ))
             ->values()
             ->all();
@@ -252,7 +253,7 @@ class AdminDashboardService
             ->get()
             ->map(fn (Payment $payment): array => $this->paymentQueueItem(
                 $payment,
-                route('admin.payments.index', ['status' => PaymentStatus::Reviewing->value]),
+                $this->paymentFocusHref($payment),
             ))
             ->values()
             ->all();
@@ -408,7 +409,7 @@ class AdminDashboardService
                 'href' => route('admin.orders.index'),
                 'badge' => [
                     'label' => ProfileStatusLabels::orderStatus($order->status),
-                    'tone' => ProfileStatusLabels::orderStatusTone($order->status),
+                    'tone' => AdminStatusLabels::orderStatusTone($order->status),
                 ],
             ])
             ->values()
@@ -528,7 +529,7 @@ class AdminDashboardService
             'href' => $href,
             'badge' => [
                 'label' => ProfileStatusLabels::paymentStatus($status),
-                'tone' => ProfileStatusLabels::paymentStatusTone($status),
+                'tone' => AdminStatusLabels::paymentStatusTone($status),
             ],
         ];
     }
@@ -561,12 +562,20 @@ class AdminDashboardService
             'title' => $license->coursePackage?->title ?? '—',
             'subtitle' => $license->order?->order_number ?? '—',
             'meta' => $metaText,
-            'href' => route('admin.licenses.index'),
+            'href' => route('admin.licenses.index', ['focus' => $license->id]),
             'badge' => [
                 'label' => ProfileStatusLabels::licenseStatus($license->status),
-                'tone' => ProfileStatusLabels::licenseStatusTone($license->status),
+                'tone' => AdminStatusLabels::licenseStatusTone($license->status),
             ],
         ];
+    }
+
+    private function paymentFocusHref(Payment $payment): string
+    {
+        return route('admin.payments.index', [
+            'status' => PaymentStatus::Reviewing->value,
+            'focus' => $payment->id,
+        ]);
     }
 
     private function smsIssueSummary(SmsMessage $message): string

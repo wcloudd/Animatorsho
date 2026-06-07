@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\SpotPlayerLicense;
 use App\Support\Admin\AdminListSearch;
+use App\Support\AdminStatusLabels;
 use App\Support\ProfileStatusLabels;
 use App\Support\TomanFormatter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -124,7 +125,7 @@ class AdminOrderListService
             'packageTitle' => $order->coursePackage?->title ?? '—',
             'status' => ProfileStatusLabels::orderStatus($status),
             'statusValue' => $status->value,
-            'statusTone' => ProfileStatusLabels::orderStatusTone($status),
+            'statusTone' => AdminStatusLabels::orderStatusTone($status),
             'paymentType' => ProfileStatusLabels::paymentType($order->payment_type),
             'amountToman' => $order->amount_toman,
             'amountFormatted' => TomanFormatter::format($order->amount_toman),
@@ -134,7 +135,7 @@ class AdminOrderListService
                 ? ProfileStatusLabels::paymentStatus($latestPayment->status)
                 : null,
             'latestPaymentStatusTone' => $latestPayment instanceof Payment
-                ? ProfileStatusLabels::paymentStatusTone($latestPayment->status)
+                ? AdminStatusLabels::paymentStatusTone($latestPayment->status)
                 : null,
             'latestPaymentMethod' => $latestPayment instanceof Payment
                 ? ProfileStatusLabels::paymentMethod($latestPayment->method)
@@ -143,7 +144,7 @@ class AdminOrderListService
                 ? ProfileStatusLabels::licenseStatus($license->status)
                 : null,
             'licenseStatusTone' => $license instanceof SpotPlayerLicense
-                ? ProfileStatusLabels::licenseStatusTone($license->status)
+                ? AdminStatusLabels::licenseStatusTone($license->status)
                 : null,
             'createdAt' => $order->created_at?->toIso8601String(),
             'canMarkPaid' => ! in_array($status, [OrderStatus::Paid, OrderStatus::Cancelled], true)

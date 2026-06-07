@@ -4,15 +4,20 @@ import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileCo
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import { ProfileAccountStatusCard } from '@/components/profile/profile-account-status-card';
 import { ProfilePresetAvatarGrid } from '@/components/profile/profile-preset-avatar-grid';
+import { ProfileSectionCard } from '@/components/profile/profile-section-card';
 import { ProfileSettingsHeader } from '@/components/profile/profile-settings-header';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { PageContainer } from '@/components/page-container';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { AvatarPresetKey } from '@/lib/avatar-presets';
 import { isAvatarPresetKey } from '@/lib/avatar-presets';
+import {
+    userFieldClassName,
+    userLabelClassName,
+    userSubmitButtonClassName,
+} from '@/lib/user-form-styles';
 
 type AccountProps = {
     name: string;
@@ -33,9 +38,6 @@ type ProfileSettingsProps = {
     avatarPresets: AvatarPresetOption[];
     passwordRules: string;
 };
-
-const fieldClassName =
-    'border-input bg-surface text-text placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm text-start shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50';
 
 export default function ProfileSettings({
     account,
@@ -63,16 +65,10 @@ export default function ProfileSettings({
                         hasPassword={account.hasPassword}
                     />
 
-                    <section className="rounded-[28px] bg-surface px-5 py-6 shadow-soft ring-1 ring-border">
-                        <div className="mb-5 flex flex-col gap-1">
-                            <h2 className="text-base font-bold text-text">
-                                اطلاعات پروفایل
-                            </h2>
-                            <p className="text-sm font-medium text-muted">
-                                نام، ایمیل و آواتار خود را به‌روزرسانی کنید.
-                            </p>
-                        </div>
-
+                    <ProfileSectionCard
+                        title="اطلاعات پروفایل"
+                        description="نام، ایمیل و آواتار خود را به‌روزرسانی کنید."
+                    >
                         <Form
                             {...ProfileController.update.form()}
                             options={{ preserveScroll: true }}
@@ -81,7 +77,12 @@ export default function ProfileSettings({
                             {({ processing, errors }) => (
                                 <>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">نام نمایشی</Label>
+                                        <Label
+                                            htmlFor="name"
+                                            className={userLabelClassName}
+                                        >
+                                            نام نمایشی
+                                        </Label>
                                         <Input
                                             id="name"
                                             name="name"
@@ -89,13 +90,18 @@ export default function ProfileSettings({
                                             required
                                             maxLength={80}
                                             autoComplete="name"
-                                            className={fieldClassName}
+                                            className={userFieldClassName}
                                         />
                                         <InputError message={errors.name} />
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email">ایمیل (اختیاری)</Label>
+                                        <Label
+                                            htmlFor="email"
+                                            className={userLabelClassName}
+                                        >
+                                            ایمیل (اختیاری)
+                                        </Label>
                                         <Input
                                             id="email"
                                             name="email"
@@ -104,13 +110,15 @@ export default function ProfileSettings({
                                             autoComplete="username"
                                             placeholder="برای ورود جایگزین"
                                             dir="ltr"
-                                            className={fieldClassName}
+                                            className={userFieldClassName}
                                         />
                                         <InputError message={errors.email} />
                                     </div>
 
                                     <div className="grid gap-3">
-                                        <Label>آواتار</Label>
+                                        <Label className={userLabelClassName}>
+                                            آواتار
+                                        </Label>
                                         <ProfilePresetAvatarGrid
                                             value={selectedPreset}
                                             onChange={setSelectedPreset}
@@ -120,35 +128,36 @@ export default function ProfileSettings({
                                             name="avatar_preset"
                                             value={selectedPreset ?? ''}
                                         />
-                                        <InputError message={errors.avatar_preset} />
+                                        <InputError
+                                            message={errors.avatar_preset}
+                                        />
                                     </div>
 
-                                    <Button
+                                    <button
                                         type="submit"
                                         disabled={processing}
                                         data-test="update-profile-button"
+                                        className={userSubmitButtonClassName}
                                     >
                                         ذخیره اطلاعات
-                                    </Button>
+                                    </button>
                                 </>
                             )}
                         </Form>
-                    </section>
+                    </ProfileSectionCard>
 
-                    <section className="rounded-[28px] bg-surface px-5 py-6 shadow-soft ring-1 ring-border">
-                        <div className="mb-5 flex flex-col gap-1">
-                            <h2 className="text-base font-bold text-text">
-                                {account.hasPassword
-                                    ? 'تغییر رمز عبور'
-                                    : 'تنظیم رمز عبور'}
-                            </h2>
-                            <p className="text-sm font-medium text-muted">
-                                {account.hasPassword
-                                    ? 'برای امنیت بیشتر، رمز عبور قوی انتخاب کنید.'
-                                    : 'برای ورود با ایمیل، یک رمز عبور تنظیم کنید.'}
-                            </p>
-                        </div>
-
+                    <ProfileSectionCard
+                        title={
+                            account.hasPassword
+                                ? 'تغییر رمز عبور'
+                                : 'تنظیم رمز عبور'
+                        }
+                        description={
+                            account.hasPassword
+                                ? 'برای امنیت بیشتر، رمز عبور قوی انتخاب کنید.'
+                                : 'برای ورود با ایمیل، یک رمز عبور تنظیم کنید.'
+                        }
+                    >
                         <Form
                             {...SecurityController.update.form()}
                             options={{ preserveScroll: true }}
@@ -164,23 +173,31 @@ export default function ProfileSettings({
                                 <>
                                     {account.hasPassword ? (
                                         <div className="grid gap-2">
-                                            <Label htmlFor="current_password">
+                                            <Label
+                                                htmlFor="current_password"
+                                                className={userLabelClassName}
+                                            >
                                                 رمز عبور فعلی
                                             </Label>
                                             <PasswordInput
                                                 id="current_password"
                                                 name="current_password"
                                                 autoComplete="current-password"
-                                                className={fieldClassName}
+                                                className={userFieldClassName}
                                             />
                                             <InputError
-                                                message={errors.current_password}
+                                                message={
+                                                    errors.current_password
+                                                }
                                             />
                                         </div>
                                     ) : null}
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="password">
+                                        <Label
+                                            htmlFor="password"
+                                            className={userLabelClassName}
+                                        >
                                             {account.hasPassword
                                                 ? 'رمز عبور جدید'
                                                 : 'رمز عبور'}
@@ -190,13 +207,16 @@ export default function ProfileSettings({
                                             name="password"
                                             autoComplete="new-password"
                                             passwordrules={passwordRules}
-                                            className={fieldClassName}
+                                            className={userFieldClassName}
                                         />
                                         <InputError message={errors.password} />
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="password_confirmation">
+                                        <Label
+                                            htmlFor="password_confirmation"
+                                            className={userLabelClassName}
+                                        >
                                             تکرار رمز عبور
                                         </Label>
                                         <PasswordInput
@@ -204,24 +224,27 @@ export default function ProfileSettings({
                                             name="password_confirmation"
                                             autoComplete="new-password"
                                             passwordrules={passwordRules}
-                                            className={fieldClassName}
+                                            className={userFieldClassName}
                                         />
                                         <InputError
-                                            message={errors.password_confirmation}
+                                            message={
+                                                errors.password_confirmation
+                                            }
                                         />
                                     </div>
 
-                                    <Button
+                                    <button
                                         type="submit"
                                         disabled={processing}
                                         data-test="update-password-button"
+                                        className={userSubmitButtonClassName}
                                     >
                                         ذخیره رمز عبور
-                                    </Button>
+                                    </button>
                                 </>
                             )}
                         </Form>
-                    </section>
+                    </ProfileSectionCard>
                 </div>
             </PageContainer>
         </>

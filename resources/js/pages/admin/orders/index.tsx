@@ -26,6 +26,10 @@ type PageProps = {
     statusOptions: AdminStatusOption[];
 };
 
+function orderNeedsAttention(order: AdminOrderListItem): boolean {
+    return order.canMarkPaid || order.canCancel;
+}
+
 export default function AdminOrdersIndex({
     orders,
     filters,
@@ -45,12 +49,15 @@ export default function AdminOrdersIndex({
                 placeholder="جستجو بر اساس شماره سفارش، نام، موبایل..."
                 value={filters.q}
                 hiddenParams={{ status: filters.status }}
-            />
-            <AdminFilterBar
-                basePath="/admin/orders"
-                options={statusOptions}
-                currentStatus={filters.status}
-                searchQuery={filters.q}
+                filters={
+                    <AdminFilterBar
+                        basePath="/admin/orders"
+                        options={statusOptions}
+                        currentStatus={filters.status}
+                        searchQuery={filters.q}
+                        label="فیلتر وضعیت"
+                    />
+                }
             />
             <div className="flex flex-col gap-3">
                 {orders.data.map((order) => (
@@ -62,19 +69,17 @@ export default function AdminOrdersIndex({
                             label: order.status,
                             tone: order.statusTone,
                         }}
+                        highlight={orderNeedsAttention(order)}
                     >
                         <AdminInfoGrid>
                             <AdminDetailRow
                                 label="نام مشتری"
                                 value={order.customerName}
+                                truncateValue
                             />
                             <AdminDetailRow
                                 label="موبایل مشتری"
                                 value={order.customerMobile}
-                            />
-                            <AdminDetailRow
-                                label="نوع پرداخت"
-                                value={order.paymentType}
                             />
                             <AdminDetailRow
                                 label="مبلغ نهایی"
@@ -85,6 +90,10 @@ export default function AdminOrdersIndex({
                                 label="وضعیت پرداخت"
                                 value={order.latestPaymentStatus}
                                 tone={order.latestPaymentStatusTone}
+                            />
+                            <AdminDetailRow
+                                label="نوع پرداخت"
+                                value={order.paymentType}
                             />
                             <AdminDetailRow
                                 label="روش پرداخت"
@@ -157,7 +166,7 @@ export default function AdminOrdersIndex({
                 ))}
                 {orders.data.length === 0 ? (
                     <AdminEmptyState
-                        message="سفارشی یافت نشد."
+                        message="هنوز سفارشی ثبت نشده است."
                         isSearchActive={Boolean(filters.q)}
                     />
                 ) : null}

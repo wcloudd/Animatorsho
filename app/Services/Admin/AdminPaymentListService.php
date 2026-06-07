@@ -6,7 +6,9 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use App\Services\PaymentReceiptStorageService;
+use App\Support\Admin\AdminListFocus;
 use App\Support\Admin\AdminListSearch;
+use App\Support\AdminStatusLabels;
 use App\Support\InstallmentTermLabels;
 use App\Support\ProfileStatusLabels;
 use App\Support\TomanFormatter;
@@ -23,12 +25,14 @@ class AdminPaymentListService
     /**
      * @return array{
      *     payments: LengthAwarePaginator<int, array<string, mixed>>,
-     *     filters: array{status: ?string, q: ?string},
+     *     filters: array{status: ?string, q: ?string, focus: ?int},
      *     statusOptions: list<array{value: string, label: string}>
      * }
      */
-    public function listForAdmin(?string $statusFilter = null, ?string $search = null): array
+    public function listForAdmin(?string $statusFilter = null, ?string $search = null, ?int $focus = null): array
     {
+        $focusId = AdminListFocus::normalize($focus);
+
         $query = Payment::query()
             ->with(['order.user', 'order.coursePackage'])
             ->latest();
@@ -36,6 +40,8 @@ class AdminPaymentListService
         if ($statusFilter !== null && $statusFilter !== '') {
             $query->where('status', $statusFilter);
         }
+
+        AdminListFocus::apply($query, $focusId);
 
         AdminListSearch::apply($query, $search, function (Builder $searchQuery, string $pattern, string $term): void {
             $searchQuery
@@ -78,6 +84,7 @@ class AdminPaymentListService
             'filters' => [
                 'status' => $statusFilter,
                 'q' => $normalizedSearch,
+                'focus' => $focusId,
             ],
             'statusOptions' => $this->statusOptions(),
         ];
@@ -105,7 +112,7 @@ class AdminPaymentListService
             'methodValue' => $payment->method->value,
             'status' => ProfileStatusLabels::paymentStatus($status),
             'statusValue' => $status->value,
-            'statusTone' => ProfileStatusLabels::paymentStatusTone($status),
+            'statusTone' => AdminStatusLabels::paymentStatusTone($status),
             'amountToman' => $payment->amount_toman,
             'amountFormatted' => TomanFormatter::format($payment->amount_toman),
             'trackingCode' => $payment->tracking_code,

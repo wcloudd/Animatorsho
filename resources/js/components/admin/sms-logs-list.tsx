@@ -50,7 +50,7 @@ export function SmsLogsList({ logs, isSearchActive = false }: SmsLogsListProps) 
                     </p>
                     {log.meta ? (
                         <AdminMetaDetails title="جزئیات فنی">
-                            <pre className="overflow-x-auto rounded-xl bg-bg p-3 text-xs text-muted ring-1 ring-border/70">
+                            <pre className="overflow-x-auto rounded-xl bg-purple-soft/30 p-3 text-xs text-muted ring-1 ring-purple/10">
                                 {log.meta}
                             </pre>
                         </AdminMetaDetails>

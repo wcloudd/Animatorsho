@@ -1,50 +1,57 @@
 import { Link } from '@inertiajs/react';
+import { ProfileSectionCard } from '@/components/profile/profile-section-card';
 import { ProfileStatusBadge } from '@/components/profile/profile-status-badge';
 import type { SupportTicketListItem } from '@/types/support';
-
-const cardClassName =
-    'flex w-full flex-col gap-4 rounded-[28px] bg-surface px-5 py-6 shadow-soft ring-1 ring-border';
+import support from '@/routes/support';
+import { cn } from '@/lib/utils';
 
 type SupportTicketsPreviewProps = {
     tickets: SupportTicketListItem[];
 };
 
+function isWaitingForUser(ticket: SupportTicketListItem): boolean {
+    return ticket.statusValue === 'waiting_user';
+}
+
 export function SupportTicketsPreview({ tickets }: SupportTicketsPreviewProps) {
     return (
-        <article className={cardClassName}>
-            <h2 className="text-base font-bold text-text">پیام‌های من</h2>
-
+        <ProfileSectionCard title="پیام‌های من">
             {tickets.length === 0 ? (
-                <p className="text-sm text-muted">
-                    هنوز پیامی ثبت نکرده‌ای. برای شروع، فرم بالا را پر کن.
-                </p>
+                <div className="flex flex-col gap-2 rounded-2xl bg-surface-warm p-4 text-sm font-medium leading-relaxed text-muted ring-1 ring-border/70">
+                    <p>هنوز پیامی ثبت نکرده‌ای.</p>
+                    <p>برای شروع، فرم ارسال پیام جدید را پر کن.</p>
+                </div>
             ) : (
                 <ul className="flex flex-col divide-y divide-border/60">
                     {tickets.map((ticket) => (
                         <li key={ticket.id}>
                             <Link
-                                href={`/support/tickets/${ticket.id}`}
-                                className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                                href={support.tickets.show(ticket.id)}
+                                className={cn(
+                                    'flex flex-col gap-2 py-3 first:pt-0 last:pb-0',
+                                    isWaitingForUser(ticket) &&
+                                        '-mx-1 rounded-2xl border-s-4 border-gold bg-gold-soft/40 px-3',
+                                )}
                             >
-                                <div className="flex min-w-0 flex-col gap-1">
-                                    <span className="truncate text-sm font-medium text-text">
+                                <div className="flex min-w-0 items-start justify-between gap-2">
+                                    <span className="min-w-0 flex-1 text-sm font-bold text-text">
                                         {ticket.subject}
                                     </span>
-                                    <span className="text-xs text-muted">
-                                        {ticket.category}
-                                        {ticket.createdAt
-                                            ? ` · ${ticket.createdAt}`
-                                            : ''}
-                                    </span>
+                                    <ProfileStatusBadge tone={ticket.statusTone}>
+                                        {ticket.status}
+                                    </ProfileStatusBadge>
                                 </div>
-                                <ProfileStatusBadge tone={ticket.statusTone}>
-                                    {ticket.status}
-                                </ProfileStatusBadge>
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                                    <span>{ticket.category}</span>
+                                    {ticket.createdAt ? (
+                                        <span>· {ticket.createdAt}</span>
+                                    ) : null}
+                                </div>
                             </Link>
                         </li>
                     ))}
                 </ul>
             )}
-        </article>
+        </ProfileSectionCard>
     );
 }

@@ -8,22 +8,38 @@ type AdminFilterBarProps = {
     currentStatus: string | null;
     allLabel?: string;
     searchQuery?: string | null;
+    paramKey?: string;
+    extraParams?: Record<string, string | null | undefined>;
+    label?: string;
 };
 
 function buildFilterHref(
     basePath: string,
+    paramKey: string,
     status: string | null,
     searchQuery?: string | null,
+    extraParams: Record<string, string | null | undefined> = {},
 ): string {
     const params = new URLSearchParams();
 
     if (status) {
-        params.set('status', status);
+        params.set(paramKey, status);
     }
 
     if (searchQuery) {
         params.set('q', searchQuery);
     }
+
+    Object.entries(extraParams).forEach(([key, paramValue]) => {
+        if (
+            key !== paramKey &&
+            paramValue !== null &&
+            paramValue !== undefined &&
+            paramValue !== ''
+        ) {
+            params.set(key, paramValue);
+        }
+    });
 
     const query = params.toString();
 
@@ -36,38 +52,58 @@ export function AdminFilterBar({
     currentStatus,
     allLabel = 'همه',
     searchQuery = null,
+    paramKey = 'status',
+    extraParams = {},
+    label,
 }: AdminFilterBarProps) {
     const isAllActive = !currentStatus;
 
     return (
-        <div className="mb-4 flex flex-wrap gap-2">
-            <Link
-                href={buildFilterHref(basePath, null, searchQuery)}
-                className={cn(
-                    'rounded-pill px-3 py-1 text-xs font-medium transition',
-                    isAllActive
-                        ? 'bg-purple text-white'
-                        : 'bg-surface text-muted ring-1 ring-purple/10 hover:text-purple',
-                )}
-                preserveState
-            >
-                {allLabel}
-            </Link>
-            {options.map((option) => (
+        <div className="flex flex-col gap-1.5">
+            {label ? (
+                <span className="text-xs font-medium text-muted">{label}</span>
+            ) : null}
+            <div className="flex flex-wrap gap-1.5">
                 <Link
-                    key={option.value}
-                    href={buildFilterHref(basePath, option.value, searchQuery)}
+                    href={buildFilterHref(
+                        basePath,
+                        paramKey,
+                        null,
+                        searchQuery,
+                        extraParams,
+                    )}
                     className={cn(
-                        'rounded-pill px-3 py-1 text-xs font-medium transition',
-                        currentStatus === option.value
-                            ? 'bg-purple text-white'
-                            : 'bg-surface text-muted ring-1 ring-purple/10 hover:text-purple',
+                        'rounded-pill px-3 py-1.5 text-xs font-medium transition',
+                        isAllActive
+                            ? 'bg-purple text-white shadow-xs'
+                            : 'bg-surface text-muted ring-1 ring-purple/15 hover:text-purple',
                     )}
                     preserveState
                 >
-                    {option.label}
+                    {allLabel}
                 </Link>
-            ))}
+                {options.map((option) => (
+                    <Link
+                        key={option.value}
+                        href={buildFilterHref(
+                            basePath,
+                            paramKey,
+                            option.value,
+                            searchQuery,
+                            extraParams,
+                        )}
+                        className={cn(
+                            'rounded-pill px-3 py-1.5 text-xs font-medium transition',
+                            currentStatus === option.value
+                                ? 'bg-purple text-white shadow-xs'
+                                : 'bg-surface text-muted ring-1 ring-purple/15 hover:text-purple',
+                        )}
+                        preserveState
+                    >
+                        {option.label}
+                    </Link>
+                ))}
+            </div>
         </div>
     );
 }

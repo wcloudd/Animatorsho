@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
+import { AdminButton } from '@/components/admin/admin-button';
 import { cn } from '@/lib/utils';
 
 type AdminSearchBarProps = {
@@ -8,6 +9,8 @@ type AdminSearchBarProps = {
     placeholder: string;
     value: string | null;
     hiddenParams?: Record<string, string | null | undefined>;
+    filters?: ReactNode;
+    embedded?: boolean;
 };
 
 function buildSearchHref(
@@ -32,6 +35,8 @@ export function AdminSearchBar({
     placeholder,
     value,
     hiddenParams = {},
+    filters,
+    embedded = false,
 }: AdminSearchBarProps) {
     const [query, setQuery] = useState(value ?? '');
     const hasActiveSearch = Boolean(value && value.trim() !== '');
@@ -53,34 +58,50 @@ export function AdminSearchBar({
 
     const clearHref = buildSearchHref(basePath, hiddenParams);
 
-    return (
-        <form onSubmit={handleSubmit} className="mb-4 flex gap-2">
-            <input
-                type="search"
-                name="q"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={placeholder}
-                className={cn(
-                    'h-10 min-w-0 flex-1 rounded-xl border border-[#e8e0f0] bg-surface px-3 text-sm text-text shadow-xs outline-none placeholder:text-muted focus-visible:ring-[3px] focus-visible:ring-purple/30',
-                )}
-                autoComplete="off"
-            />
-            <button
-                type="submit"
-                className="shrink-0 rounded-xl bg-purple px-4 text-sm font-medium text-white transition hover:bg-purple/90"
-            >
-                جستجو
-            </button>
-            {hasActiveSearch ? (
-                <Link
-                    href={clearHref}
-                    className="flex h-10 shrink-0 items-center rounded-xl bg-surface px-3 text-sm font-medium text-muted ring-1 ring-border/70 transition hover:text-purple"
-                    preserveState
-                >
-                    پاک کردن
-                </Link>
+    const content = (
+        <>
+            <form onSubmit={handleSubmit} className="flex gap-2">
+                <input
+                    type="search"
+                    name="q"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder={placeholder}
+                    className={cn(
+                        'h-10 min-w-0 flex-1 rounded-xl border border-[#e8e0f0] bg-surface px-3 text-sm text-text shadow-xs outline-none placeholder:text-muted focus-visible:ring-[3px] focus-visible:ring-purple/30',
+                    )}
+                    autoComplete="off"
+                />
+                <AdminButton type="submit" size="sm" adminVariant="brand">
+                    جستجو
+                </AdminButton>
+                {hasActiveSearch ? (
+                    <AdminButton asChild size="sm" adminVariant="outline">
+                        <Link href={clearHref} preserveState>
+                            پاک کردن
+                        </Link>
+                    </AdminButton>
+                ) : null}
+            </form>
+            {filters ? (
+                <div className="flex flex-col gap-2 border-t border-purple/10 pt-3">
+                    {filters}
+                </div>
             ) : null}
-        </form>
+        </>
+    );
+
+    if (embedded) {
+        return content;
+    }
+
+    return (
+        <div
+            className={cn(
+                'mb-5 flex flex-col gap-3 rounded-2xl bg-surface-warm p-3 shadow-soft ring-1 ring-purple/10',
+            )}
+        >
+            {content}
+        </div>
     );
 }

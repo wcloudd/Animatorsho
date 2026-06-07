@@ -24,7 +24,7 @@ export function AdminMetaDetails({
     return (
         <Collapsible open={open} onOpenChange={setOpen}>
             <CollapsibleTrigger
-                className="flex w-full items-center justify-between gap-3 rounded-xl bg-purple-soft/40 px-3 py-2 text-sm font-medium text-text ring-1 ring-purple/10"
+                className="flex w-full items-center justify-between gap-3 rounded-xl bg-purple-soft/30 px-3 py-2.5 text-sm font-medium text-text ring-1 ring-purple/10 transition hover:bg-purple-soft/50"
                 aria-expanded={open}
             >
                 <span>{title}</span>

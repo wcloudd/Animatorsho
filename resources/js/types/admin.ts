@@ -1,4 +1,4 @@
-import type { ProfileStatusTone } from '@/lib/profile-data';
+import type { AdminStatusTone } from '@/components/admin/admin-status-badge';
 
 export type AdminDashboardSummaryTone = 'warning' | 'danger' | 'neutral';
 
@@ -16,7 +16,7 @@ export type AdminDashboardQueueItem = {
     subtitle: string;
     meta: string;
     href: string;
-    badge: { label: string; tone: ProfileStatusTone } | null;
+    badge: { label: string; tone: AdminStatusTone } | null;
 };
 
 export type AdminDashboardQueue = {
@@ -85,17 +85,17 @@ export type AdminOrderListItem = {
     packageTitle: string;
     status: string;
     statusValue: string;
-    statusTone: ProfileStatusTone;
+    statusTone: AdminStatusTone;
     paymentType: string;
     amountToman: number;
     amountFormatted: string;
     finalAmountToman: number;
     finalAmountFormatted: string;
     latestPaymentStatus: string | null;
-    latestPaymentStatusTone: ProfileStatusTone | null;
+    latestPaymentStatusTone: AdminStatusTone | null;
     latestPaymentMethod: string | null;
     licenseStatus: string | null;
-    licenseStatusTone: ProfileStatusTone | null;
+    licenseStatusTone: AdminStatusTone | null;
     createdAt: string | null;
     canMarkPaid: boolean;
     canCancel: boolean;
@@ -113,7 +113,7 @@ export type AdminPaymentListItem = {
     methodValue: string;
     status: string;
     statusValue: string;
-    statusTone: ProfileStatusTone;
+    statusTone: AdminStatusTone;
     amountToman: number;
     amountFormatted: string;
     trackingCode: string | null;
@@ -137,12 +137,12 @@ export type AdminLicenseListItem = {
     packageTitle: string;
     orderNumber: string | null;
     orderStatus: string | null;
-    orderStatusTone: ProfileStatusTone | null;
+    orderStatusTone: AdminStatusTone | null;
     latestPaymentStatus: string | null;
-    latestPaymentStatusTone: ProfileStatusTone | null;
+    latestPaymentStatusTone: AdminStatusTone | null;
     status: string;
     statusValue: string;
-    statusTone: ProfileStatusTone;
+    statusTone: AdminStatusTone;
     licenseKey: string | null;
     activatedAt: string | null;
     canActivate: boolean;
@@ -187,7 +187,7 @@ export type AdminSmsLogItem = {
     typeValue: string | null;
     status: string;
     statusValue: string | null;
-    statusTone: ProfileStatusTone;
+    statusTone: AdminStatusTone;
     provider: string;
     messagePreview: string;
     message: string;
@@ -201,7 +201,7 @@ export type AdminSupportTicketListItem = {
     subject: string;
     status: string;
     statusValue: string;
-    statusTone: ProfileStatusTone;
+    statusTone: AdminStatusTone;
     category: string;
     categoryValue: string;
     customerName: string;
@@ -216,7 +216,7 @@ export type AdminSupportTicketDetail = {
     subject: string;
     status: string;
     statusValue: string;
-    statusTone: ProfileStatusTone;
+    statusTone: AdminStatusTone;
     category: string;
     categoryValue: string;
     customerName: string;
@@ -247,7 +247,7 @@ export type AdminSupportOrderContext = {
     id: number;
     orderNumber: string;
     status: string;
-    statusTone: ProfileStatusTone;
+    statusTone: AdminStatusTone;
     packageTitle: string;
 };
 
@@ -255,5 +255,5 @@ export type AdminSupportLicenseContext = {
     id: number;
     packageTitle: string;
     status: string;
-    statusTone: ProfileStatusTone;
+    statusTone: AdminStatusTone;
 };

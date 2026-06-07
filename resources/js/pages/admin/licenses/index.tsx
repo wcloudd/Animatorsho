@@ -1,6 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import { useAdminListFocus } from '@/hooks/use-admin-list-focus';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
+import { AdminCallout } from '@/components/admin/admin-callout';
 import { AdminCommerceCard } from '@/components/admin/admin-commerce-card';
 import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
 import { AdminDetailBadgeRow } from '@/components/admin/admin-detail-badge-row';
@@ -17,7 +19,7 @@ import type { AdminLicenseListItem, AdminPaginated } from '@/types/admin';
 
 type PageProps = {
     licenses: AdminPaginated<AdminLicenseListItem>;
-    filters: { q: string | null };
+    filters: { q: string | null; focus: number | null };
 };
 
 function licenseSubtitle(license: AdminLicenseListItem): string {
@@ -36,8 +38,18 @@ function shouldShowLicenseKey(license: AdminLicenseListItem): boolean {
     return !license.canActivate;
 }
 
+function licenseNeedsAttention(license: AdminLicenseListItem): boolean {
+    return (
+        license.canActivate ||
+        license.canRetryProvision ||
+        Boolean(license.apiFailureSummary)
+    );
+}
+
 export default function AdminLicensesIndex({ licenses, filters }: PageProps) {
     const [confirmKey, setConfirmKey] = useState<string | number | null>(null);
+
+    useAdminListFocus(filters.focus);
 
     return (
         <>
@@ -55,17 +67,24 @@ export default function AdminLicensesIndex({ licenses, filters }: PageProps) {
                 {licenses.data.map((license) => (
                     <AdminCommerceCard
                         key={license.id}
+                        itemId={license.id}
                         title={license.packageTitle}
                         subtitle={licenseSubtitle(license)}
                         badge={{
                             label: license.status,
                             tone: license.statusTone,
                         }}
+                        highlight={licenseNeedsAttention(license)}
+                        highlightTone={
+                            license.apiFailureSummary ? 'error' : 'action'
+                        }
+                        focused={filters.focus === license.id}
                     >
                         <AdminInfoGrid>
                             <AdminDetailRow
                                 label="نام مشتری"
                                 value={license.orderCustomerName}
+                                truncateValue
                             />
                             <AdminDetailRow
                                 label="موبایل مشتری"
@@ -92,14 +111,12 @@ export default function AdminLicensesIndex({ licenses, filters }: PageProps) {
                         </AdminInfoGrid>
 
                         {license.apiFailureSummary ? (
-                            <div className="rounded-xl bg-gold-soft px-3 py-2 ring-1 ring-gold/20">
-                                <p className="text-xs font-medium text-muted">
-                                    خطای آخرین تلاش API
-                                </p>
-                                <p className="mt-1 text-sm text-text">
-                                    {license.apiFailureSummary}
-                                </p>
-                            </div>
+                            <AdminCallout
+                                title="خطای آخرین تلاش API"
+                                variant="error"
+                            >
+                                {license.apiFailureSummary}
+                            </AdminCallout>
                         ) : null}
 
                         {shouldShowLicenseKey(license) ? (
@@ -238,7 +255,7 @@ export default function AdminLicensesIndex({ licenses, filters }: PageProps) {
                 ))}
                 {licenses.data.length === 0 ? (
                     <AdminEmptyState
-                        message="لایسنسی یافت نشد."
+                        message="هنوز لایسنسی ثبت نشده است."
                         isSearchActive={Boolean(filters.q)}
                     />
                 ) : null}

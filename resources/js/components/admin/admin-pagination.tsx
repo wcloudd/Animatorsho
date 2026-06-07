@@ -12,7 +12,7 @@ export function AdminPagination<T>({ paginator }: AdminPaginationProps<T>) {
     }
 
     return (
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-1">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-1.5">
             {paginator.links.map((link, index) => {
                 if (link.url === null) {
                     return (
@@ -29,9 +29,9 @@ export function AdminPagination<T>({ paginator }: AdminPaginationProps<T>) {
                         key={`${link.label}-${index}`}
                         href={link.url}
                         className={cn(
-                            'rounded-lg px-3 py-1 text-sm transition',
+                            'rounded-lg px-3 py-1.5 text-sm transition',
                             link.active
-                                ? 'bg-purple text-white'
+                                ? 'bg-purple text-white shadow-xs'
                                 : 'text-muted hover:bg-purple-soft hover:text-purple',
                         )}
                         preserveState

@@ -43,7 +43,7 @@ export function ProfilePresetAvatarCard({
                 resolved={resolved}
                 className={cn(avatarSize, 'shadow-soft ring-2 ring-white/80')}
             />
-            <span className="line-clamp-2 text-[11px] font-semibold leading-snug text-text">
+            <span className="line-clamp-2 text-xs font-semibold leading-snug text-text">
                 {preset.labelFa}
             </span>
         </button>

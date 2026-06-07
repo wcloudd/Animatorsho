@@ -25,9 +25,11 @@ class SpotPlayerLicenseController extends Controller
     public function index(Request $request): Response
     {
         $search = $request->string('q')->toString();
+        $focus = $request->has('focus') ? $request->integer('focus') : null;
 
         return Inertia::render('admin/licenses/index', $this->licenseList->listForAdmin(
             $search !== '' ? $search : null,
+            $focus,
         ));
     }
 

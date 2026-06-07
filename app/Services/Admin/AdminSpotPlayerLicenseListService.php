@@ -5,7 +5,9 @@ namespace App\Services\Admin;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\Payment;
 use App\Models\SpotPlayerLicense;
+use App\Support\Admin\AdminListFocus;
 use App\Support\Admin\AdminListSearch;
+use App\Support\AdminStatusLabels;
 use App\Support\ProfileStatusLabels;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,11 +17,13 @@ class AdminSpotPlayerLicenseListService
     /**
      * @return array{
      *     licenses: LengthAwarePaginator<int, array<string, mixed>>,
-     *     filters: array{q: ?string}
+     *     filters: array{q: ?string, focus: ?int}
      * }
      */
-    public function listForAdmin(?string $search = null): array
+    public function listForAdmin(?string $search = null, ?int $focus = null): array
     {
+        $focusId = AdminListFocus::normalize($focus);
+
         $query = SpotPlayerLicense::query()
             ->with([
                 'user',
@@ -29,6 +33,8 @@ class AdminSpotPlayerLicenseListService
                 ]),
             ])
             ->latest();
+
+        AdminListFocus::apply($query, $focusId);
 
         AdminListSearch::apply($query, $search, function (Builder $searchQuery, string $pattern): void {
             $searchQuery
@@ -60,6 +66,7 @@ class AdminSpotPlayerLicenseListService
             'licenses' => $licenses,
             'filters' => [
                 'q' => $normalizedSearch,
+                'focus' => $focusId,
             ],
         ];
     }
@@ -89,17 +96,17 @@ class AdminSpotPlayerLicenseListService
                 ? ProfileStatusLabels::orderStatus($order->status)
                 : null,
             'orderStatusTone' => $order !== null
-                ? ProfileStatusLabels::orderStatusTone($order->status)
+                ? AdminStatusLabels::orderStatusTone($order->status)
                 : null,
             'latestPaymentStatus' => $latestPayment instanceof Payment
                 ? ProfileStatusLabels::paymentStatus($latestPayment->status)
                 : null,
             'latestPaymentStatusTone' => $latestPayment instanceof Payment
-                ? ProfileStatusLabels::paymentStatusTone($latestPayment->status)
+                ? AdminStatusLabels::paymentStatusTone($latestPayment->status)
                 : null,
             'status' => ProfileStatusLabels::licenseStatus($status),
             'statusValue' => $status->value,
-            'statusTone' => ProfileStatusLabels::licenseStatusTone($status),
+            'statusTone' => AdminStatusLabels::licenseStatusTone($status),
             'licenseKey' => $license->license_key,
             'activatedAt' => $license->activated_at?->toIso8601String(),
             'canActivate' => in_array($status, [
