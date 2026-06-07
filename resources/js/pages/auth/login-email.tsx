@@ -10,12 +10,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { AUTH_LOGIN_COPY } from '@/lib/auth-form-data';
+import { AUTH_LOGIN_EMAIL_COPY } from '@/lib/auth-form-data';
 import { localizeAuthStatus } from '@/lib/auth-validation-messages';
 import { cn } from '@/lib/utils';
-import { create as mobileAuthCreate } from '@/routes/auth/mobile';
-import { register } from '@/routes';
-import { email as loginEmail, store } from '@/routes/login';
+import { login, register } from '@/routes';
+import { store } from '@/routes/login/email';
 import { request } from '@/routes/password';
 
 function redirectQueryFromUrl(url: string): { redirect: string } | undefined {
@@ -30,8 +29,8 @@ type Props = {
     canResetPassword: boolean;
 };
 
-export default function Login({ status, canResetPassword }: Props) {
-    const copy = AUTH_LOGIN_COPY;
+export default function LoginEmail({ status, canResetPassword }: Props) {
+    const copy = AUTH_LOGIN_EMAIL_COPY;
     const localizedStatus = localizeAuthStatus(status);
     const { url } = usePage();
     const redirectQuery = redirectQueryFromUrl(url);
@@ -59,24 +58,24 @@ export default function Login({ status, canResetPassword }: Props) {
                             <div className="grid gap-5">
                                 <div className="grid gap-2">
                                     <Label
-                                        htmlFor="mobile"
+                                        htmlFor="email"
                                         className={authLabelClassName}
                                     >
-                                        {copy.mobileLabel}
+                                        {copy.emailLabel}
                                     </Label>
                                     <Input
-                                        id="mobile"
-                                        type="tel"
-                                        name="mobile"
+                                        id="email"
+                                        type="email"
+                                        name="email"
                                         required
                                         autoFocus
                                         tabIndex={1}
-                                        autoComplete="tel"
-                                        placeholder={copy.mobilePlaceholder}
+                                        autoComplete="email"
+                                        placeholder={copy.emailPlaceholder}
                                         dir="ltr"
                                         className={authFieldClassName}
                                     />
-                                    <AuthInputError message={errors.mobile} />
+                                    <AuthInputError message={errors.email} />
                                 </div>
 
                                 <div className="grid gap-2">
@@ -130,7 +129,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     )}
                                     tabIndex={4}
                                     disabled={processing}
-                                    data-test="login-button"
+                                    data-test="login-email-button"
                                 >
                                     {processing ? <Spinner /> : null}
                                     {copy.submitLabel}
@@ -139,23 +138,13 @@ export default function Login({ status, canResetPassword }: Props) {
 
                             <div className="flex flex-col items-center gap-3 text-center">
                                 <TextLink
-                                    href={mobileAuthCreate(
+                                    href={login(
                                         redirectQuery ? { query: redirectQuery } : undefined,
                                     )}
                                     className="text-sm font-bold text-purple"
                                     tabIndex={5}
                                 >
-                                    {copy.otpLoginLabel}
-                                </TextLink>
-
-                                <TextLink
-                                    href={loginEmail(
-                                        redirectQuery ? { query: redirectQuery } : undefined,
-                                    )}
-                                    className="text-sm font-medium text-muted"
-                                    tabIndex={6}
-                                >
-                                    {copy.legacyEmailLoginLabel}
+                                    {copy.primaryLoginLabel}
                                 </TextLink>
 
                                 <div className="flex flex-col items-center gap-1">
@@ -167,7 +156,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                             redirectQuery ? { query: redirectQuery } : undefined,
                                         )}
                                         className="text-sm font-bold text-purple"
-                                        tabIndex={7}
+                                        tabIndex={6}
                                     >
                                         {copy.secondaryLinkLabel}
                                     </TextLink>

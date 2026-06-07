@@ -289,7 +289,7 @@ test('email password auth still works for users with credentials', function () {
         'email' => 'password-user@example.com',
     ]);
 
-    $this->post(route('login.store'), [
+    $this->post(route('login.email.store'), [
         'email' => $user->email,
         'password' => 'password',
     ]);
@@ -300,7 +300,7 @@ test('email password auth still works for users with credentials', function () {
 test('email password login fails for otp only users without email', function () {
     User::factory()->otpOnly('09126667788')->create();
 
-    $this->post(route('login.store'), [
+    $this->post(route('login.email.store'), [
         'email' => 'missing@example.com',
         'password' => 'password',
     ]);

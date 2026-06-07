@@ -18,7 +18,25 @@ export const AUTH_LOGIN_COPY = {
     headTitle: 'ورود',
     title: 'ورود به انیماتورشو',
     subtitle:
-        'برای دیدن دوره‌ها، لایسنس‌ها و پشتیبانی وارد حساب کاربری‌ات شو.',
+        'با شماره موبایل و رمز عبور وارد حساب کاربری‌ات شو.',
+    mobileLabel: 'شماره موبایل',
+    mobilePlaceholder: '09123456789',
+    passwordLabel: 'رمز عبور',
+    passwordPlaceholder: 'رمز عبور',
+    rememberLabel: 'مرا به خاطر بسپار',
+    forgotPasswordLabel: 'فراموشی رمز عبور',
+    submitLabel: 'ورود به حساب',
+    otpLoginLabel: 'ورود با کد یکبار مصرف',
+    legacyEmailLoginLabel: 'ورود با ایمیل برای حساب‌های قدیمی / ادمین',
+    secondaryPrompt: 'هنوز ثبت‌نام نکردی؟',
+    secondaryLinkLabel: 'ثبت‌نام',
+} as const;
+
+export const AUTH_LOGIN_EMAIL_COPY = {
+    headTitle: 'ورود با ایمیل',
+    title: 'ورود با ایمیل',
+    subtitle:
+        'برای حساب‌های قدیمی یا ادمین که با ایمیل ثبت‌نام کرده‌اند.',
     emailLabel: 'ایمیل',
     emailPlaceholder: 'example@email.com',
     passwordLabel: 'رمز عبور',
@@ -26,8 +44,9 @@ export const AUTH_LOGIN_COPY = {
     rememberLabel: 'مرا به خاطر بسپار',
     forgotPasswordLabel: 'فراموشی رمز عبور',
     submitLabel: 'ورود به حساب',
+    primaryLoginLabel: 'ورود با شماره موبایل و رمز عبور',
     secondaryPrompt: 'هنوز ثبت‌نام نکردی؟',
-    secondaryLinkLabel: 'ثبت‌نام در انیماتورشو',
+    secondaryLinkLabel: 'ثبت‌نام',
 } as const;
 
 export const AUTH_REGISTER_COPY = {

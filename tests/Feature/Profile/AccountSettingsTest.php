@@ -193,7 +193,7 @@ test('otp user can login with email and password after setting credentials', fun
 
     auth()->logout();
 
-    $response = $this->post(route('login.store'), [
+    $response = $this->post(route('login.email.store'), [
         'email' => 'backup@example.com',
         'password' => 'backup-password-123',
     ]);
@@ -217,7 +217,7 @@ test('existing email password user still works after profile update', function (
 
     auth()->logout();
 
-    $this->post(route('login.store'), [
+    $this->post(route('login.email.store'), [
         'email' => 'existing@example.com',
         'password' => 'password',
     ])->assertRedirect(route('home', absolute: false));

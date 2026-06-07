@@ -21,7 +21,7 @@ test('external and invalid redirect paths are rejected', function () {
 });
 
 test('login redirects back to checkout confirm when redirect query is provided', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile('09129876543')->create();
     $target = route('checkout.confirm', [
         'package' => 'full',
         'payment' => 'cash',
@@ -30,7 +30,7 @@ test('login redirects back to checkout confirm when redirect query is provided',
     $this->get(route('login', ['redirect' => $target]));
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'mobile' => '09129876543',
         'password' => 'password',
     ]);
 

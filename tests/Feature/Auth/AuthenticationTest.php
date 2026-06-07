@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
 
 test('login screen can be rendered', function () {
@@ -10,16 +9,69 @@ test('login screen can be rendered', function () {
     $response->assertOk();
 });
 
-test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+test('main login page uses mobile primary auth component', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('auth/login'));
+});
+
+test('legacy email login page can be rendered', function () {
+    $this->get(route('login.email'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('auth/login-email'));
+});
+
+test('users can authenticate using mobile and password', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'mobile' => '09121234567',
         'password' => 'password',
     ]);
 
-    $this->assertAuthenticated();
+    $this->assertAuthenticatedAs($user);
     $response->assertRedirect(route('home', absolute: false));
+});
+
+test('mobile is normalized before login lookup', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
+
+    $this->post(route('login.store'), [
+        'mobile' => '+98 912 123 4567',
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticatedAs($user);
+});
+
+test('users can authenticate using legacy email login route', function () {
+    $user = User::factory()->create([
+        'email' => 'legacy-user@example.com',
+    ]);
+
+    $response = $this->post(route('login.email.store'), [
+        'email' => 'legacy-user@example.com',
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticatedAs($user);
+    $response->assertRedirect(route('home', absolute: false));
+});
+
+test('admin can authenticate using legacy email login route', function () {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin@example.com',
+    ]);
+
+    $this->post(route('login.email.store'), [
+        'email' => 'admin@example.com',
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticatedAs($admin);
+
+    $this->get(route('admin.dashboard'))
+        ->assertOk();
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
@@ -32,7 +84,7 @@ test('users with two factor enabled are redirected to two factor challenge', fun
 
     $user = User::factory()->withTwoFactor()->create();
 
-    $response = $this->post(route('login'), [
+    $response = $this->post(route('login.email.store'), [
         'email' => $user->email,
         'password' => 'password',
     ]);
@@ -42,12 +94,36 @@ test('users with two factor enabled are redirected to two factor challenge', fun
     $this->assertGuest();
 });
 
-test('users can not authenticate with invalid password', function () {
+test('users can not authenticate with invalid mobile password', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
+
+    $this->post(route('login.store'), [
+        'mobile' => '09121234567',
+        'password' => 'wrong-password',
+    ]);
+
+    $this->assertGuest();
+});
+
+test('users can not authenticate with invalid email password on legacy route', function () {
     $user = User::factory()->create();
+
+    $this->post(route('login.email.store'), [
+        'email' => $user->email,
+        'password' => 'wrong-password',
+    ]);
+
+    $this->assertGuest();
+});
+
+test('email password login on main route does not authenticate legacy users', function () {
+    $user = User::factory()->create([
+        'email' => 'legacy-user@example.com',
+    ]);
 
     $this->post(route('login.store'), [
         'email' => $user->email,
-        'password' => 'wrong-password',
+        'password' => 'password',
     ]);
 
     $this->assertGuest();
@@ -63,15 +139,18 @@ test('users can logout', function () {
     $this->assertGuest();
 });
 
-test('users are rate limited', function () {
-    $user = User::factory()->create();
+test('users are rate limited on mobile login', function () {
+    User::factory()->withMobile('09121234567')->create();
 
-    RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
+    foreach (range(1, 5) as $attempt) {
+        $this->post(route('login.store'), [
+            'mobile' => '09121234567',
+            'password' => 'wrong-password',
+        ])->assertSessionHasErrors('mobile');
+    }
 
-    $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+    $this->post(route('login.store'), [
+        'mobile' => '09121234567',
         'password' => 'wrong-password',
-    ]);
-
-    $response->assertTooManyRequests();
+    ])->assertStatus(429);
 });

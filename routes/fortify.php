@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -9,14 +10,23 @@ use Laravel\Fortify\Http\Controllers\PasswordResetLinkController;
 
 Route::middleware(config('fortify.middleware', ['web']))->group(function () {
     Route::middleware('guest')->group(function () {
-        Route::get('/login', [AuthenticatedSessionController::class, 'create'])
+        Route::get('/login', [LoginController::class, 'create'])
             ->name('login');
 
-        Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+        Route::post('/login', [LoginController::class, 'store'])
             ->middleware(array_filter([
                 'throttle:'.config('fortify.limiters.login', 'login'),
             ]))
             ->name('login.store');
+
+        Route::get('/login/email', [LoginController::class, 'createEmail'])
+            ->name('login.email');
+
+        Route::post('/login/email', [LoginController::class, 'storeEmail'])
+            ->middleware(array_filter([
+                'throttle:'.config('fortify.limiters.login', 'login'),
+            ]))
+            ->name('login.email.store');
 
         if (Features::enabled(Features::registration())) {
             Route::get('/register', [RegisterController::class, 'create'])
