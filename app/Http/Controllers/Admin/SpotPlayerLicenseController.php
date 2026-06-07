@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\SpotPlayerLicenseStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ActivateSpotPlayerLicenseRequest;
 use App\Models\SpotPlayerLicense;
@@ -45,9 +46,14 @@ class SpotPlayerLicenseController extends Controller
 
     public function retryProvision(SpotPlayerLicense $license): RedirectResponse
     {
-        $this->spotPlayerApi->attemptForLicense($license);
+        $license = $this->spotPlayerApi->attemptForLicense($license);
+        $license->refresh();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'درخواست فعال‌سازی مجدد SpotPlayer ثبت شد.']);
+        if ($license->status === SpotPlayerLicenseStatus::Active) {
+            Inertia::flash('toast', ['type' => 'success', 'message' => 'لایسنس SpotPlayer با موفقیت فعال شد.']);
+        } else {
+            Inertia::flash('toast', ['type' => 'warning', 'message' => 'درخواست ارسال شد اما لایسنس هنوز فعال نشد. جزئیات را در همین صفحه بررسی کنید.']);
+        }
 
         return redirect()->back();
     }

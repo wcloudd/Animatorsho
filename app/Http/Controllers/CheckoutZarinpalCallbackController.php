@@ -8,10 +8,12 @@ use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\OrderPaymentCompletionService;
+use App\Services\Zarinpal\ZarinpalVerifyResult;
 use App\Services\ZarinpalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutZarinpalCallbackController extends Controller
 {
@@ -62,6 +64,17 @@ class CheckoutZarinpalCallbackController extends Controller
         $verifyResult = $this->zarinpal->verify($payment, $authority);
 
         if ($verifyResult->successful) {
+            $order->refresh();
+
+            if ($order->status === OrderStatus::Cancelled) {
+                $this->recordVerifiedAfterCancelledOrder($payment, $verifyResult);
+
+                return redirect()->route('checkout.result', [
+                    'status' => 'payment-received-needs-support',
+                    'order' => $order->order_number,
+                ]);
+            }
+
             $this->orderPaymentCompletion->markOrderPaid($order, $verifyResult->refId);
 
             return redirect()->route('checkout.result', [
@@ -89,5 +102,22 @@ class CheckoutZarinpalCallbackController extends Controller
                 'status' => OrderStatus::Failed,
             ]);
         });
+    }
+
+    private function recordVerifiedAfterCancelledOrder(Payment $payment, ZarinpalVerifyResult $verifyResult): void
+    {
+        $payment->update([
+            'meta' => array_merge($payment->meta ?? [], [
+                'callback_anomaly' => 'cancelled_order_verified',
+                'verified_after_cancel_at' => now()->toIso8601String(),
+                'gateway_ref_id' => $verifyResult->refId,
+            ]),
+        ]);
+
+        Log::warning('Zarinpal verified for cancelled order.', [
+            'order_id' => $payment->order_id,
+            'payment_id' => $payment->id,
+            'order_number' => $payment->order?->order_number,
+        ]);
     }
 }

@@ -14,6 +14,7 @@ use Database\Seeders\AnimatorshoCourseSeeder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -533,5 +534,43 @@ test('admin can retry pending license provisioning', function () {
 
     expect($license->status)->toBe(SpotPlayerLicenseStatus::Active)
         ->and($license->license_key)->toBe('SPOT-RETRY-KEY')
-        ->and($license->meta['provisioned_via'])->toBe('api');
+        ->and($license->meta['provisioned_via'])->toBe('api')
+        ->and(session(SessionKey::FLASH_DATA)['toast']['type'])->toBe('success');
+});
+
+test('admin retry provisioning failure shows warning toast when license stays pending', function () {
+    enableSpotPlayerForTests();
+
+    Http::fake([
+        'https://panel.spotplayer.ir/license/edit/' => Http::response([
+            'ex' => ['msg' => 'Invalid course id'],
+        ], 422),
+    ]);
+
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+    configurePackageSpotPlayer($package, ['course_id_ch0']);
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->paid()
+        ->create(spotPlayerTestCustomer());
+
+    $license = SpotPlayerLicense::factory()
+        ->forOrder($order)
+        ->create([
+            'status' => SpotPlayerLicenseStatus::Pending,
+            'license_key' => null,
+        ]);
+
+    $this->actingAs($admin)
+        ->post(route('admin.licenses.retry-provision', $license))
+        ->assertRedirect();
+
+    $license->refresh();
+
+    expect($license->status)->toBe(SpotPlayerLicenseStatus::Pending)
+        ->and(session(SessionKey::FLASH_DATA)['toast']['type'])->toBe('warning');
 });

@@ -350,6 +350,56 @@ test('verify failure marks order and payment failed', function () {
         ->and($payment->status)->toBe(PaymentStatus::Failed);
 });
 
+test('successful zarinpal callback on cancelled order redirects to payment-received-needs-support', function () {
+    $user = User::factory()->create();
+    $order = Order::factory()->for($user)->create([
+        'status' => OrderStatus::Cancelled,
+        'payment_type' => OrderPaymentType::Cash,
+        'final_amount_toman' => 5_500_000,
+    ]);
+
+    $authority = 'A00000000000000000000000000000000008';
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Zarinpal,
+        'status' => PaymentStatus::Failed,
+        'amount_toman' => 5_500_000,
+        'meta' => [
+            'authority' => $authority,
+            'cancelled_by_user_at' => now()->toIso8601String(),
+        ],
+    ]);
+
+    $this->mock(ZarinpalService::class, function (MockInterface $mock) use ($authority): void {
+        $mock->shouldReceive('verify')
+            ->once()
+            ->withArgs(function (Payment $payment, string $receivedAuthority) use ($authority): bool {
+                return $receivedAuthority === $authority;
+            })
+            ->andReturn(ZarinpalVerifyResult::success('998877665'));
+    });
+
+    $response = $this->get(route('checkout.zarinpal.callback', [
+        'Authority' => $authority,
+        'Status' => 'OK',
+    ]));
+
+    $order->refresh();
+    $payment = $order->payments()->first();
+
+    $response->assertRedirect(route('checkout.result', [
+        'status' => 'payment-received-needs-support',
+        'order' => $order->order_number,
+    ]));
+
+    expect($order->status)->toBe(OrderStatus::Cancelled)
+        ->and($payment->status)->toBe(PaymentStatus::Failed)
+        ->and($payment->meta['callback_anomaly'])->toBe('cancelled_order_verified')
+        ->and($payment->meta['gateway_ref_id'])->toBe('998877665')
+        ->and($payment->meta)->toHaveKey('verified_after_cancel_at')
+        ->and(SpotPlayerLicense::query()->where('order_id', $order->id)->count())->toBe(0);
+});
+
 test('already paid callback redirects to success without calling verify again', function () {
     $user = User::factory()->create();
     $order = Order::factory()->for($user)->paid()->create([

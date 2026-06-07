@@ -12,7 +12,8 @@ export type CheckoutResultStatus =
     | 'failed'
     | 'manual-review'
     | 'installment-review'
-    | 'payment-pending';
+    | 'payment-pending'
+    | 'payment-received-needs-support';
 
 export type CheckoutResultVisualTone =
     | 'success'
@@ -104,6 +105,19 @@ const CHECKOUT_RESULT_CONTENT: Record<
         icon: Clock,
         statusBadgeLabel: 'ثبت سفارش',
     },
+    'payment-received-needs-support': {
+        title: 'پرداخت دریافت شد — نیاز به پیگیری',
+        description:
+            'پرداخت شما در درگاه تأیید شد، اما این سفارش قبلاً لغو شده بود. برای فعال‌سازی دسترسی، لطفاً با پشتیبانی تماس بگیر و شماره سفارش را ارسال کن.',
+        primaryCtaLabel: 'پیام به پشتیبانی',
+        primaryCtaHref: '/support',
+        secondaryCtaLabel: 'مشاهده پروفایل',
+        secondaryCtaHref: '/profile',
+        orderStatusLabel: 'نیاز به پیگیری پشتیبانی',
+        visualTone: 'gold',
+        icon: CircleAlert,
+        statusBadgeLabel: 'نیاز به پیگیری',
+    },
 };
 
 export const CHECKOUT_RESULT_FALLBACK: CheckoutResultContent = {
@@ -132,6 +146,7 @@ const VALID_STATUSES = new Set<string>([
     'manual-review',
     'installment-review',
     'payment-pending',
+    'payment-received-needs-support',
 ]);
 
 export function isCheckoutResultStatus(

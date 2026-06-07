@@ -26,9 +26,13 @@ Route::middleware('auth')->group(function () {
         ->name('checkout.orders.store');
 
     Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
-    Route::post('support/tickets', [SupportTicketController::class, 'store'])->name('support.tickets.store');
+    Route::post('support/tickets', [SupportTicketController::class, 'store'])
+        ->middleware('throttle:support-ticket')
+        ->name('support.tickets.store');
     Route::get('support/tickets/{ticket}', [SupportTicketController::class, 'show'])->name('support.tickets.show');
-    Route::post('support/tickets/{ticket}/messages', [SupportTicketController::class, 'storeMessage'])->name('support.tickets.messages.store');
+    Route::post('support/tickets/{ticket}/messages', [SupportTicketController::class, 'storeMessage'])
+        ->middleware('throttle:support-ticket')
+        ->name('support.tickets.messages.store');
     Route::get('support/tickets/{ticket}/attachments/{attachment}', [SupportTicketController::class, 'downloadAttachment'])->name('support.tickets.attachments.download');
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');

@@ -102,5 +102,11 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(10)->by($mobile.'|'.$request->ip());
         });
+
+        RateLimiter::for('support-ticket', function (Request $request) {
+            $userId = $request->user()?->id ?? $request->ip();
+
+            return Limit::perMinute(5)->by('support-ticket|'.$userId);
+        });
     }
 }

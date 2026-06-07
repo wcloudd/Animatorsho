@@ -157,3 +157,21 @@ test('sms failure does not break user reply', function () {
 
     expect($ticket->messages()->count())->toBe(1);
 });
+
+test('support ticket creation is rate limited', function () {
+    $user = User::factory()->create();
+
+    for ($i = 0; $i < 5; $i++) {
+        $this->actingAs($user)->post(route('support.tickets.store'), [
+            'subject' => "موضوع {$i}",
+            'category' => SupportTicketCategory::Payment->value,
+            'message' => 'پیام تست برای محدودیت ارسال.',
+        ])->assertRedirect();
+    }
+
+    $this->actingAs($user)->post(route('support.tickets.store'), [
+        'subject' => 'موضوع ششم',
+        'category' => SupportTicketCategory::Payment->value,
+        'message' => 'پیام تست برای محدودیت ارسال.',
+    ])->assertStatus(429);
+});
