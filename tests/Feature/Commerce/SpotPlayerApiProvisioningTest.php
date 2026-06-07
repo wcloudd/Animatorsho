@@ -50,11 +50,10 @@ function enableSpotPlayerForTests(): void
     ]);
 }
 
-function configurePackageSpotPlayer(CoursePackage $package, array $courseIds, ?string $accessLimit = null): CoursePackage
+function configurePackageSpotPlayer(CoursePackage $package, array $courseIds): CoursePackage
 {
     $package->update([
         'spotplayer_course_ids' => $courseIds,
-        'spotplayer_access_limit' => $accessLimit,
     ]);
 
     return $package->fresh();
@@ -105,7 +104,7 @@ test('spotplayer enabled with fake api success activates license and stores safe
 
     $user = User::factory()->create();
     $package = CoursePackage::query()->where('slug', 'chapter-1')->firstOrFail();
-    configurePackageSpotPlayer($package, ['course_id_ch1'], '1-20');
+    configurePackageSpotPlayer($package, ['course_id_ch1']);
 
     $order = Order::factory()
         ->for($user)
@@ -136,7 +135,7 @@ test('spotplayer enabled with fake api success activates license and stores safe
             && $body['course'] === ['course_id_ch1']
             && $body['name'] === $order->customer_name
             && $body['watermark']['texts'][0]['text'] === $order->customer_mobile
-            && $body['data']['limit'] === '1-20'
+            && ! array_key_exists('data', $body)
             && $body['test'] === true
             && str_contains((string) $body['payload'], (string) $order->order_number);
     });
@@ -174,7 +173,79 @@ test('spotplayer api failure keeps order paid and license pending with safe meta
         ->and($license->status)->toBe(SpotPlayerLicenseStatus::Pending)
         ->and($license->license_key)->toBeNull()
         ->and($license->meta['last_api_error'])->toBe('Invalid course id')
-        ->and($license->meta['last_api_http_status'])->toBe(422);
+        ->and($license->meta['last_api_http_status'])->toBe(422)
+        ->and($license->meta['spotplayer_error_message'])->toBe('Invalid course id')
+        ->and($license->meta['spotplayer_response_keys'])->toBe(['message'])
+        ->and($license->meta['spotplayer_response_preview'])->toContain('Invalid course id');
+});
+
+test('spotplayer 422 ex.msg response stores safe diagnostics without leaking api key', function () {
+    enableSpotPlayerForTests();
+
+    Http::fake([
+        'https://panel.spotplayer.ir/license/edit/' => Http::response([
+            'ex' => ['msg' => 'Course not found in panel'],
+        ], 422),
+    ]);
+
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+    configurePackageSpotPlayer($package, ['course_id_ch0']);
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->create(array_merge(['status' => OrderStatus::Pending], spotPlayerTestCustomer()));
+
+    Payment::factory()->forOrder($order)->create([
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    app(OrderPaymentCompletionService::class)->markOrderPaid($order);
+
+    $license = SpotPlayerLicense::query()->where('order_id', $order->id)->firstOrFail();
+
+    expect($license->status)->toBe(SpotPlayerLicenseStatus::Pending)
+        ->and($license->license_key)->toBeNull()
+        ->and($license->meta['last_api_error'])->toBe('Course not found in panel')
+        ->and($license->meta['last_api_http_status'])->toBe(422)
+        ->and($license->meta['spotplayer_error_message'])->toBe('Course not found in panel')
+        ->and($license->meta['spotplayer_response_keys'])->toBe(['ex'])
+        ->and($license->meta['spotplayer_response_preview'])->toContain('Course not found in panel')
+        ->and(mb_strlen((string) $license->meta['spotplayer_response_preview']))->toBeLessThanOrEqual(300)
+        ->and(json_encode($license->meta))->not->toContain('test-api-key-secret');
+});
+
+test('spotplayer error response redacts api key from stored diagnostics', function () {
+    enableSpotPlayerForTests();
+
+    Http::fake([
+        'https://panel.spotplayer.ir/license/edit/' => Http::response([
+            'ex' => ['msg' => 'Invalid API key test-api-key-secret'],
+        ], 422),
+    ]);
+
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+    configurePackageSpotPlayer($package, ['course_id_ch0']);
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->create(array_merge(['status' => OrderStatus::Pending], spotPlayerTestCustomer()));
+
+    Payment::factory()->forOrder($order)->create([
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    app(OrderPaymentCompletionService::class)->markOrderPaid($order);
+
+    $license = SpotPlayerLicense::query()->where('order_id', $order->id)->firstOrFail();
+    $encodedMeta = json_encode($license->meta);
+
+    expect($license->status)->toBe(SpotPlayerLicenseStatus::Pending)
+        ->and($encodedMeta)->not->toContain('test-api-key-secret')
+        ->and($license->meta['spotplayer_error_message'])->toContain('[redacted]');
 });
 
 test('spotplayer api timeout does not break payment completion flow', function () {
@@ -213,7 +284,6 @@ test('missing package course ids keeps license pending with safe admin meta', fu
     $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
     $package->update([
         'spotplayer_course_ids' => null,
-        'spotplayer_access_limit' => null,
     ]);
 
     $order = Order::factory()
@@ -335,7 +405,6 @@ test('admin package edit saves spotplayer course ids json array', function () {
             'is_active' => true,
             'display_order' => $package->display_order,
             'spotplayer_course_ids_input' => "course_id_ch1\ncourse_id_ch2, course_id_ch3",
-            'spotplayer_access_limit' => '1-20',
         ])
         ->assertRedirect(route('admin.packages.index'));
 
@@ -345,65 +414,15 @@ test('admin package edit saves spotplayer course ids json array', function () {
         'course_id_ch1',
         'course_id_ch2',
         'course_id_ch3',
-    ])
-        ->and($package->spotplayer_access_limit)->toBe('1-20');
-});
-
-test('admin package edit saves spotplayer access limit', function () {
-    $admin = User::factory()->admin()->create();
-    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
-
-    $this->actingAs($admin)
-        ->patch(route('admin.packages.update', $package), [
-            'title' => $package->title,
-            'price_toman' => $package->price_toman,
-            'is_active' => true,
-            'display_order' => $package->display_order,
-            'spotplayer_course_ids_input' => 'course_id_ch0',
-            'spotplayer_access_limit' => '0',
-        ])
-        ->assertRedirect(route('admin.packages.index'));
-
-    expect($package->fresh()->spotplayer_access_limit)->toBe('0');
-});
-
-test('new provisioning uses current package access limit', function () {
-    enableSpotPlayerForTests();
-
-    Http::fake(function (Request $request) {
-        expect($request->data()['data']['limit'])->toBe('1-21');
-
-        return Http::response([
-            '_id' => 'new-license-id',
-            'key' => 'SPOT-LIMIT-KEY',
-            'url' => 'https://spotplayer.ir/license/example',
-        ], 200);
-    });
-
-    $user = User::factory()->create();
-    $package = CoursePackage::query()->where('slug', 'chapter-1')->firstOrFail();
-    configurePackageSpotPlayer($package, ['course_id_ch1'], '1-21');
-
-    $order = Order::factory()
-        ->for($user)
-        ->forPackage($package)
-        ->create(array_merge(['status' => OrderStatus::Pending], spotPlayerTestCustomer()));
-
-    Payment::factory()->forOrder($order)->create([
-        'status' => PaymentStatus::Pending,
     ]);
-
-    app(OrderPaymentCompletionService::class)->markOrderPaid($order);
-
-    Http::assertSentCount(1);
 });
 
-test('existing licenses are not automatically changed when package limit changes', function () {
+test('existing licenses are not automatically changed when package course ids change', function () {
     enableSpotPlayerForTests();
 
     $user = User::factory()->create();
     $package = CoursePackage::query()->where('slug', 'chapter-1')->firstOrFail();
-    configurePackageSpotPlayer($package, ['course_id_ch1'], '1-20');
+    configurePackageSpotPlayer($package, ['course_id_ch1']);
 
     $existingLicense = SpotPlayerLicense::factory()->create([
         'user_id' => $user->id,
@@ -416,10 +435,11 @@ test('existing licenses are not automatically changed when package limit changes
         ],
     ]);
 
-    $package->update(['spotplayer_access_limit' => '1-21']);
+    $package->update(['spotplayer_course_ids' => ['course_id_ch1', 'course_id_ch2']]);
 
     Http::fake(function (Request $request) {
-        expect($request->data()['data']['limit'])->toBe('1-21');
+        expect($request->data()['course'])->toBe(['course_id_ch1', 'course_id_ch2'])
+            ->and($request->data())->not->toHaveKey('data');
 
         return Http::response([
             '_id' => 'brand-new-license',

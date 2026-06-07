@@ -217,6 +217,35 @@ export default function AdminLicensesIndex({ licenses }: PageProps) {
                                             .spotplayerLicenseId
                                     }
                                 />
+                                {license.apiTechnicalDetails.spotplayerErrorMessage ? (
+                                    <AdminDetailRow
+                                        label="پیام SpotPlayer"
+                                        value={
+                                            license.apiTechnicalDetails
+                                                .spotplayerErrorMessage
+                                        }
+                                    />
+                                ) : null}
+                                {license.apiTechnicalDetails
+                                    .spotplayerResponseKeys.length > 0 ? (
+                                    <AdminDetailRow
+                                        label="کلیدهای پاسخ"
+                                        value={license.apiTechnicalDetails.spotplayerResponseKeys.join(
+                                            ', ',
+                                        )}
+                                    />
+                                ) : null}
+                                {license.apiTechnicalDetails
+                                    .spotplayerResponsePreview ? (
+                                    <AdminDetailRow
+                                        label="پیش‌نمایش پاسخ"
+                                        value={
+                                            license.apiTechnicalDetails
+                                                .spotplayerResponsePreview
+                                        }
+                                        valueClassName="break-all font-mono text-xs"
+                                    />
+                                ) : null}
                                 {license.apiTechnicalDetails.lastApiError ? (
                                     <AdminDetailRow
                                         label="پیام فنی API"

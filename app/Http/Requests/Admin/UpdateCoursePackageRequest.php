@@ -23,7 +23,6 @@ class UpdateCoursePackageRequest extends FormRequest
             'is_active' => ['required', 'boolean'],
             'display_order' => ['required', 'integer', 'min:0'],
             'spotplayer_course_ids_input' => ['nullable', 'string', 'max:2000', $this->validateCourseIds(...)],
-            'spotplayer_access_limit' => ['nullable', 'string', 'max:255', 'regex:/^[0-9,\-\s]+$/'],
         ];
     }
 

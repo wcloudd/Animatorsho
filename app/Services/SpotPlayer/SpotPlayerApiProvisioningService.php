@@ -61,7 +61,13 @@ class SpotPlayerApiProvisioningService
         $result = $this->apiClient->createLicense($payload);
 
         if (! $result->successful) {
-            return $this->recordFailure($license, $result->errorMessage ?? 'SpotPlayer provisioning failed.', $result->httpStatus, $attemptMeta);
+            return $this->recordFailure(
+                $license,
+                $result->errorMessage ?? 'SpotPlayer provisioning failed.',
+                $result->httpStatus,
+                $attemptMeta,
+                $result->errorDiagnostics,
+            );
         }
 
         return $this->recordSuccess($license, $result, $attemptMeta);
@@ -82,6 +88,9 @@ class SpotPlayerApiProvisioningService
                 'spotplayer_url' => $result->url,
                 'last_api_error' => null,
                 'last_api_http_status' => $result->httpStatus,
+                'spotplayer_error_message' => null,
+                'spotplayer_response_keys' => null,
+                'spotplayer_response_preview' => null,
             ])),
         ]);
 
@@ -96,12 +105,14 @@ class SpotPlayerApiProvisioningService
 
     /**
      * @param  array<string, mixed>  $attemptMeta
+     * @param  array<string, mixed>|null  $apiDiagnostics
      */
     private function recordFailure(
         SpotPlayerLicense $license,
         string $errorMessage,
         ?int $httpStatus,
         array $attemptMeta,
+        ?array $apiDiagnostics = null,
     ): SpotPlayerLicense {
         Log::warning('SpotPlayer license provisioning failed.', [
             'license_id' => $license->id,
@@ -109,13 +120,23 @@ class SpotPlayerApiProvisioningService
             'http_status' => $httpStatus,
         ]);
 
+        $failureMeta = array_merge($attemptMeta, [
+            'last_api_error' => SpotPlayerMetaSanitizer::containsSecret($errorMessage)
+                ? 'SpotPlayer provisioning failed.'
+                : $errorMessage,
+            'last_api_http_status' => $httpStatus,
+        ]);
+
+        if (is_array($apiDiagnostics)) {
+            $failureMeta = array_merge($failureMeta, array_filter([
+                'spotplayer_error_message' => $apiDiagnostics['spotplayer_error_message'] ?? null,
+                'spotplayer_response_keys' => $apiDiagnostics['spotplayer_response_keys'] ?? null,
+                'spotplayer_response_preview' => $apiDiagnostics['spotplayer_response_preview'] ?? null,
+            ], fn (mixed $value): bool => $value !== null));
+        }
+
         $license->update([
-            'meta' => SpotPlayerMetaSanitizer::merge($license->meta, array_merge($attemptMeta, [
-                'last_api_error' => SpotPlayerMetaSanitizer::containsSecret($errorMessage)
-                    ? 'SpotPlayer provisioning failed.'
-                    : $errorMessage,
-                'last_api_http_status' => $httpStatus,
-            ])),
+            'meta' => SpotPlayerMetaSanitizer::merge($license->meta, $failureMeta),
         ]);
 
         return $license->fresh() ?? $license;

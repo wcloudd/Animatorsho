@@ -40,7 +40,6 @@ export type AdminPackageEdit = {
     displayOrder: number;
     ordersCount: number;
     spotplayerCourseIdsText: string;
-    spotplayerAccessLimit: string | null;
 };
 
 export type AdminOrderListItem = {
@@ -123,6 +122,9 @@ export type AdminLicenseListItem = {
         lastApiError: string | null;
         lastApiHttpStatus: number | null;
         spotplayerLicenseId: string | null;
+        spotplayerErrorMessage: string | null;
+        spotplayerResponseKeys: string[];
+        spotplayerResponsePreview: string | null;
     };
     canRetryProvision: boolean;
 };

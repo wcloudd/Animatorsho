@@ -53,14 +53,6 @@ class SpotPlayerLicensePayloadBuilder
             $payload['payload'] = 'order_id:'.$license->order_id;
         }
 
-        $limit = $package->spotplayer_access_limit;
-
-        if (is_string($limit) && trim($limit) !== '') {
-            $payload['data'] = [
-                'limit' => $this->buildLimitMap($courseIds, trim($limit)),
-            ];
-        }
-
         return $payload;
     }
 
@@ -86,24 +78,5 @@ class SpotPlayerLicensePayloadBuilder
         }
 
         return $fallbackName;
-    }
-
-    /**
-     * @param  list<string>  $courseIds
-     * @return array<string, string>|string
-     */
-    private function buildLimitMap(array $courseIds, string $limit): array|string
-    {
-        if (count($courseIds) === 1) {
-            return $limit;
-        }
-
-        $limitMap = [];
-
-        foreach ($courseIds as $courseId) {
-            $limitMap[$courseId] = $limit;
-        }
-
-        return $limitMap;
     }
 }

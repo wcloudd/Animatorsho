@@ -43,15 +43,20 @@ class SpotPlayerApiClient
         $httpStatus = $response->status();
 
         if (! $response->successful()) {
-            $errorMessage = $this->extractErrorMessage($response->json());
+            /** @var array<string, mixed>|null $body */
+            $body = $response->json();
+            $diagnostics = SpotPlayerApiResponseDiagnostics::fromJsonBody($body);
+            $errorMessage = $diagnostics['last_api_error'];
 
             Log::warning('SpotPlayer license create returned an error response.', [
                 'http_status' => $httpStatus,
+                'response_keys' => $diagnostics['spotplayer_response_keys'],
             ]);
 
             return SpotPlayerApiResult::failure(
-                $errorMessage ?? 'SpotPlayer returned an error response.',
+                $errorMessage,
                 $httpStatus,
+                $diagnostics,
             );
         }
 
@@ -71,31 +76,5 @@ class SpotPlayerApiClient
         }
 
         return SpotPlayerApiResult::success($licenseKey, $externalId, $licenseUrl, $httpStatus);
-    }
-
-    private function extractErrorMessage(mixed $body): ?string
-    {
-        if (! is_array($body)) {
-            return null;
-        }
-
-        foreach (['message', 'error', 'msg'] as $key) {
-            if (isset($body[$key]) && is_string($body[$key]) && $body[$key] !== '') {
-                return $this->sanitizeErrorMessage($body[$key]);
-            }
-        }
-
-        return null;
-    }
-
-    private function sanitizeErrorMessage(string $message): string
-    {
-        $apiKey = config('spotplayer.api_key');
-
-        if (is_string($apiKey) && $apiKey !== '') {
-            $message = str_replace($apiKey, '[redacted]', $message);
-        }
-
-        return mb_substr($message, 0, 500);
     }
 }

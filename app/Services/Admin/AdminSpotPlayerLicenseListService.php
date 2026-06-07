@@ -80,12 +80,21 @@ class AdminSpotPlayerLicenseListService
             'canRevoke' => $status === SpotPlayerLicenseStatus::Active,
             'provisionedVia' => $provisionedVia,
             'provisionedViaLabel' => $this->provisionedViaLabel($provisionedVia),
-            'apiFailureSummary' => is_string($meta['last_api_error'] ?? null) ? $meta['last_api_error'] : null,
+            'apiFailureSummary' => is_string($meta['spotplayer_error_message'] ?? null)
+                ? $meta['spotplayer_error_message']
+                : (is_string($meta['last_api_error'] ?? null) ? $meta['last_api_error'] : null),
             'apiTechnicalDetails' => [
                 'lastApiAttemptAt' => is_string($meta['last_api_attempt_at'] ?? null) ? $meta['last_api_attempt_at'] : null,
                 'lastApiError' => is_string($meta['last_api_error'] ?? null) ? $meta['last_api_error'] : null,
                 'lastApiHttpStatus' => is_int($meta['last_api_http_status'] ?? null) ? $meta['last_api_http_status'] : null,
                 'spotplayerLicenseId' => is_string($meta['spotplayer_license_id'] ?? null) ? $meta['spotplayer_license_id'] : null,
+                'spotplayerErrorMessage' => is_string($meta['spotplayer_error_message'] ?? null) ? $meta['spotplayer_error_message'] : null,
+                'spotplayerResponseKeys' => is_array($meta['spotplayer_response_keys'] ?? null)
+                    ? array_values(array_filter($meta['spotplayer_response_keys'], is_string(...)))
+                    : [],
+                'spotplayerResponsePreview' => is_string($meta['spotplayer_response_preview'] ?? null)
+                    ? $meta['spotplayer_response_preview']
+                    : null,
             ],
             'canRetryProvision' => $status === SpotPlayerLicenseStatus::Pending
                 && config('spotplayer.enabled')

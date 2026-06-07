@@ -138,31 +138,31 @@ function LicenseKeyCopyField({ licenseKey }: { licenseKey: string }) {
     };
 
     return (
-        <div className="flex flex-col gap-1">
+        <div className="flex min-w-0 w-full flex-col gap-2">
             <span className="text-xs font-medium text-muted">
                 کد لایسنس SpotPlayer
             </span>
+            <div
+                dir="ltr"
+                className="max-h-24 min-w-0 overflow-x-hidden overflow-y-auto rounded-xl bg-surface px-3 py-2 ring-1 ring-border"
+            >
+                <p className="break-all text-left font-mono text-[11px] leading-relaxed text-text">
+                    {licenseKey}
+                </p>
+            </div>
             <button
                 type="button"
                 onClick={handleCopy}
-                aria-label={`کپی کد لایسنس ${licenseKey}`}
+                aria-label="کپی کد لایسنس SpotPlayer"
                 className={cn(
-                    'rounded-xl bg-surface px-3 py-2 text-sm font-bold tracking-wide text-text ring-1 ring-border transition-colors',
-                    'cursor-pointer hover:bg-purple-soft hover:ring-purple/30',
-                    copied && 'bg-green-soft ring-green/40',
+                    'flex h-10 w-full min-w-0 items-center justify-center rounded-pill px-4 text-sm font-bold transition-opacity hover:opacity-95',
+                    copied
+                        ? 'bg-green-soft text-green ring-1 ring-green/40'
+                        : 'btn-cta-green text-white shadow-soft',
                 )}
             >
-                {licenseKey}
+                {copied ? 'در کلیپ‌بورد ذخیره شد' : 'کپی کد لایسنس'}
             </button>
-            {copied ? (
-                <p
-                    role="status"
-                    aria-live="polite"
-                    className="text-xs font-medium text-green"
-                >
-                    در کلیپ‌بورد ذخیره شد
-                </p>
-            ) : null}
         </div>
     );
 }
@@ -197,7 +197,7 @@ export function ProfileAccessCard({ accessItems }: ProfileAccessCardProps) {
                     {accessItems.map((item) => (
                         <li
                             key={item.id}
-                            className="flex flex-col gap-3 rounded-2xl bg-surface-warm p-4 ring-1 ring-border/70"
+                            className="flex min-w-0 flex-col gap-3 rounded-2xl bg-surface-warm p-4 ring-1 ring-border/70"
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <h3 className="text-sm font-bold text-text">

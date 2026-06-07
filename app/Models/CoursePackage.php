@@ -21,7 +21,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'is_active',
     'display_order',
     'spotplayer_course_ids',
-    'spotplayer_access_limit',
 ])]
 class CoursePackage extends Model
 {
