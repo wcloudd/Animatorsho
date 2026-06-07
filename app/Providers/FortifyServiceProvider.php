@@ -139,9 +139,9 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('consultation-submit', function (Request $request) {
-            $mobile = IranianMobile::normalize($request->input('mobile')) ?? 'unknown';
+            $userId = $request->user()?->id ?? $request->ip();
 
-            return Limit::perMinute(3)->by('consultation-submit|'.$mobile.'|'.$request->ip());
+            return Limit::perMinute(3)->by('consultation-submit|'.$userId);
         });
     }
 }

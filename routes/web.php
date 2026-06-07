@@ -23,7 +23,7 @@ Route::get('/checkout/zarinpal/callback', CheckoutZarinpalCallbackController::cl
 
 Route::get('/consultation', [ConsultationController::class, 'index'])->name('consultation');
 Route::post('/consultation', [ConsultationController::class, 'store'])
-    ->middleware('throttle:consultation-submit')
+    ->middleware(['auth', 'verified.mobile', 'throttle:consultation-submit'])
     ->name('consultation.store');
 
 Route::middleware('auth')->group(function () {

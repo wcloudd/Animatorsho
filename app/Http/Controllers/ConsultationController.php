@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreConsultationRequestRequest;
+use App\Models\User;
 use App\Services\ConsultationRequestService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -21,8 +22,11 @@ class ConsultationController extends Controller
 
     public function store(StoreConsultationRequestRequest $request): RedirectResponse
     {
+        /** @var User $user */
+        $user = $request->user();
+
         $this->consultations->create(
-            $request->user(),
+            $user,
             $request->validated(),
         );
 

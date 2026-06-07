@@ -2,14 +2,13 @@
 
 namespace App\Http\Requests;
 
-use App\Support\IranianMobile;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreConsultationRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     protected function prepareForValidation(): void
@@ -18,14 +17,6 @@ class StoreConsultationRequestRequest extends FormRequest
 
         if ($this->has('full_name') && is_string($this->input('full_name'))) {
             $merged['name'] = trim($this->input('full_name'));
-        }
-
-        if ($this->has('mobile') && is_string($this->input('mobile'))) {
-            $normalized = IranianMobile::normalize($this->input('mobile'));
-
-            if ($normalized !== null) {
-                $merged['mobile'] = $normalized;
-            }
         }
 
         if ($this->has('note') && is_string($this->input('note'))) {
@@ -52,11 +43,6 @@ class StoreConsultationRequestRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'min:3', 'max:255'],
-            'mobile' => ['required', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
-                if (! IranianMobile::isValid(is_string($value) ? $value : null)) {
-                    $fail('شماره موبایل معتبر وارد کنید (مثال: 09123456789).');
-                }
-            }],
             'note' => ['nullable', 'string', 'max:2000'],
             'level' => ['nullable', 'string', 'in:beginner,some-design,made-animation,unsure'],
             'interest' => ['nullable', 'string', 'in:full-course,chapter,installment,summer-class,advice-only'],
@@ -71,7 +57,6 @@ class StoreConsultationRequestRequest extends FormRequest
     {
         return [
             'name' => 'نام و نام خانوادگی',
-            'mobile' => 'شماره موبایل',
             'note' => 'توضیح کوتاه',
             'level' => 'سطح فعلی',
             'interest' => 'علاقه‌مند به',
