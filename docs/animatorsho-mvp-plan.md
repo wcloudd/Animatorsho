@@ -18,7 +18,7 @@ Main goal:
 - React
 - Inertia
 - Tailwind
-- MySQL
+- SQLite (local development) / PostgreSQL (production) — see [PostgreSQL Production Deployment](postgresql-deploy.md)
 - Laravel authentication starter
 - Future admin panel can be built with a Laravel-friendly admin approach such as Filament.
 
