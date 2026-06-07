@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Headphones, User } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState, type TransitionEvent } from 'react';
+import { useScrollDirectionNavVisible } from '@/hooks/use-scroll-direction';
 import { home, profile } from '@/routes';
 import support from '@/routes/support';
 import { cn, toUrl } from '@/lib/utils';
@@ -160,12 +161,16 @@ function CenterNavItem({ active }: CenterNavItemProps) {
     );
 }
 
+const NAV_SLIDE_MS = 420;
+
 export function BottomNav() {
     useEffect(() => {
         preloadNavLogos();
     }, []);
 
     const { url } = usePage();
+    const navVisible = useScrollDirectionNavVisible();
+    const [navInteractive, setNavInteractive] = useState(true);
     const homeHref = toUrl(home());
     const supportHref = toUrl(support.index());
     const profileHref = toUrl(profile());
@@ -174,10 +179,39 @@ export function BottomNav() {
     const supportActive = isActive(url, supportHref);
     const profileActive = isActive(url, profileHref);
 
+    useEffect(() => {
+        if (navVisible) {
+            setNavInteractive(true);
+            return;
+        }
+
+        const timer = window.setTimeout(
+            () => setNavInteractive(false),
+            NAV_SLIDE_MS,
+        );
+
+        return () => window.clearTimeout(timer);
+    }, [navVisible]);
+
+    const handleTransitionEnd = (event: TransitionEvent<HTMLElement>): void => {
+        if (event.propertyName === 'transform' && !navVisible) {
+            setNavInteractive(false);
+        }
+    };
+
     return (
         <nav
-            className="fixed inset-x-0 bottom-0 z-50 pb-[env(safe-area-inset-bottom)]"
+            className={cn(
+                'fixed inset-x-0 bottom-0 z-50 pb-[env(safe-area-inset-bottom)]',
+                'will-change-transform transform-gpu motion-reduce:transition-none',
+                'transition-transform duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)]',
+                navVisible ? 'translate-y-0' : 'translate-y-[calc(100%+0.75rem)]',
+                !navInteractive && 'pointer-events-none',
+            )}
             aria-label="ناوبری اصلی"
+            aria-hidden={navInteractive ? undefined : true}
+            inert={navInteractive ? undefined : true}
+            onTransitionEnd={handleTransitionEnd}
         >
             <div className="mx-auto w-full max-w-[390px] px-4 pb-3">
                 <div className="relative pt-6">
