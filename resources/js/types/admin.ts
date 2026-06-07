@@ -125,7 +125,20 @@ export type AdminPaymentListItem = {
     rejectionNote: string | null;
     installmentRequestedTerm: string | null;
     installmentNote: string | null;
+    installment: AdminPaymentInstallmentSnapshot | null;
     meta: string | null;
+};
+
+export type AdminPaymentInstallmentSnapshot = {
+    cashPriceToman: number | null;
+    installmentTotalToman: number | null;
+    downPaymentToman: number | null;
+    remainingToman: number | null;
+    downPaymentPercent: number | null;
+    months: number | null;
+    downPaymentPaidAt: string | null;
+    downPaymentRef: string | null;
+    downPaymentCaptured: boolean;
 };
 
 export type AdminLicenseListItem = {

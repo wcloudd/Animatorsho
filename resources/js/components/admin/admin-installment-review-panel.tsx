@@ -7,6 +7,7 @@ import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import type { AdminPaymentListItem } from '@/types/admin';
 import { cn } from '@/lib/utils';
+import { formatTomanPrice } from '@/lib/format-toman';
 import { adminCalloutStyles } from '@/components/admin/admin-callout';
 
 const rejectNoteClassName = cn(
@@ -28,6 +29,8 @@ export function AdminInstallmentReviewPanel({
         note: '',
     });
 
+    const installment = payment.installment;
+
     return (
         <AdminActionRow
             bordered={false}
@@ -48,6 +51,65 @@ export function AdminInstallmentReviewPanel({
                     <span className="font-medium text-muted">مدت اقساط: </span>
                     {payment.installmentRequestedTerm}
                 </p>
+            ) : null}
+
+            {installment ? (
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-lg bg-surface/70 p-3 text-xs text-text">
+                    {installment.cashPriceToman !== null ? (
+                        <div className="flex flex-col">
+                            <dt className="text-muted">قیمت نقدی</dt>
+                            <dd>{formatTomanPrice(installment.cashPriceToman)}</dd>
+                        </div>
+                    ) : null}
+                    {installment.installmentTotalToman !== null ? (
+                        <div className="flex flex-col">
+                            <dt className="text-muted">مبلغ کل اقساطی</dt>
+                            <dd>
+                                {formatTomanPrice(
+                                    installment.installmentTotalToman,
+                                )}
+                            </dd>
+                        </div>
+                    ) : null}
+                    {installment.downPaymentToman !== null ? (
+                        <div className="flex flex-col">
+                            <dt className="text-muted">
+                                پیش‌پرداخت
+                                {installment.downPaymentPercent !== null
+                                    ? ` (${installment.downPaymentPercent}٪)`
+                                    : ''}
+                            </dt>
+                            <dd className="font-bold text-purple">
+                                {formatTomanPrice(installment.downPaymentToman)}
+                            </dd>
+                        </div>
+                    ) : null}
+                    {installment.remainingToman !== null ? (
+                        <div className="flex flex-col">
+                            <dt className="text-muted">باقی‌مانده</dt>
+                            <dd>{formatTomanPrice(installment.remainingToman)}</dd>
+                        </div>
+                    ) : null}
+                    <div className="col-span-2 flex flex-col">
+                        <dt className="text-muted">وضعیت پیش‌پرداخت</dt>
+                        <dd
+                            className={cn(
+                                'font-medium',
+                                installment.downPaymentCaptured
+                                    ? 'text-green'
+                                    : 'text-gold',
+                            )}
+                        >
+                            {installment.downPaymentCaptured
+                                ? `پرداخت شد${
+                                      installment.downPaymentRef
+                                          ? ` — کد رهگیری ${installment.downPaymentRef}`
+                                          : ''
+                                  }`
+                                : 'هنوز پرداخت نشده است'}
+                        </dd>
+                    </div>
+                </dl>
             ) : null}
 
             {payment.installmentNote ? (

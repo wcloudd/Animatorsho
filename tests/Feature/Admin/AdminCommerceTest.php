@@ -528,10 +528,22 @@ function createReviewingInstallmentPayment(): Payment
         ->create([
             'method' => PaymentMethod::Installment,
             'status' => PaymentStatus::Reviewing,
+            'amount_toman' => 2_600_000,
+            'paid_at' => now(),
+            'tracking_code' => '777888',
             'meta' => [
                 'requested_term' => 'two_months',
+                'months' => 2,
                 'note' => 'ترجیح تماس بعد از ظهر',
+                'down_payment_percent' => 40,
+                'cash_price_toman' => 5_500_000,
+                'extra_amount_toman' => 1_000_000,
+                'installment_total_toman' => 6_500_000,
+                'down_payment_toman' => 2_600_000,
+                'remaining_toman' => 3_900_000,
                 'submitted_at' => now()->toIso8601String(),
+                'down_payment_paid_at' => now()->toIso8601String(),
+                'down_payment_ref' => '777888',
             ],
         ])
         ->fresh(['order']);
@@ -577,7 +589,7 @@ test('admin can approve installment payment and create pending license once', fu
     expect(SpotPlayerLicense::query()->where('order_id', $order->id)->count())->toBe(1);
 });
 
-test('admin can reject installment payment without creating license', function () {
+test('admin reject preserves the captured down payment and does not grant access', function () {
     $admin = User::factory()->admin()->create();
     $payment = createReviewingInstallmentPayment();
     $order = $payment->order;
@@ -591,9 +603,16 @@ test('admin can reject installment payment without creating license', function (
     $order->refresh();
     $payment->refresh();
 
-    expect($order->status)->toBe(OrderStatus::Failed)
-        ->and($payment->status)->toBe(PaymentStatus::Failed)
+    // The installment request is rejected, but the down payment money trail is preserved
+    // (payment stays Paid, not Failed). Refunds are handled manually.
+    expect($order->status)->toBe(OrderStatus::InstallmentRejected)
+        ->and($payment->status)->toBe(PaymentStatus::Paid)
+        ->and($payment->paid_at)->not->toBeNull()
+        ->and($payment->tracking_code)->toBe('777888')
+        ->and($payment->meta['down_payment_ref'])->toBe('777888')
+        ->and($payment->meta['down_payment_paid_at'])->not->toBeNull()
         ->and($payment->meta['rejection_note'])->toBe('در حال حاضر امکان اقساط برای این بسته فعال نیست.')
+        ->and($payment->meta)->toHaveKey('rejected_at')
         ->and(SpotPlayerLicense::query()->where('order_id', $order->id)->exists())->toBeFalse();
 });
 

@@ -126,8 +126,51 @@ class AdminPaymentListService
             'rejectionNote' => $this->rejectionNote($payment->meta),
             'installmentRequestedTerm' => InstallmentTermLabels::fromPaymentMeta($payment->meta),
             'installmentNote' => InstallmentTermLabels::noteFromPaymentMeta($payment->meta),
+            'installment' => $this->installmentSnapshot($payment),
             'meta' => $this->formatMeta($payment->meta),
         ];
+    }
+
+    /**
+     * @return array{
+     *     cashPriceToman: ?int,
+     *     installmentTotalToman: ?int,
+     *     downPaymentToman: ?int,
+     *     remainingToman: ?int,
+     *     downPaymentPercent: ?int,
+     *     months: ?int,
+     *     downPaymentPaidAt: ?string,
+     *     downPaymentRef: ?string,
+     *     downPaymentCaptured: bool
+     * }|null
+     */
+    private function installmentSnapshot(Payment $payment): ?array
+    {
+        if ($payment->method !== PaymentMethod::Installment) {
+            return null;
+        }
+
+        $meta = $payment->meta ?? [];
+
+        $downPaymentPaidAt = $meta['down_payment_paid_at'] ?? null;
+        $downPaymentRef = $meta['down_payment_ref'] ?? null;
+
+        return [
+            'cashPriceToman' => $this->intOrNull($meta['cash_price_toman'] ?? null),
+            'installmentTotalToman' => $this->intOrNull($meta['installment_total_toman'] ?? null),
+            'downPaymentToman' => $this->intOrNull($meta['down_payment_toman'] ?? null),
+            'remainingToman' => $this->intOrNull($meta['remaining_toman'] ?? null),
+            'downPaymentPercent' => $this->intOrNull($meta['down_payment_percent'] ?? null),
+            'months' => $this->intOrNull($meta['months'] ?? null),
+            'downPaymentPaidAt' => is_string($downPaymentPaidAt) ? $downPaymentPaidAt : null,
+            'downPaymentRef' => is_string($downPaymentRef) ? $downPaymentRef : (is_int($downPaymentRef) ? (string) $downPaymentRef : null),
+            'downPaymentCaptured' => $downPaymentPaidAt !== null,
+        ];
+    }
+
+    private function intOrNull(mixed $value): ?int
+    {
+        return is_int($value) || (is_string($value) && is_numeric($value)) ? (int) $value : null;
     }
 
     /**

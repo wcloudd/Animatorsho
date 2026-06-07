@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Sms\SmsNotifier;
+use App\Support\InstallmentPricing;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -137,23 +138,41 @@ class CheckoutOrderService
         array $customerData,
         array $installmentData,
     ): array {
+        $term = $installmentData['installment_term'] ?? null;
+
+        if (! is_string($term) || $term === '') {
+            throw new InvalidArgumentException('Installment term is required.');
+        }
+
+        $pricing = InstallmentPricing::calculate((int) $coursePackage->price_toman, $term);
+
         $paymentMeta = [
-            'requested_term' => $installmentData['installment_term'] ?? null,
+            'requested_term' => $term,
+            'months' => $pricing['months'],
             'note' => $installmentData['note'] ?? null,
+            'down_payment_percent' => $pricing['down_payment_percent'],
+            'cash_price_toman' => $pricing['cash_price_toman'],
+            'extra_amount_toman' => $pricing['extra_amount_toman'],
+            'installment_total_toman' => $pricing['installment_total_toman'],
+            'down_payment_toman' => $pricing['down_payment_toman'],
+            'remaining_toman' => $pricing['remaining_toman'],
             'submitted_at' => now()->toIso8601String(),
         ];
 
         return $this->persistOrder(
             user: $user,
             coursePackage: $coursePackage,
-            orderStatus: OrderStatus::InstallmentReview,
+            orderStatus: OrderStatus::InstallmentDownPaymentPending,
             orderPaymentType: OrderPaymentType::Installment,
             paymentMethod: PaymentMethod::Installment,
-            paymentStatus: PaymentStatus::Reviewing,
+            paymentStatus: PaymentStatus::Pending,
             resultStatus: 'installment-review',
             customerName: $customerData['customer_name'],
             customerMobile: $customerData['customer_mobile'],
             paymentMeta: $paymentMeta,
+            orderAmountToman: $pricing['cash_price_toman'],
+            orderFinalAmountToman: $pricing['installment_total_toman'],
+            paymentAmountToman: $pricing['down_payment_toman'],
         );
     }
 
@@ -234,6 +253,9 @@ class CheckoutOrderService
         string $customerName,
         string $customerMobile,
         ?array $paymentMeta = null,
+        ?int $orderAmountToman = null,
+        ?int $orderFinalAmountToman = null,
+        ?int $paymentAmountToman = null,
     ): array {
         $order = DB::transaction(function () use (
             $user,
@@ -245,6 +267,9 @@ class CheckoutOrderService
             $customerName,
             $customerMobile,
             $paymentMeta,
+            $orderAmountToman,
+            $orderFinalAmountToman,
+            $paymentAmountToman,
         ): Order {
             $order = new Order([
                 'user_id' => $user->id,
@@ -257,22 +282,29 @@ class CheckoutOrderService
             ]);
 
             $order->snapshotAmountsFromPackage($coursePackage);
+
+            if ($orderAmountToman !== null) {
+                $order->amount_toman = $orderAmountToman;
+            }
+
+            if ($orderFinalAmountToman !== null) {
+                $order->final_amount_toman = $orderFinalAmountToman;
+            }
+
             $order->save();
 
             Payment::query()->create([
                 'order_id' => $order->id,
                 'method' => $paymentMethod,
                 'status' => $paymentStatus,
-                'amount_toman' => $order->final_amount_toman,
+                'amount_toman' => $paymentAmountToman ?? $order->final_amount_toman,
                 'meta' => $paymentMeta,
             ]);
 
             return $order;
         });
 
-        if ($paymentMethod === PaymentMethod::Installment) {
-            $this->smsNotifier->notifyInstallmentRequestSubmitted($order);
-        } else {
+        if ($paymentMethod !== PaymentMethod::Installment) {
             $this->smsNotifier->notifyOrderCreated($order);
         }
 

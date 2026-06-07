@@ -213,6 +213,36 @@ test('installment review order blocks duplicate installment checkout', function 
     assertDuplicateBlocked($response, $user, confirmFullInstallmentUrl(), 1);
 });
 
+test('installment down payment pending order does not block re-initiating checkout', function () {
+    $user = User::factory()->withMobile()->create();
+    $package = fullPackage();
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->installmentDownPaymentPending()
+        ->create();
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Installment,
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    // An abandoned down payment must not lock the user out; they can retry from checkout.
+    $response = $this->actingAs($user)
+        ->from(confirmFullInstallmentUrl())
+        ->post(route('checkout.orders.store'), [
+            'package' => 'full',
+            'payment' => 'installment',
+            ...validCheckoutCustomer(),
+            'installment_term' => 'one_month',
+        ]);
+
+    $response->assertRedirect('https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000000');
+
+    expect(Order::query()->where('user_id', $user->id)->count())->toBe(2);
+});
+
 test('paid order with pending license blocks duplicate checkout', function () {
     $user = User::factory()->withMobile()->create();
     $package = fullPackage();

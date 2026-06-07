@@ -443,11 +443,8 @@ test('missing or invalid authority redirects safely to checkout result fallback'
     ]))->assertRedirect(route('checkout.result'));
 });
 
-test('installment checkout does not call zarinpal', function () {
-    $this->mock(ZarinpalService::class, function (MockInterface $mock): void {
-        $mock->shouldNotReceive('request');
-        $mock->shouldNotReceive('verify');
-    });
+test('installment checkout calls zarinpal to capture the down payment', function () {
+    mockSuccessfulZarinpalRequest('A00000000000000000000000000000000099');
 
     $user = User::factory()->withMobile()->create();
 
@@ -456,10 +453,135 @@ test('installment checkout does not call zarinpal', function () {
         'payment' => 'installment',
         ...validCheckoutCustomer(),
         'installment_term' => 'one_month',
-    ])->assertRedirect(route('checkout.result', [
-        'status' => 'installment-review',
-        'order' => Order::query()->value('order_number'),
+    ])->assertRedirect('https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000099');
+
+    $order = Order::query()->first();
+
+    expect($order->status)->toBe(OrderStatus::InstallmentDownPaymentPending);
+});
+
+test('successful installment callback captures down payment and enters review without granting access', function () {
+    $user = User::factory()->withMobile()->create();
+    $order = Order::factory()->for($user)->installmentDownPaymentPending()->create([
+        'amount_toman' => 5_500_000,
+        'final_amount_toman' => 6_000_000,
+    ]);
+
+    $authority = 'A00000000000000000000000000000000100';
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Installment,
+        'status' => PaymentStatus::Pending,
+        'amount_toman' => 2_400_000,
+        'meta' => [
+            'requested_term' => 'one_month',
+            'down_payment_toman' => 2_400_000,
+            'remaining_toman' => 3_600_000,
+            'authority' => $authority,
+        ],
+    ]);
+
+    $this->mock(ZarinpalService::class, function (MockInterface $mock) use ($authority): void {
+        $mock->shouldReceive('verify')
+            ->once()
+            ->withArgs(fn (Payment $payment, string $receivedAuthority): bool => $receivedAuthority === $authority)
+            ->andReturn(ZarinpalVerifyResult::success('987654321'));
+    });
+
+    $response = $this->get(route('checkout.zarinpal.callback', [
+        'Authority' => $authority,
+        'Status' => 'OK',
     ]));
+
+    $order->refresh();
+    $payment = $order->payments()->first();
+
+    $response->assertRedirect(route('checkout.result', [
+        'status' => 'installment-review',
+        'order' => $order->order_number,
+    ]));
+
+    expect($order->status)->toBe(OrderStatus::InstallmentReview)
+        ->and($payment->status)->toBe(PaymentStatus::Reviewing)
+        ->and($payment->paid_at)->not->toBeNull()
+        ->and($payment->tracking_code)->toBe('987654321')
+        ->and($payment->meta['down_payment_ref'])->toBe('987654321')
+        ->and($payment->meta)->toHaveKey('down_payment_paid_at')
+        ->and(SpotPlayerLicense::query()->where('order_id', $order->id)->exists())->toBeFalse();
+});
+
+test('failed installment callback marks order and payment failed', function () {
+    $user = User::factory()->withMobile()->create();
+    $order = Order::factory()->for($user)->installmentDownPaymentPending()->create([
+        'amount_toman' => 5_500_000,
+        'final_amount_toman' => 6_000_000,
+    ]);
+
+    $authority = 'A00000000000000000000000000000000101';
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Installment,
+        'status' => PaymentStatus::Pending,
+        'amount_toman' => 2_400_000,
+        'meta' => ['authority' => $authority],
+    ]);
+
+    $this->mock(ZarinpalService::class, function (MockInterface $mock): void {
+        $mock->shouldNotReceive('verify');
+    });
+
+    $this->get(route('checkout.zarinpal.callback', [
+        'Authority' => $authority,
+        'Status' => 'NOK',
+    ]))->assertRedirect(route('checkout.result', [
+        'status' => 'failed',
+        'order' => $order->order_number,
+    ]));
+
+    $order->refresh();
+    $payment = $order->payments()->first();
+
+    expect($order->status)->toBe(OrderStatus::Failed)
+        ->and($payment->status)->toBe(PaymentStatus::Failed);
+});
+
+test('repeated installment callback is idempotent after down payment captured', function () {
+    $user = User::factory()->withMobile()->create();
+    $order = Order::factory()->for($user)->installment()->create([
+        'amount_toman' => 5_500_000,
+        'final_amount_toman' => 6_000_000,
+    ]);
+
+    $authority = 'A00000000000000000000000000000000102';
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Installment,
+        'status' => PaymentStatus::Reviewing,
+        'amount_toman' => 2_400_000,
+        'paid_at' => now(),
+        'tracking_code' => '555',
+        'meta' => [
+            'authority' => $authority,
+            'down_payment_paid_at' => now()->toIso8601String(),
+            'down_payment_ref' => '555',
+        ],
+    ]);
+
+    $this->mock(ZarinpalService::class, function (MockInterface $mock): void {
+        $mock->shouldNotReceive('verify');
+    });
+
+    $this->get(route('checkout.zarinpal.callback', [
+        'Authority' => $authority,
+        'Status' => 'OK',
+    ]))->assertRedirect(route('checkout.result', [
+        'status' => 'installment-review',
+        'order' => $order->order_number,
+    ]));
+
+    $order->refresh();
+
+    expect($order->status)->toBe(OrderStatus::InstallmentReview);
 });
 
 test('zarinpal service converts toman to rial for gateway amounts', function () {

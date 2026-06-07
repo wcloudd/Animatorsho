@@ -14,6 +14,7 @@ import type { CatalogPackage } from '@/lib/checkout-catalog';
 import type {
     CardToCardTransferDetails,
     CheckoutPaymentMethodId,
+    InstallmentPlan,
     OrderSummaryContent,
 } from '@/lib/checkout-confirm';
 import type { CheckoutOrderContext } from '@/lib/checkout-order';
@@ -23,6 +24,7 @@ type CheckoutConfirmProps = {
     showChapterSelector: boolean;
     chapterPackages: CatalogPackage[];
     showInstallmentForm: boolean;
+    installmentPlans: InstallmentPlan[] | null;
     orderContext: CheckoutOrderContext | null;
     customerDefaults: { name: string } | null;
     duplicatePurchaseBlocked: boolean;
@@ -37,6 +39,7 @@ export default function CheckoutConfirm({
     showChapterSelector,
     chapterPackages,
     showInstallmentForm,
+    installmentPlans,
     orderContext,
     customerDefaults,
     duplicatePurchaseBlocked,
@@ -164,6 +167,7 @@ export default function CheckoutConfirm({
                                                 data={data}
                                                 setData={setData}
                                                 errors={errors}
+                                                plans={installmentPlans ?? []}
                                             />
                                         ) : null}
                                     </>

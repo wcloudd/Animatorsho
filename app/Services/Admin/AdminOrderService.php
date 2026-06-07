@@ -63,7 +63,10 @@ class AdminOrderService
             return false;
         }
 
-        if ($order->status === OrderStatus::InstallmentReview) {
+        if (in_array($order->status, [
+            OrderStatus::InstallmentReview,
+            OrderStatus::InstallmentDownPaymentPending,
+        ], true)) {
             return $latestPayment->method === PaymentMethod::Installment;
         }
 

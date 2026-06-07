@@ -57,15 +57,35 @@ class AdminPaymentReviewService
 
         $isInstallment = $payment->method === PaymentMethod::Installment;
 
-        DB::transaction(function () use ($payment, $note): void {
+        DB::transaction(function () use ($payment, $note, $isInstallment): void {
             $order = $payment->order;
+
+            $rejectionMeta = array_merge($payment->meta ?? [], array_filter([
+                'rejection_note' => $note,
+                'rejected_at' => now()->toIso8601String(),
+            ]));
+
+            if ($isInstallment) {
+                // The down payment was already captured via Zarinpal. Preserve the
+                // money trail (paid_at, tracking_code, down_payment_*) and only mark
+                // the installment request itself as rejected. Refunds are manual.
+                $payment->update([
+                    'status' => PaymentStatus::Paid,
+                    'meta' => $rejectionMeta,
+                ]);
+
+                if ($order !== null && $order->status !== OrderStatus::Paid) {
+                    $order->update([
+                        'status' => OrderStatus::InstallmentRejected,
+                    ]);
+                }
+
+                return;
+            }
 
             $payment->update([
                 'status' => PaymentStatus::Failed,
-                'meta' => array_merge($payment->meta ?? [], array_filter([
-                    'rejection_note' => $note,
-                    'rejected_at' => now()->toIso8601String(),
-                ])),
+                'meta' => $rejectionMeta,
             ]);
 
             if ($order !== null && $order->status !== OrderStatus::Paid) {

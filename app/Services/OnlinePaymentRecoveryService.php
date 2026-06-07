@@ -27,7 +27,9 @@ class OnlinePaymentRecoveryService
             OrderStatus::Paid,
             OrderStatus::Cancelled,
             OrderStatus::ManualReview,
+            OrderStatus::InstallmentDownPaymentPending,
             OrderStatus::InstallmentReview,
+            OrderStatus::InstallmentRejected,
         ], true)) {
             return false;
         }

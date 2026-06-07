@@ -221,6 +221,20 @@ class ProfileAccessPresenter
             );
         }
 
+        if ($order->status === OrderStatus::InstallmentDownPaymentPending) {
+            return $this->candidate(
+                self::PRIORITY_PAYMENT_PENDING,
+                'installment_down_payment_pending',
+                $sortTimestamp,
+                $order->id,
+                $license?->id,
+                $title,
+                $this->paymentMethodLabel($order, $payment),
+                $order->final_amount_toman,
+                null,
+            );
+        }
+
         if ($order->status === OrderStatus::InstallmentReview) {
             return $this->candidate(
                 self::PRIORITY_PAYMENT_REVIEWING,
@@ -232,6 +246,21 @@ class ProfileAccessPresenter
                 $this->paymentMethodLabel($order, $payment),
                 $order->final_amount_toman,
                 null,
+            );
+        }
+
+        if ($order->status === OrderStatus::InstallmentRejected) {
+            return $this->candidate(
+                self::PRIORITY_FAILED_OR_CANCELLED,
+                'installment_rejected',
+                $sortTimestamp,
+                $order->id,
+                $license?->id,
+                $title,
+                $this->paymentMethodLabel($order, $payment),
+                $order->final_amount_toman,
+                null,
+                $this->rejectionNoteFromMeta($payment?->meta),
             );
         }
 
@@ -416,7 +445,7 @@ class ProfileAccessPresenter
             'licenseKey' => $candidate['accessState'] === 'access_active'
                 ? $candidate['licenseKey']
                 : null,
-            'rejectionReason' => $candidate['accessState'] === 'payment_failed'
+            'rejectionReason' => in_array($candidate['accessState'], ['payment_failed', 'installment_rejected'], true)
                 ? $candidate['rejectionReason']
                 : null,
             'nextAction' => $this->nextActionForState($candidate['accessState']),
@@ -514,10 +543,20 @@ class ProfileAccessPresenter
                 'statusTone' => 'warning',
                 'description' => 'لایسنس SpotPlayer بعد از فعال‌سازی توسط پشتیبانی همین‌جا نمایش داده می‌شود.',
             ],
+            'installment_down_payment_pending' => [
+                'statusLabel' => 'در انتظار پرداخت پیش‌پرداخت',
+                'statusTone' => 'warning',
+                'description' => 'برای ثبت درخواست اقساطی، پرداخت پیش‌پرداخت ۴۰٪ را از طریق درگاه تکمیل کنید.',
+            ],
             'installment_reviewing' => [
                 'statusLabel' => 'در انتظار بررسی خرید اقساطی',
                 'statusTone' => 'warning',
-                'description' => 'درخواست شما ثبت شده و پشتیبانی برای هماهنگی با شما تماس می‌گیرد.',
+                'description' => 'پیش‌پرداخت ۴۰٪ شما با موفقیت ثبت شد و درخواست اقساطی شما در حال بررسی توسط پشتیبانی است.',
+            ],
+            'installment_rejected' => [
+                'statusLabel' => 'درخواست اقساط رد شد',
+                'statusTone' => 'neutral',
+                'description' => 'درخواست اقساط رد شد، اما پیش‌پرداخت شما ثبت شده است و پیگیری مالی به‌صورت دستی انجام می‌شود.',
             ],
             'payment_reviewing' => [
                 'statusLabel' => 'در انتظار بررسی پرداخت',
@@ -562,9 +601,14 @@ class ProfileAccessPresenter
                 'href' => route('checkout'),
                 'external' => false,
             ],
-            'license_revoked', 'payment_reviewing', 'installment_reviewing' => [
+            'license_revoked', 'payment_reviewing', 'installment_reviewing', 'installment_rejected' => [
                 'label' => 'ارتباط با پشتیبانی',
                 'href' => route('support.index'),
+                'external' => false,
+            ],
+            'installment_down_payment_pending' => [
+                'label' => 'تکمیل پیش‌پرداخت',
+                'href' => route('checkout'),
                 'external' => false,
             ],
             default => null,

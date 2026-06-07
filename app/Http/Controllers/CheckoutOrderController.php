@@ -53,13 +53,6 @@ class CheckoutOrderController extends Controller
             $paymentChannel,
         );
 
-        if ($validated['payment'] === 'installment') {
-            return redirect()->route('checkout.result', [
-                'status' => $result['resultStatus'],
-                'order' => $result['order']->order_number,
-            ]);
-        }
-
         if ($paymentChannel === 'card_to_card') {
             return $this->completeCardToCardCheckout(
                 $result['order'],

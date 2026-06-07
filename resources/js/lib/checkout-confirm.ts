@@ -51,5 +51,17 @@ export const INSTALLMENT_TERM_OPTIONS = [
     { id: 'two_months', label: '۲ ماهه' },
 ] as const;
 
+export type InstallmentPlan = {
+    term: string;
+    label: string;
+    months: number;
+    downPaymentPercent: number;
+    cashPriceToman: number;
+    extraAmountToman: number;
+    installmentTotalToman: number;
+    downPaymentToman: number;
+    remainingToman: number;
+};
+
 export const TRUST_NOTE_TEXT =
     'فعال‌سازی دسترسی دوره بعد از تأیید پرداخت یا بررسی درخواست اقساطی انجام می‌شود. اطلاعات سفارش و لایسنس‌ها بعداً در پروفایل کاربری نمایش داده خواهد شد.';

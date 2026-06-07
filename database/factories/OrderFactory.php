@@ -67,4 +67,20 @@ class OrderFactory extends Factory
             'status' => OrderStatus::InstallmentReview,
         ]);
     }
+
+    public function installmentDownPaymentPending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'payment_type' => OrderPaymentType::Installment,
+            'status' => OrderStatus::InstallmentDownPaymentPending,
+        ]);
+    }
+
+    public function installmentRejected(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'payment_type' => OrderPaymentType::Installment,
+            'status' => OrderStatus::InstallmentRejected,
+        ]);
+    }
 }

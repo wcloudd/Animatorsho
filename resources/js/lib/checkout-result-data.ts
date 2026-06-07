@@ -80,9 +80,9 @@ const CHECKOUT_RESULT_CONTENT: Record<
         statusBadgeLabel: 'در انتظار بررسی',
     },
     'installment-review': {
-        title: 'درخواست اقساطی ثبت شد',
+        title: 'پیش‌پرداخت ثبت شد',
         description:
-            'درخواست خرید اقساطی شما ثبت شده و پشتیبانی برای هماهنگی با شما تماس می‌گیرد.',
+            'پیش‌پرداخت شما با موفقیت ثبت شد. درخواست خرید اقساطی شما برای بررسی پشتیبانی ارسال شد. بعد از تایید، دسترسی دوره و لایسنس SpotPlayer فعال می‌شود.',
         primaryCtaLabel: 'مشاهده وضعیت در پروفایل',
         primaryCtaHref: '/profile',
         secondaryCtaLabel: 'پیام به پشتیبانی',

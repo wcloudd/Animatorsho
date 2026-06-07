@@ -7,6 +7,7 @@ use App\Services\AnimatorshoCatalogService;
 use App\Services\CheckoutOrderService;
 use App\Services\PaymentReceiptStorageService;
 use App\Services\UserPackagePurchaseGuard;
+use App\Support\InstallmentPricing;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -61,6 +62,9 @@ class CheckoutController extends Controller
                     'chapter' => null,
                 ],
                 request: $request,
+                installmentPlans: $paymentParam === 'installment'
+                    ? $this->installmentPlans((int) $catalog['fullPackage']['priceToman'])
+                    : null,
             ));
         }
 
@@ -114,6 +118,7 @@ class CheckoutController extends Controller
         bool $showInstallmentForm,
         ?array $orderContext,
         Request $request,
+        ?array $installmentPlans = null,
     ): array {
         $user = $request->user();
         $duplicatePurchaseBlocked = false;
@@ -141,6 +146,7 @@ class CheckoutController extends Controller
             'showChapterSelector' => $orderContext === null,
             'chapterPackages' => $chapterPackages,
             'showInstallmentForm' => $showInstallmentForm,
+            'installmentPlans' => $installmentPlans,
             'orderContext' => $orderContext,
             'customerDefaults' => $user !== null
                 ? ['name' => $user->name]
@@ -158,6 +164,42 @@ class CheckoutController extends Controller
                 ? null
                 : 'اطلاعات کارت‌به‌کارت هنوز توسط مدیر سایت تنظیم نشده است.',
         ];
+    }
+
+    /**
+     * @return list<array{
+     *     term: string,
+     *     label: string,
+     *     months: int,
+     *     downPaymentPercent: int,
+     *     cashPriceToman: int,
+     *     extraAmountToman: int,
+     *     installmentTotalToman: int,
+     *     downPaymentToman: int,
+     *     remainingToman: int
+     * }>
+     */
+    private function installmentPlans(int $cashPriceToman): array
+    {
+        $plans = [];
+
+        foreach (InstallmentPricing::availableTerms() as $term) {
+            $pricing = InstallmentPricing::calculate($cashPriceToman, $term);
+
+            $plans[] = [
+                'term' => $term,
+                'label' => InstallmentPricing::label($term) ?? $term,
+                'months' => $pricing['months'],
+                'downPaymentPercent' => $pricing['down_payment_percent'],
+                'cashPriceToman' => $pricing['cash_price_toman'],
+                'extraAmountToman' => $pricing['extra_amount_toman'],
+                'installmentTotalToman' => $pricing['installment_total_toman'],
+                'downPaymentToman' => $pricing['down_payment_toman'],
+                'remainingToman' => $pricing['remaining_toman'],
+            ];
+        }
+
+        return $plans;
     }
 
     /**

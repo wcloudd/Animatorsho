@@ -1,6 +1,8 @@
 import { Spinner } from '@/components/ui/spinner';
 import { INSTALLMENT_TERM_OPTIONS } from '@/lib/checkout-confirm';
 import type { CheckoutOrderFormRenderProps } from '@/components/checkout/checkout-order-form';
+import type { InstallmentPlan } from '@/lib/checkout-confirm';
+import { formatTomanPrice } from '@/lib/format-toman';
 import { cn } from '@/lib/utils';
 
 const installmentFieldClassName =
@@ -11,14 +13,20 @@ const installmentTextareaClassName = cn(
     'min-h-[80px]',
 );
 
-type InstallmentFormFieldsProps = CheckoutOrderFormRenderProps;
+type InstallmentFormFieldsProps = CheckoutOrderFormRenderProps & {
+    plans?: InstallmentPlan[];
+};
 
 export function InstallmentFormFields({
     processing,
     data,
     setData,
     errors,
+    plans = [],
 }: InstallmentFormFieldsProps) {
+    const selectedPlan =
+        plans.find((plan) => plan.term === data.installment_term) ?? null;
+
     return (
         <section
             className="flex w-full flex-col gap-4 rounded-[28px] bg-surface px-5 py-6 shadow-soft ring-1 ring-border"
@@ -32,8 +40,10 @@ export function InstallmentFormFields({
             </h2>
 
             <p className="rounded-xl bg-purple-soft px-4 py-3 text-center text-sm leading-6 text-text ring-1 ring-purple/20">
-                درخواست خرید اقساطی ثبت می‌شود و پشتیبانی برای هماهنگی با
-                شما تماس می‌گیرد.
+                برای ثبت درخواست اقساطی، ابتدا پیش‌پرداخت
+                {selectedPlan ? ` ${selectedPlan.downPaymentPercent}٪ ` : ' '}
+                را از طریق درگاه پرداخت می‌کنید و سپس درخواست شما برای بررسی
+                پشتیبانی ارسال می‌شود.
             </p>
 
             <div className="grid gap-2">
@@ -94,6 +104,39 @@ export function InstallmentFormFields({
                 ) : null}
             </fieldset>
 
+            {selectedPlan ? (
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-2xl bg-purple-soft/60 p-4 text-sm ring-1 ring-purple/20">
+                    <div className="flex flex-col">
+                        <dt className="text-xs text-muted">قیمت نقدی</dt>
+                        <dd className="font-medium text-text">
+                            {formatTomanPrice(selectedPlan.cashPriceToman)}
+                        </dd>
+                    </div>
+                    <div className="flex flex-col">
+                        <dt className="text-xs text-muted">مبلغ کل اقساطی</dt>
+                        <dd className="font-medium text-text">
+                            {formatTomanPrice(
+                                selectedPlan.installmentTotalToman,
+                            )}
+                        </dd>
+                    </div>
+                    <div className="flex flex-col">
+                        <dt className="text-xs text-muted">
+                            پیش‌پرداخت ({selectedPlan.downPaymentPercent}٪)
+                        </dt>
+                        <dd className="font-bold text-purple">
+                            {formatTomanPrice(selectedPlan.downPaymentToman)}
+                        </dd>
+                    </div>
+                    <div className="flex flex-col">
+                        <dt className="text-xs text-muted">باقی‌مانده اقساط</dt>
+                        <dd className="font-medium text-text">
+                            {formatTomanPrice(selectedPlan.remainingToman)}
+                        </dd>
+                    </div>
+                </dl>
+            ) : null}
+
             <button
                 type="submit"
                 disabled={processing}
@@ -102,10 +145,12 @@ export function InstallmentFormFields({
                 {processing ? (
                     <>
                         <Spinner className="size-4" />
-                        در حال ثبت درخواست...
+                        در حال انتقال به درگاه...
                     </>
+                ) : selectedPlan ? (
+                    `پرداخت پیش‌پرداخت ${formatTomanPrice(selectedPlan.downPaymentToman)}`
                 ) : (
-                    'ثبت درخواست اقساطی'
+                    'پرداخت پیش‌پرداخت و ثبت درخواست'
                 )}
             </button>
         </section>

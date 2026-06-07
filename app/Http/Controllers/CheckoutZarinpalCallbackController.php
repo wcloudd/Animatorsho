@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderPaymentType;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\OrderPaymentCompletionService;
+use App\Services\Sms\SmsNotifier;
 use App\Services\Zarinpal\ZarinpalVerifyResult;
 use App\Services\ZarinpalService;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +22,7 @@ class CheckoutZarinpalCallbackController extends Controller
     public function __construct(
         private readonly ZarinpalService $zarinpal,
         private readonly OrderPaymentCompletionService $orderPaymentCompletion,
+        private readonly SmsNotifier $smsNotifier,
     ) {}
 
     public function __invoke(Request $request): RedirectResponse
@@ -32,7 +35,7 @@ class CheckoutZarinpalCallbackController extends Controller
         }
 
         $payment = Payment::query()
-            ->where('method', PaymentMethod::Zarinpal)
+            ->whereIn('method', [PaymentMethod::Zarinpal, PaymentMethod::Installment])
             ->where('meta->authority', $authority)
             ->with('order')
             ->first();
@@ -42,6 +45,10 @@ class CheckoutZarinpalCallbackController extends Controller
         }
 
         $order = $payment->order;
+
+        if ($order->payment_type === OrderPaymentType::Installment) {
+            return $this->handleInstallmentDownPayment($payment, $order, $authority, $status);
+        }
 
         if ($payment->status === PaymentStatus::Paid) {
             $this->orderPaymentCompletion->finalizeLicenseProvisioning($order);
@@ -87,6 +94,82 @@ class CheckoutZarinpalCallbackController extends Controller
 
         return redirect()->route('checkout.result', [
             'status' => 'failed',
+            'order' => $order->order_number,
+        ]);
+    }
+
+    /**
+     * Capture the 40% installment down payment. On success the order moves into
+     * admin review (NOT paid/granted). The down payment money is recorded on the
+     * payment so a later admin rejection can preserve the audit trail.
+     */
+    private function handleInstallmentDownPayment(
+        Payment $payment,
+        Order $order,
+        string $authority,
+        ?string $status,
+    ): RedirectResponse {
+        $alreadyCaptured = $payment->status !== PaymentStatus::Pending
+            || isset($payment->meta['down_payment_paid_at']);
+
+        if ($alreadyCaptured) {
+            return redirect()->route('checkout.result', [
+                'status' => 'installment-review',
+                'order' => $order->order_number,
+            ]);
+        }
+
+        if ($status !== 'OK') {
+            $this->markCallbackFailed($payment, $order);
+
+            return redirect()->route('checkout.result', [
+                'status' => 'failed',
+                'order' => $order->order_number,
+            ]);
+        }
+
+        $verifyResult = $this->zarinpal->verify($payment, $authority);
+
+        if (! $verifyResult->successful) {
+            $this->markCallbackFailed($payment, $order);
+
+            return redirect()->route('checkout.result', [
+                'status' => 'failed',
+                'order' => $order->order_number,
+            ]);
+        }
+
+        $order->refresh();
+
+        if ($order->status === OrderStatus::Cancelled) {
+            $this->recordVerifiedAfterCancelledOrder($payment, $verifyResult);
+
+            return redirect()->route('checkout.result', [
+                'status' => 'payment-received-needs-support',
+                'order' => $order->order_number,
+            ]);
+        }
+
+        DB::transaction(function () use ($payment, $order, $verifyResult): void {
+            $payment->update([
+                'status' => PaymentStatus::Reviewing,
+                'paid_at' => now(),
+                'tracking_code' => $verifyResult->refId,
+                'meta' => array_merge($payment->meta ?? [], [
+                    'down_payment_paid_at' => now()->toIso8601String(),
+                    'down_payment_ref' => $verifyResult->refId,
+                ]),
+            ]);
+
+            $order->update([
+                'status' => OrderStatus::InstallmentReview,
+            ]);
+        });
+
+        $this->smsNotifier->notifyInstallmentRequestSubmitted($order->fresh());
+
+        return redirect()->route('checkout.result', [
+            'status' => 'installment-review',
             'order' => $order->order_number,
         ]);
     }

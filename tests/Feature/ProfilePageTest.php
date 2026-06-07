@@ -82,8 +82,45 @@ test('installment reviewing order appears once in access section', function () {
             ->has('accessItems', 1)
             ->where('accessItems.0.accessState', 'installment_reviewing')
             ->where('accessItems.0.statusLabel', 'در انتظار بررسی خرید اقساطی')
-            ->where('accessItems.0.description', 'درخواست شما ثبت شده و پشتیبانی برای هماهنگی با شما تماس می‌گیرد.')
+            ->where('accessItems.0.description', 'پیش‌پرداخت ۴۰٪ شما با موفقیت ثبت شد و درخواست اقساطی شما در حال بررسی توسط پشتیبانی است.')
             ->has('orderHistory', 1)
+        );
+});
+
+test('installment rejected order shows honest preserved down payment copy', function () {
+    $this->seed(AnimatorshoCourseSeeder::class);
+
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->installmentRejected()
+        ->create();
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Installment,
+        'status' => PaymentStatus::Paid,
+        'paid_at' => now(),
+        'tracking_code' => '999',
+        'meta' => [
+            'requested_term' => 'one_month',
+            'down_payment_paid_at' => now()->toIso8601String(),
+            'down_payment_ref' => '999',
+            'rejection_note' => 'فعلاً ظرفیت اقساط تکمیل است.',
+            'rejected_at' => now()->toIso8601String(),
+        ],
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('profile'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('accessItems', 1)
+            ->where('accessItems.0.accessState', 'installment_rejected')
+            ->where('accessItems.0.description', 'درخواست اقساط رد شد، اما پیش‌پرداخت شما ثبت شده است و پیگیری مالی به‌صورت دستی انجام می‌شود.')
+            ->where('accessItems.0.rejectionReason', 'فعلاً ظرفیت اقساط تکمیل است.')
         );
 });
 

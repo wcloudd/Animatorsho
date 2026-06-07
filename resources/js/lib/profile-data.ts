@@ -9,7 +9,9 @@ export type ProfileUser = {
 };
 
 export type ProfileAccessState =
+    | 'installment_down_payment_pending'
     | 'installment_reviewing'
+    | 'installment_rejected'
     | 'payment_reviewing'
     | 'payment_pending'
     | 'paid_license_pending'

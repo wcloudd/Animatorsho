@@ -79,7 +79,7 @@ test('authenticated user can create full cash order with snapped package price',
         ->and($payment->amount_toman)->toBe(5_500_000);
 });
 
-test('authenticated user can create installment review order for full package only', function () {
+test('authenticated user starts installment down payment for full package only', function () {
     $user = User::factory()->withMobile('09121234567')->create();
 
     $response = $this->actingAs($user)->post(route('checkout.orders.store'), [
@@ -92,27 +92,61 @@ test('authenticated user can create installment review order for full package on
 
     $order = Order::query()->first();
 
-    $response->assertRedirect(route('checkout.result', [
-        'status' => 'installment-review',
-        'order' => $order->order_number,
-    ]));
+    // Installment now routes through Zarinpal to capture the 40% down payment
+    // BEFORE the request becomes admin-reviewable.
+    $response->assertRedirect('https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000000');
 
-    expect($order->status)->toBe(OrderStatus::InstallmentReview)
+    expect($order->status)->toBe(OrderStatus::InstallmentDownPaymentPending)
         ->and($order->payment_type)->toBe(OrderPaymentType::Installment)
         ->and($order->amount_toman)->toBe(5_500_000)
+        ->and($order->final_amount_toman)->toBe(6_000_000)
         ->and($order->customer_mobile)->toBe('09121234567')
         ->and($order->customer_name)->toBe('علی رضایی');
 
     $payment = Payment::query()->where('order_id', $order->id)->first();
 
     expect($payment->method)->toBe(PaymentMethod::Installment)
-        ->and($payment->status)->toBe(PaymentStatus::Reviewing)
+        ->and($payment->status)->toBe(PaymentStatus::Pending)
+        ->and($payment->amount_toman)->toBe(2_400_000)
         ->and($payment->meta)->toMatchArray([
             'requested_term' => 'one_month',
+            'months' => 1,
             'note' => 'ترجیح پرداخت ماه اول تا پنجم',
+            'down_payment_percent' => 40,
+            'cash_price_toman' => 5_500_000,
+            'extra_amount_toman' => 500_000,
+            'installment_total_toman' => 6_000_000,
+            'down_payment_toman' => 2_400_000,
+            'remaining_toman' => 3_600_000,
         ])
         ->and($payment->meta)->toHaveKey('submitted_at')
         ->and($payment->meta)->not->toHaveKey('customer_name');
+});
+
+test('installment down payment gateway charges the down payment, not the total', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
+
+    $this->mock(ZarinpalService::class, function (MockInterface $mock): void {
+        $mock->shouldReceive('request')
+            ->once()
+            ->withArgs(function (Payment $payment, string $callbackUrl): bool {
+                // 6,000,000 installment total -> only the 2,400,000 down payment is charged.
+                expect($payment->amount_toman)->toBe(2_400_000);
+
+                return true;
+            })
+            ->andReturn(ZarinpalRequestResult::success(
+                'A00000000000000000000000000000000000',
+                'https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000000',
+            ));
+    });
+
+    $this->actingAs($user)->post(route('checkout.orders.store'), [
+        'package' => 'full',
+        'payment' => 'installment',
+        ...validCheckoutCustomer(),
+        'installment_term' => 'one_month',
+    ])->assertRedirect('https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000000');
 });
 
 test('installment checkout ignores frontend amount fields', function () {
@@ -131,8 +165,8 @@ test('installment checkout ignores frontend amount fields', function () {
     $payment = Payment::query()->where('order_id', $order->id)->first();
 
     expect($order->amount_toman)->toBe(5_500_000)
-        ->and($order->final_amount_toman)->toBe(5_500_000)
-        ->and($payment->amount_toman)->toBe(5_500_000);
+        ->and($order->final_amount_toman)->toBe(6_500_000)
+        ->and($payment->amount_toman)->toBe(2_600_000);
 });
 
 test('checkout snapshots account mobile and ignores posted customer_mobile', function () {

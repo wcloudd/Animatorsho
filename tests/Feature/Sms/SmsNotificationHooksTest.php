@@ -332,9 +332,19 @@ test('commerce hooks do not make external http requests', function () {
     Http::assertNothingSent();
 });
 
-test('installment checkout creates installment sms logs instead of generic order created', function () {
-    $this->mock(ZarinpalService::class, function (MockInterface $mock): void {
-        $mock->shouldNotReceive('request');
+test('installment submission sends no submitted sms until the down payment succeeds', function () {
+    $authority = 'A00000000000000000000000000000000200';
+
+    $this->mock(ZarinpalService::class, function (MockInterface $mock) use ($authority): void {
+        $mock->shouldReceive('request')
+            ->once()
+            ->andReturn(ZarinpalRequestResult::success(
+                $authority,
+                'https://sandbox.zarinpal.com/pg/StartPay/'.$authority,
+            ));
+        $mock->shouldReceive('verify')
+            ->once()
+            ->andReturn(ZarinpalVerifyResult::success('555000'));
     });
 
     $user = User::factory()->withMobile()->create();
@@ -345,6 +355,18 @@ test('installment checkout creates installment sms logs instead of generic order
         ...validCheckoutCustomer(),
         'installment_term' => 'one_month',
     ])->assertRedirect();
+
+    // Before the down payment, the installment request is NOT yet submitted for review.
+    expect(SmsMessage::query()->where('type', SmsMessageType::InstallmentRequestSubmitted->value)->exists())->toBeFalse();
+
+    Order::query()->first()->payments()->first()->update([
+        'meta' => ['authority' => $authority],
+    ]);
+
+    $this->get(route('checkout.zarinpal.callback', [
+        'Authority' => $authority,
+        'Status' => 'OK',
+    ]))->assertRedirect();
 
     expect(SmsMessage::query()->where('type', SmsMessageType::InstallmentRequestSubmitted->value)->exists())->toBeTrue()
         ->and(SmsMessage::query()->where('type', SmsMessageType::AdminInstallmentReview->value)->exists())->toBeTrue()
@@ -359,7 +381,12 @@ test('installment checkout still creates order when sms is disabled', function (
     ]);
 
     $this->mock(ZarinpalService::class, function (MockInterface $mock): void {
-        $mock->shouldNotReceive('request');
+        $mock->shouldReceive('request')
+            ->once()
+            ->andReturn(ZarinpalRequestResult::success(
+                'A00000000000000000000000000000000201',
+                'https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000201',
+            ));
     });
 
     $user = User::factory()->withMobile()->create();
@@ -372,7 +399,7 @@ test('installment checkout still creates order when sms is disabled', function (
     ])->assertRedirect();
 
     expect(Order::query()->count())->toBe(1)
-        ->and(SmsMessage::query()->where('type', SmsMessageType::InstallmentRequestSubmitted->value)->where('status', SmsMessageStatus::Skipped)->exists())->toBeTrue();
+        ->and(Order::query()->first()->status)->toBe(OrderStatus::InstallmentDownPaymentPending);
 });
 
 test('installment reject creates installment rejected sms log', function () {

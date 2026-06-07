@@ -17,7 +17,9 @@ class ProfileStatusLabels
             OrderStatus::Paid => 'پرداخت موفق',
             OrderStatus::Failed => 'ناموفق',
             OrderStatus::ManualReview => 'در انتظار بررسی کارت‌به‌کارت',
+            OrderStatus::InstallmentDownPaymentPending => 'در انتظار پرداخت پیش‌پرداخت',
             OrderStatus::InstallmentReview => 'در انتظار بررسی اقساطی',
+            OrderStatus::InstallmentRejected => 'درخواست اقساط رد شد',
             OrderStatus::Cancelled => 'لغو شده',
         };
     }
@@ -31,8 +33,10 @@ class ProfileStatusLabels
             OrderStatus::Paid => 'success',
             OrderStatus::Pending,
             OrderStatus::ManualReview,
+            OrderStatus::InstallmentDownPaymentPending,
             OrderStatus::InstallmentReview => 'warning',
             OrderStatus::Failed,
+            OrderStatus::InstallmentRejected,
             OrderStatus::Cancelled => 'neutral',
         };
     }
