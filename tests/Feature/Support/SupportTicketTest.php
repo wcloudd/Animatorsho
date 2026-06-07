@@ -39,7 +39,7 @@ test('guest cannot create support ticket', function () {
 });
 
 test('authenticated user can create ticket', function () {
-    $user = User::factory()->create(['name' => 'کاربر تست']);
+    $user = User::factory()->withMobile()->create(['name' => 'کاربر تست']);
 
     $this->actingAs($user)->post(route('support.tickets.store'), [
         'subject' => 'مشکل پرداخت',
@@ -82,7 +82,7 @@ test('user cannot view another users ticket', function () {
 });
 
 test('user can reply to own open ticket', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($user)->open()->create([
         'status' => SupportTicketStatus::Answered,
     ]);
@@ -98,7 +98,7 @@ test('user can reply to own open ticket', function () {
 });
 
 test('user cannot reply to closed ticket', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($user)->closed()->create();
 
     $this->actingAs($user)->post(route('support.tickets.messages.store', $ticket), [
@@ -109,7 +109,7 @@ test('user cannot reply to closed ticket', function () {
 });
 
 test('ticket creation creates admin sms log', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('support.tickets.store'), [
         'subject' => 'مشکل لایسنس',
@@ -130,7 +130,7 @@ test('sms failure does not break ticket creation', function () {
         $mock->shouldReceive('isEnabled')->andReturn(true);
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('support.tickets.store'), [
         'subject' => 'مشکل فنی',
@@ -148,7 +148,7 @@ test('sms failure does not break user reply', function () {
         $mock->shouldReceive('isEnabled')->andReturn(true);
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($user)->open()->create();
 
     $this->actingAs($user)->post(route('support.tickets.messages.store', $ticket), [
@@ -159,7 +159,7 @@ test('sms failure does not break user reply', function () {
 });
 
 test('support ticket creation is rate limited', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     for ($i = 0; $i < 5; $i++) {
         $this->actingAs($user)->post(route('support.tickets.store'), [

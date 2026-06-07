@@ -31,7 +31,7 @@ class MobileOtpAuthService
             ]);
         }
 
-        $this->assertResendCooldown($normalizedMobile);
+        $this->assertResendCooldown($normalizedMobile, OtpPurpose::Login);
 
         $this->invalidateActiveCodes($normalizedMobile, OtpPurpose::Login);
 
@@ -103,6 +103,94 @@ class MobileOtpAuthService
         return $this->findOrCreateUser($normalizedMobile);
     }
 
+    public function sendVerificationCode(User $user, string $mobile, Request $request): void
+    {
+        $normalizedMobile = IranianMobile::normalize($mobile);
+
+        if ($normalizedMobile === null) {
+            throw ValidationException::withMessages([
+                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+            ]);
+        }
+
+        $this->assertMobileAvailableForUser($user, $normalizedMobile);
+        $this->assertResendCooldown($normalizedMobile, OtpPurpose::Verification);
+
+        $this->invalidateActiveCodes($normalizedMobile, OtpPurpose::Verification);
+
+        $code = $this->generateCode();
+        $expiresMinutes = (int) config('otp.expires_minutes', 5);
+
+        OtpCode::query()->create([
+            'mobile' => $normalizedMobile,
+            'code_hash' => Hash::make($code),
+            'purpose' => OtpPurpose::Verification,
+            'expires_at' => now()->addMinutes($expiresMinutes),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        $message = $this->templates->render(SmsMessageType::OtpLogin, [
+            'code' => $code,
+        ]);
+
+        $this->sms->send(
+            $normalizedMobile,
+            $message,
+            SmsMessageType::OtpLogin,
+            ['purpose' => OtpPurpose::Verification->value],
+        );
+
+        $request->session()->put('mobile_verification.mobile', $normalizedMobile);
+        $request->session()->put('mobile_verification.sent_at', now()->toIso8601String());
+    }
+
+    public function verifyVerificationCode(User $user, string $mobile, string $code): void
+    {
+        $normalizedMobile = IranianMobile::normalize($mobile);
+
+        if ($normalizedMobile === null) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        $this->assertMobileAvailableForUser($user, $normalizedMobile);
+
+        $otpCode = OtpCode::query()
+            ->forMobile($normalizedMobile, OtpPurpose::Verification)
+            ->active()
+            ->latest('id')
+            ->first();
+
+        if ($otpCode === null) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        if ($otpCode->hasExceededAttempts()) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        if (! Hash::check($code, $otpCode->code_hash)) {
+            $otpCode->increment('attempts');
+
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        $otpCode->update(['consumed_at' => now()]);
+
+        $user->forceFill([
+            'mobile' => $normalizedMobile,
+            'mobile_verified_at' => now(),
+        ])->save();
+    }
+
     public function findOrCreateUser(string $mobile): User
     {
         $user = User::query()->where('mobile', $mobile)->first();
@@ -158,10 +246,10 @@ class MobileOtpAuthService
             ->update(['consumed_at' => now()]);
     }
 
-    private function assertResendCooldown(string $mobile): void
+    private function assertResendCooldown(string $mobile, OtpPurpose $purpose): void
     {
         $latest = OtpCode::query()
-            ->forMobile($mobile, OtpPurpose::Login)
+            ->forMobile($mobile, $purpose)
             ->latest('id')
             ->first();
 
@@ -175,6 +263,17 @@ class MobileOtpAuthService
         if ($availableAt->isFuture()) {
             throw ValidationException::withMessages([
                 'mobile' => 'لطفاً چند لحظه صبر کنید و دوباره تلاش کنید.',
+            ]);
+        }
+    }
+
+    private function assertMobileAvailableForUser(User $user, string $mobile): void
+    {
+        $existingUser = User::query()->where('mobile', $mobile)->first();
+
+        if ($existingUser !== null && $existingUser->id !== $user->id) {
+            throw ValidationException::withMessages([
+                'mobile' => 'این شماره موبایل قبلاً ثبت شده است.',
             ]);
         }
     }

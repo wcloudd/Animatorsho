@@ -54,3 +54,13 @@ function validCheckoutCustomer(): array
         'customer_mobile' => '09121234567',
     ];
 }
+
+/**
+ * @return array{customer_name: string}
+ */
+function validCheckoutCustomerNameOnly(): array
+{
+    return [
+        'customer_name' => 'علی رضایی',
+    ];
+}

@@ -84,6 +84,28 @@ export default function Register({ passwordRules }: Props) {
 
                                 <div className="grid gap-2">
                                     <Label
+                                        htmlFor="mobile"
+                                        className={authLabelClassName}
+                                    >
+                                        {copy.mobileLabel}
+                                    </Label>
+                                    <Input
+                                        id="mobile"
+                                        type="tel"
+                                        required
+                                        tabIndex={3}
+                                        autoComplete="tel"
+                                        inputMode="numeric"
+                                        name="mobile"
+                                        placeholder={copy.mobilePlaceholder}
+                                        dir="ltr"
+                                        className={authFieldClassName}
+                                    />
+                                    <AuthInputError message={errors.mobile} />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label
                                         htmlFor="password"
                                         className={authLabelClassName}
                                     >
@@ -92,7 +114,7 @@ export default function Register({ passwordRules }: Props) {
                                     <PasswordInput
                                         id="password"
                                         required
-                                        tabIndex={3}
+                                        tabIndex={4}
                                         autoComplete="new-password"
                                         name="password"
                                         placeholder={copy.passwordPlaceholder}
@@ -112,7 +134,7 @@ export default function Register({ passwordRules }: Props) {
                                     <PasswordInput
                                         id="password_confirmation"
                                         required
-                                        tabIndex={4}
+                                        tabIndex={5}
                                         autoComplete="new-password"
                                         name="password_confirmation"
                                         placeholder={copy.passwordConfirmPlaceholder}
@@ -129,7 +151,7 @@ export default function Register({ passwordRules }: Props) {
                                     className={cn(
                                         'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
                                     )}
-                                    tabIndex={5}
+                                    tabIndex={6}
                                     data-test="register-user-button"
                                 >
                                     {processing ? <Spinner /> : null}
@@ -144,7 +166,7 @@ export default function Register({ passwordRules }: Props) {
                                 <TextLink
                                     href={login()}
                                     className="text-sm font-bold text-purple"
-                                    tabIndex={6}
+                                    tabIndex={7}
                                 >
                                     {copy.secondaryLinkLabel}
                                 </TextLink>

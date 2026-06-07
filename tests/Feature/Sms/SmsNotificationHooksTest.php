@@ -49,7 +49,7 @@ test('checkout order creation creates customer and admin sms logs', function () 
             ));
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -72,7 +72,7 @@ test('card to card receipt submission creates submitted and admin review sms log
         $mock->shouldNotReceive('request');
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -87,7 +87,7 @@ test('card to card receipt submission creates submitted and admin review sms log
 });
 
 test('successful zarinpal callback creates payment paid sms log', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->create([
         'status' => OrderStatus::Pending,
         'payment_type' => OrderPaymentType::Cash,
@@ -119,7 +119,7 @@ test('successful zarinpal callback creates payment paid sms log', function () {
 });
 
 test('idempotent mark order paid does not create duplicate payment sms', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->paid()->create([
         'customer_mobile' => '09121234567',
     ]);
@@ -231,7 +231,7 @@ test('globally disabled sms creates skipped logs from commerce hooks', function 
             ));
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -256,7 +256,7 @@ test('disabled template creates skipped log from commerce hook', function () {
             ));
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -287,7 +287,7 @@ test('sms failure does not break checkout order creation', function () {
             ));
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -321,7 +321,7 @@ test('commerce hooks do not make external http requests', function () {
             ));
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -337,7 +337,7 @@ test('installment checkout creates installment sms logs instead of generic order
         $mock->shouldNotReceive('request');
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -362,7 +362,7 @@ test('installment checkout still creates order when sms is disabled', function (
         $mock->shouldNotReceive('request');
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -377,7 +377,7 @@ test('installment checkout still creates order when sms is disabled', function (
 
 test('installment reject creates installment rejected sms log', function () {
     $admin = User::factory()->admin()->create();
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
 
     $order = Order::factory()

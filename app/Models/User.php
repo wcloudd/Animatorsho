@@ -49,6 +49,11 @@ class User extends Authenticatable
         return filled($this->email);
     }
 
+    public function hasVerifiedMobile(): bool
+    {
+        return filled($this->mobile) && $this->mobile_verified_at !== null;
+    }
+
     public function validAvatarPreset(): ?string
     {
         if (! AvatarPresetRegistry::isValid($this->avatar_preset)) {

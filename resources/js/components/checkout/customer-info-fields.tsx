@@ -5,10 +5,18 @@ import { cn } from '@/lib/utils';
 const fieldClassName =
     'border-border bg-surface text-text placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm text-start shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface dark:text-text';
 
+export const CHECKOUT_ACCOUNT_MOBILE_COPY = {
+    snapshotNote:
+        'شماره تماس سفارش از شماره موبایل حساب کاربری شما ثبت می‌شود.',
+    verifiedLabel: 'شماره ثبت نام کننده:',
+} as const;
+
 type CustomerInfoFieldsProps = {
     data: Record<string, string>;
     setData: (key: string, value: string) => void;
     errors: Partial<Record<string, string>>;
+    accountMobile?: string | null;
+    accountMobileVerified?: boolean;
     className?: string;
 };
 
@@ -16,8 +24,12 @@ export function CustomerInfoFields({
     data,
     setData,
     errors,
+    accountMobile = null,
+    accountMobileVerified = false,
     className,
 }: CustomerInfoFieldsProps) {
+    const usesAccountMobile = Boolean(accountMobile);
+
     return (
         <section
             className={cn(
@@ -33,13 +45,14 @@ export function CustomerInfoFields({
                 اطلاعات تماس
             </h2>
             <p className="text-center text-sm font-medium leading-relaxed text-muted">
-                برای پیگیری سفارش، لایسنس SpotPlayer و پشتیبانی به نام و شماره
-                موبایل نیاز داریم.
+                {usesAccountMobile
+                    ? CHECKOUT_ACCOUNT_MOBILE_COPY.snapshotNote
+                    : 'برای پیگیری سفارش، لایسنس SpotPlayer و پشتیبانی به نام و شماره موبایل نیاز داریم.'}
             </p>
 
             <div className="grid gap-2">
                 <Label htmlFor="checkout-customer-name">
-                    نام و نام خانوادگی
+                    نام و نام خانوادگی ثبت نام کننده:
                 </Label>
                 <Input
                     id="checkout-customer-name"
@@ -58,27 +71,56 @@ export function CustomerInfoFields({
                 ) : null}
             </div>
 
-            <div className="grid gap-2">
-                <Label htmlFor="checkout-customer-mobile">شماره موبایل</Label>
-                <Input
-                    id="checkout-customer-mobile"
-                    name="customer_mobile"
-                    type="tel"
-                    required
-                    inputMode="tel"
-                    dir="ltr"
-                    placeholder="09123456789"
-                    autoComplete="tel"
-                    value={data.customer_mobile ?? ''}
-                    onChange={(event) =>
-                        setData('customer_mobile', event.target.value)
-                    }
-                    className={cn(fieldClassName, 'h-10')}
-                />
-                {errors.customer_mobile ? (
-                    <p className="text-sm text-red">{errors.customer_mobile}</p>
-                ) : null}
-            </div>
+            {usesAccountMobile ? (
+                <div
+                    className="grid gap-2"
+                    data-test="checkout-account-mobile-display"
+                >
+                    <Label htmlFor="checkout-account-mobile">
+                        {CHECKOUT_ACCOUNT_MOBILE_COPY.verifiedLabel}
+                    </Label>
+                    <Input
+                        id="checkout-account-mobile"
+                        type="tel"
+                        value={accountMobile ?? ''}
+                        readOnly
+                        disabled
+                        dir="ltr"
+                        className={cn(fieldClassName, 'h-10')}
+                    />
+                    {!accountMobileVerified ? (
+                        <p className="text-sm text-purple">
+                            مهم: از این شماره برای ارتباط با پشتیبان و رفع مشکلات لایسنس استفاده میشه، در روند خرید لازمه تاییدش کنی.
+                        </p>
+                    ) : null}
+                </div>
+            ) : (
+                <div className="grid gap-2">
+                    <Label htmlFor="checkout-customer-mobile">
+                        شماره موبایل
+                    </Label>
+                    <Input
+                        id="checkout-customer-mobile"
+                        name="customer_mobile"
+                        type="tel"
+                        required
+                        inputMode="tel"
+                        dir="ltr"
+                        placeholder="09123456789"
+                        autoComplete="tel"
+                        value={data.customer_mobile ?? ''}
+                        onChange={(event) =>
+                            setData('customer_mobile', event.target.value)
+                        }
+                        className={cn(fieldClassName, 'h-10')}
+                    />
+                    {errors.customer_mobile ? (
+                        <p className="text-sm text-red">
+                            {errors.customer_mobile}
+                        </p>
+                    ) : null}
+                </div>
+            )}
         </section>
     );
 }

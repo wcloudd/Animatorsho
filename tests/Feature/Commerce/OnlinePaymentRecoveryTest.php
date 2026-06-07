@@ -355,7 +355,7 @@ test('gateway failed order allows new checkout', function () {
             ));
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackageForRecovery();
 
     $order = Order::factory()

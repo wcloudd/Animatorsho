@@ -2,6 +2,7 @@
 
 namespace App\Concerns;
 
+use App\Models\User;
 use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -15,6 +16,44 @@ trait CustomerValidationRules
         return [
             'customer_name' => $this->customerNameRules(),
             'customer_mobile' => $this->customerMobileRules(),
+        ];
+    }
+
+    /**
+     * @return array<string, array<int, ValidationRule|array<mixed>|string>>
+     */
+    protected function checkoutCustomerInfoRules(?User $user): array
+    {
+        return [
+            'customer_name' => $this->customerNameRules(),
+            'customer_mobile' => $this->usesAccountMobileSnapshot($user)
+                ? $this->accountMobileSnapshotRules($user)
+                : $this->customerMobileRules(),
+        ];
+    }
+
+    protected function usesAccountMobileSnapshot(?User $user): bool
+    {
+        return $user !== null && filled($user->mobile);
+    }
+
+    /**
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function accountMobileSnapshotRules(User $user): array
+    {
+        $expectedMobile = IranianMobile::normalize($user->mobile);
+
+        return [
+            'required',
+            'string',
+            function (string $attribute, mixed $value, \Closure $fail) use ($expectedMobile): void {
+                $normalized = IranianMobile::normalize(is_string($value) ? $value : null);
+
+                if ($normalized === null || $normalized !== $expectedMobile) {
+                    $fail('شماره موبایل معتبر وارد کنید (مثال: 09123456789).');
+                }
+            },
         ];
     }
 

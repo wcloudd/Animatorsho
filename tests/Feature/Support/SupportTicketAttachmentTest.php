@@ -14,7 +14,7 @@ beforeEach(function () {
 });
 
 test('user can create ticket with valid attachment', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('support.tickets.store'), [
         'subject' => 'مشکل فنی',
@@ -35,7 +35,7 @@ test('user can create ticket with valid attachment', function () {
 });
 
 test('user can reply with valid attachment', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($user)->open()->create();
 
     $this->actingAs($user)->post(route('support.tickets.messages.store', $ticket), [
@@ -71,7 +71,7 @@ test('admin can reply with valid attachment', function () {
 });
 
 test('oversized attachment is rejected', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->from(route('support.index'))->post(route('support.tickets.store'), [
         'subject' => 'فایل بزرگ',
@@ -86,7 +86,7 @@ test('oversized attachment is rejected', function () {
 });
 
 test('invalid attachment type is rejected', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->from(route('support.index'))->post(route('support.tickets.store'), [
         'subject' => 'فایل نامعتبر',
@@ -100,7 +100,7 @@ test('invalid attachment type is rejected', function () {
 });
 
 test('ticket owner can download own attachment', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($user)->create();
     $message = SupportTicketMessage::factory()->forTicket($ticket)->fromUser($user)->create();
     $path = sprintf('support-attachments/%d/%d/test.png', $ticket->id, $message->id);
@@ -117,8 +117,8 @@ test('ticket owner can download own attachment', function () {
 });
 
 test('another user cannot download attachment', function () {
-    $owner = User::factory()->create();
-    $otherUser = User::factory()->create();
+    $owner = User::factory()->withMobile()->create();
+    $otherUser = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($owner)->create();
     $message = SupportTicketMessage::factory()->forTicket($ticket)->fromUser($owner)->create();
     $path = sprintf('support-attachments/%d/%d/test.png', $ticket->id, $message->id);
@@ -134,7 +134,7 @@ test('another user cannot download attachment', function () {
 
 test('admin can download any attachment', function () {
     $admin = User::factory()->admin()->create();
-    $owner = User::factory()->create();
+    $owner = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($owner)->create();
     $message = SupportTicketMessage::factory()->forTicket($ticket)->fromUser($owner)->create();
     $path = sprintf('support-attachments/%d/%d/test.pdf', $ticket->id, $message->id);
@@ -152,7 +152,7 @@ test('admin can download any attachment', function () {
 });
 
 test('attachment download does not expose public storage path', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($user)->create();
     $message = SupportTicketMessage::factory()->forTicket($ticket)->fromUser($user)->create();
     $path = sprintf('support-attachments/%d/%d/secret.png', $ticket->id, $message->id);
@@ -174,7 +174,7 @@ test('attachment download does not expose public storage path', function () {
 });
 
 test('attachment from another ticket returns not found', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $ticket = SupportTicket::factory()->forUser($user)->create();
     $otherTicket = SupportTicket::factory()->forUser($user)->create();
     $message = SupportTicketMessage::factory()->forTicket($otherTicket)->fromUser($user)->create();

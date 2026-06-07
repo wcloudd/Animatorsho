@@ -33,7 +33,7 @@ function mockSuccessfulZarinpalRequest(string $authority = 'A0000000000000000000
 test('cash checkout calls zarinpal request and redirects to gateway url', function () {
     mockSuccessfulZarinpalRequest();
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $response = $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -56,7 +56,7 @@ test('cash checkout calls zarinpal request and redirects to gateway url', functi
 test('cash checkout through inertia returns external location response for zarinpal redirect', function () {
     mockSuccessfulZarinpalRequest();
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $gatewayUrl = 'https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000000';
 
     $response = $this->actingAs($user)
@@ -93,7 +93,7 @@ test('cash checkout sends payment amount from database package price to zarinpal
             ));
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -109,7 +109,7 @@ test('gateway request failure marks order and payment failed and redirects to fa
             ->andReturn(ZarinpalRequestResult::failure('Could not connect to Zarinpal.'));
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $response = $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -132,7 +132,7 @@ test('gateway request failure marks order and payment failed and redirects to fa
 });
 
 test('successful callback marks order and payment paid', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->create([
         'status' => OrderStatus::Pending,
         'payment_type' => OrderPaymentType::Cash,
@@ -188,7 +188,7 @@ test('successful callback marks order and payment paid', function () {
 });
 
 test('repeated successful callback does not create duplicate license', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->create([
         'status' => OrderStatus::Pending,
         'payment_type' => OrderPaymentType::Cash,
@@ -241,7 +241,7 @@ test('repeated successful callback does not create duplicate license', function 
 });
 
 test('failed callback does not create spotplayer license', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->create([
         'status' => OrderStatus::Pending,
         'payment_type' => OrderPaymentType::Cash,
@@ -273,7 +273,7 @@ test('failed callback does not create spotplayer license', function () {
 });
 
 test('failed callback marks order and payment failed', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->create([
         'status' => OrderStatus::Pending,
         'payment_type' => OrderPaymentType::Cash,
@@ -311,7 +311,7 @@ test('failed callback marks order and payment failed', function () {
 });
 
 test('verify failure marks order and payment failed', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->create([
         'status' => OrderStatus::Pending,
         'payment_type' => OrderPaymentType::Cash,
@@ -351,7 +351,7 @@ test('verify failure marks order and payment failed', function () {
 });
 
 test('successful zarinpal callback on cancelled order redirects to payment-received-needs-support', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->create([
         'status' => OrderStatus::Cancelled,
         'payment_type' => OrderPaymentType::Cash,
@@ -401,7 +401,7 @@ test('successful zarinpal callback on cancelled order redirects to payment-recei
 });
 
 test('already paid callback redirects to success without calling verify again', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $order = Order::factory()->for($user)->paid()->create([
         'payment_type' => OrderPaymentType::Cash,
     ]);
@@ -449,7 +449,7 @@ test('installment checkout does not call zarinpal', function () {
         $mock->shouldNotReceive('verify');
     });
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',

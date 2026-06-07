@@ -6,6 +6,7 @@ use App\Concerns\CustomerValidationRules;
 use App\Services\CheckoutOrderService;
 use App\Services\PaymentReceiptStorageService;
 use App\Services\UserPackagePurchaseGuard;
+use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -21,7 +22,18 @@ class StoreCheckoutOrderRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $merged = $this->normalizedCustomerInput($this->all());
+        $user = $this->user();
+        $merged = $this->all();
+
+        if ($this->usesAccountMobileSnapshot($user)) {
+            $merged['customer_mobile'] = IranianMobile::normalize($user->mobile) ?? $user->mobile;
+        } else {
+            $merged = $this->normalizedCustomerInput($merged);
+        }
+
+        if (isset($merged['customer_name']) && is_string($merged['customer_name'])) {
+            $merged['customer_name'] = trim($merged['customer_name']);
+        }
 
         if (! array_key_exists('payment_channel', $merged)) {
             $merged['payment_channel'] = 'online';
@@ -48,7 +60,7 @@ class StoreCheckoutOrderRequest extends FormRequest
             'payment' => ['required', 'string', Rule::in(['cash', 'installment'])],
             'payment_channel' => ['nullable', 'string', Rule::in(['online', 'card_to_card'])],
             'chapter' => ['nullable', 'string', 'max:255'],
-            ...$this->customerInfoRules(),
+            ...$this->checkoutCustomerInfoRules($this->user()),
             'installment_term' => [
                 Rule::requiredIf($isInstallment),
                 'nullable',

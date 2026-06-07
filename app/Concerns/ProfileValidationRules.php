@@ -4,6 +4,7 @@ namespace App\Concerns;
 
 use App\Models\User;
 use App\Support\AvatarPresetRegistry;
+use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
@@ -57,5 +58,48 @@ trait ProfileValidationRules
     protected function avatarPresetRules(): array
     {
         return ['nullable', 'string', AvatarPresetRegistry::validationRule()];
+    }
+
+    /**
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function registrationMobileRules(?int $userId = null): array
+    {
+        return [
+            'mobile' => $this->mobileRules($userId),
+        ];
+    }
+
+    /**
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function mobileRules(?int $userId = null): array
+    {
+        return [
+            'required',
+            'string',
+            function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! IranianMobile::isValid(is_string($value) ? $value : null)) {
+                    $fail('شماره موبایل معتبر وارد کنید (مثال: 09123456789).');
+                }
+            },
+            $userId === null
+                ? Rule::unique(User::class, 'mobile')
+                : Rule::unique(User::class, 'mobile')->ignore($userId),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    protected function normalizedMobileFromInput(array $input): ?string
+    {
+        $mobile = $input['mobile'] ?? null;
+
+        if (! is_string($mobile)) {
+            return null;
+        }
+
+        return IranianMobile::normalize($mobile);
     }
 }

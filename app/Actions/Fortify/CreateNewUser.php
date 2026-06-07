@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
+use App\Support\IranianMobile;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
@@ -19,8 +20,17 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        if (isset($input['mobile']) && is_string($input['mobile'])) {
+            $normalized = IranianMobile::normalize($input['mobile']);
+
+            if ($normalized !== null) {
+                $input['mobile'] = $normalized;
+            }
+        }
+
         Validator::make($input, [
             ...$this->profileRules(),
+            ...$this->registrationMobileRules(),
             'password' => $this->passwordRules(),
         ])->validate();
 
@@ -28,6 +38,7 @@ class CreateNewUser implements CreatesNewUsers
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
+            'mobile' => $this->normalizedMobileFromInput($input),
         ]);
     }
 }

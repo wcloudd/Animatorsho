@@ -82,7 +82,7 @@ function assertDuplicateBlocked(
 }
 
 test('purchase guard detects pending order as blocking access', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -101,7 +101,7 @@ test('purchase guard detects pending order as blocking access', function () {
 });
 
 test('purchase guard detects manual review order as blocking access', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     SpotPlayerLicense::factory()
@@ -128,7 +128,7 @@ test('purchase guard detects manual review order as blocking access', function (
 });
 
 test('pending zarinpal order blocks duplicate full cash checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -153,7 +153,7 @@ test('card to card reviewing order blocks duplicate checkout', function () {
         'card_to_card.card_owner_name' => 'انیماتورشو',
     ]);
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -187,7 +187,7 @@ test('card to card reviewing order blocks duplicate checkout', function () {
 });
 
 test('installment review order blocks duplicate installment checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -214,7 +214,7 @@ test('installment review order blocks duplicate installment checkout', function 
 });
 
 test('paid order with pending license blocks duplicate checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -237,7 +237,7 @@ test('paid order with pending license blocks duplicate checkout', function () {
 });
 
 test('active license blocks duplicate checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -261,7 +261,7 @@ test('active license blocks duplicate checkout', function () {
 });
 
 test('pending license only blocks duplicate checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     SpotPlayerLicense::factory()->create([
@@ -275,7 +275,7 @@ test('pending license only blocks duplicate checkout', function () {
 });
 
 test('revoked license plus reviewing order blocks duplicate checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     SpotPlayerLicense::factory()
@@ -303,7 +303,7 @@ test('revoked license plus reviewing order blocks duplicate checkout', function 
 });
 
 test('failed order only allows duplicate checkout retry', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     Order::factory()
@@ -318,7 +318,7 @@ test('failed order only allows duplicate checkout retry', function () {
 });
 
 test('cancelled order only allows duplicate checkout retry', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     Order::factory()
@@ -333,7 +333,7 @@ test('cancelled order only allows duplicate checkout retry', function () {
 });
 
 test('gateway failed zarinpal order does not block duplicate checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -353,7 +353,7 @@ test('gateway failed zarinpal order does not block duplicate checkout', function
 });
 
 test('cancelled pending zarinpal order unblocks duplicate checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -376,7 +376,7 @@ test('cancelled pending zarinpal order unblocks duplicate checkout', function ()
 });
 
 test('revoked license only allows duplicate checkout retry', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     SpotPlayerLicense::factory()
@@ -395,7 +395,7 @@ test('revoked license only allows duplicate checkout retry', function () {
 });
 
 test('active license on full package does not block different chapter checkout', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $full = fullPackage();
     $chapter = chapterPackage('chapter-2');
 
@@ -430,7 +430,7 @@ test('active license on full package does not block different chapter checkout',
 });
 
 test('checkout confirm shows duplicate purchase notice for blocked user', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
     $package = fullPackage();
 
     $order = Order::factory()
@@ -460,7 +460,7 @@ test('checkout confirm does not block guest or clean user', function () {
             ->where('duplicatePurchaseBlocked', false)
         );
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)
         ->get(confirmFullCashUrl())

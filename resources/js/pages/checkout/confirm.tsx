@@ -105,6 +105,13 @@ export default function CheckoutConfirm({
                                             data={data}
                                             setData={setData}
                                             errors={errors}
+                                            accountMobile={auth.user?.mobile ?? null}
+                                            accountMobileVerified={
+                                                auth.user?.mobile_verified_at !==
+                                                    null &&
+                                                auth.user?.mobile_verified_at !==
+                                                    undefined
+                                            }
                                         />
 
                                         {errors.package ? (

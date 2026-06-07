@@ -63,6 +63,14 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function withUnverifiedMobile(?string $mobile = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'mobile' => $mobile ?? ('09'.fake()->unique()->numerify('#########')),
+            'mobile_verified_at' => null,
+        ]);
+    }
+
     public function otpOnly(?string $mobile = null): static
     {
         return $this->state(fn (array $attributes) => [

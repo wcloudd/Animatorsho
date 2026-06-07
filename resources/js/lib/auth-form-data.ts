@@ -39,6 +39,8 @@ export const AUTH_REGISTER_COPY = {
     namePlaceholder: 'نام کامل',
     emailLabel: 'ایمیل',
     emailPlaceholder: 'example@email.com',
+    mobileLabel: 'شماره موبایل',
+    mobilePlaceholder: '09123456789',
     passwordLabel: 'رمز عبور',
     passwordPlaceholder: 'رمز عبور',
     passwordConfirmLabel: 'تکرار رمز عبور',
@@ -78,6 +80,37 @@ export const AUTH_MOBILE_VERIFY_COPY = {
     codeLabel: 'کد ورود',
     codePlaceholder: '123456',
     submitLabel: 'ورود به حساب',
+    resendLabel: 'ارسال مجدد کد',
+    resendWaitLabel: 'ارسال مجدد تا {seconds} ثانیه دیگر',
+    changeMobileLabel: 'تغییر شماره موبایل',
+    sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
+} as const;
+
+export const PROFILE_MOBILE_VERIFY_COPY = {
+    headTitle: 'تأیید موبایل',
+    title: 'ثبت و تأیید شماره موبایل',
+    subtitle:
+        'برای ادامه، شماره موبایل خود را وارد کنید تا کد تأیید برایت ارسال شود.',
+    existingSubtitle:
+        'برای ادامه، کد تأیید را برای شماره موبایل ثبت‌شده در حساب کاربری‌ات ارسال می‌کنیم.',
+    requiredMessage:
+        'برای ادامه، ابتدا شماره موبایل خود را ثبت و تأیید کنید.',
+    mobileLabel: 'شماره موبایل',
+    mobilePlaceholder: '09123456789',
+    submitLabel: 'دریافت کد تأیید',
+    verifyExistingLabel: 'ارسال کد تأیید',
+    changeMobileLabel: 'تغییر شماره موبایل',
+    useExistingMobileLabel: 'تأیید همین شماره',
+    sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
+} as const;
+
+export const PROFILE_MOBILE_VERIFY_OTP_COPY = {
+    headTitle: 'تأیید کد',
+    title: 'کد تأیید را وارد کن',
+    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کن.',
+    codeLabel: 'کد تأیید',
+    codePlaceholder: '123456',
+    submitLabel: 'تأیید شماره موبایل',
     resendLabel: 'ارسال مجدد کد',
     resendWaitLabel: 'ارسال مجدد تا {seconds} ثانیه دیگر',
     changeMobileLabel: 'تغییر شماره موبایل',

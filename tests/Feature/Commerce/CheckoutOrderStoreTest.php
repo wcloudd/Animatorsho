@@ -33,8 +33,23 @@ test('guest cannot create checkout order and is redirected to login', function (
     ])->assertRedirect(route('login'));
 });
 
+test('authenticated user with mobile can create checkout order without posting customer_mobile', function () {
+    $user = User::factory()->withMobile('09129876543')->create();
+
+    $this->actingAs($user)->post(route('checkout.orders.store'), [
+        'package' => 'full',
+        'payment' => 'cash',
+        ...validCheckoutCustomerNameOnly(),
+    ])->assertRedirect();
+
+    $order = Order::query()->first();
+
+    expect($order)->not->toBeNull()
+        ->and($order->customer_mobile)->toBe('09129876543');
+});
+
 test('authenticated user can create full cash order with snapped package price', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $response = $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -65,7 +80,7 @@ test('authenticated user can create full cash order with snapped package price',
 });
 
 test('authenticated user can create installment review order for full package only', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $response = $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -101,7 +116,7 @@ test('authenticated user can create installment review order for full package on
 });
 
 test('installment checkout ignores frontend amount fields', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -120,8 +135,8 @@ test('installment checkout ignores frontend amount fields', function () {
         ->and($payment->amount_toman)->toBe(5_500_000);
 });
 
-test('checkout normalizes iranian mobile numbers before storing', function () {
-    $user = User::factory()->create();
+test('checkout snapshots account mobile and ignores posted customer_mobile', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -132,43 +147,52 @@ test('checkout normalizes iranian mobile numbers before storing', function () {
 
     $order = Order::query()->first();
 
-    expect($order->customer_mobile)->toBe('09123456789');
+    expect($order->customer_mobile)->toBe('09121234567');
 });
 
-test('checkout rejects invalid customer mobile', function () {
+test('checkout ignores invalid posted customer_mobile when account mobile exists', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
+
+    $this->actingAs($user)->post(route('checkout.orders.store'), [
+        'package' => 'full',
+        'payment' => 'cash',
+        'customer_name' => 'علی رضایی',
+        'customer_mobile' => '08123456789',
+    ])->assertRedirect();
+
+    expect(Order::query()->first()?->customer_mobile)->toBe('09121234567');
+});
+
+test('checkout without verified account mobile is redirected before validation', function () {
     $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('checkout.orders.store'), [
+        'package' => 'full',
+        'payment' => 'cash',
+        'customer_name' => 'علی رضایی',
+        'customer_mobile' => '08123456789',
+    ])->assertRedirect(route('profile.mobile.create'));
+
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('checkout requires customer name and uses account mobile when available', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $this->actingAs($user)
         ->from(route('checkout.confirm', ['package' => 'full', 'payment' => 'cash']))
         ->post(route('checkout.orders.store'), [
             'package' => 'full',
             'payment' => 'cash',
-            'customer_name' => 'علی رضایی',
-            'customer_mobile' => '08123456789',
         ])
         ->assertRedirect(route('checkout.confirm', ['package' => 'full', 'payment' => 'cash']))
-        ->assertSessionHasErrors(['customer_mobile']);
+        ->assertSessionHasErrors(['customer_name']);
 
     expect(Order::query()->count())->toBe(0);
 });
 
-test('checkout requires customer name and mobile for all orders', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-        ->from(route('checkout.confirm', ['package' => 'full', 'payment' => 'cash']))
-        ->post(route('checkout.orders.store'), [
-            'package' => 'full',
-            'payment' => 'cash',
-        ])
-        ->assertRedirect(route('checkout.confirm', ['package' => 'full', 'payment' => 'cash']))
-        ->assertSessionHasErrors(['customer_name', 'customer_mobile']);
-
-    expect(Order::query()->count())->toBe(0);
-});
-
-test('installment checkout requires customer mobile and installment term', function () {
-    $user = User::factory()->create();
+test('installment checkout requires customer name and installment term when account mobile exists', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $this->actingAs($user)
         ->from(route('checkout.confirm', ['package' => 'full', 'payment' => 'installment']))
@@ -178,13 +202,13 @@ test('installment checkout requires customer mobile and installment term', funct
             'customer_name' => 'علی رضایی',
         ])
         ->assertRedirect(route('checkout.confirm', ['package' => 'full', 'payment' => 'installment']))
-        ->assertSessionHasErrors(['customer_mobile', 'installment_term']);
+        ->assertSessionHasErrors(['installment_term']);
 
     expect(Order::query()->count())->toBe(0);
 });
 
 test('cash checkout does not require installment fields', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -196,7 +220,7 @@ test('cash checkout does not require installment fields', function () {
 });
 
 test('authenticated user can create chapter cash order from database package', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $response = $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'chapter',
@@ -221,7 +245,7 @@ test('authenticated user can create chapter cash order from database package', f
 });
 
 test('installment is rejected for chapter package', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $this->actingAs($user)
         ->from(route('checkout.confirm', ['package' => 'chapter', 'chapter' => 'chapter-1']))
@@ -238,7 +262,7 @@ test('installment is rejected for chapter package', function () {
 });
 
 test('invalid package chapter and payment combinations are rejected', function (array $payload) {
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile('09121234567')->create();
 
     $this->actingAs($user)
         ->from(route('checkout'))
@@ -267,7 +291,7 @@ test('checkout result page supports payment pending status', function () {
 });
 
 test('checkout confirm passes order context and customer defaults for full cash', function () {
-    $user = User::factory()->create(['name' => 'کاربر تست']);
+    $user = User::factory()->withMobile('09121234567')->create(['name' => 'کاربر تست']);
 
     $this->actingAs($user)->get(route('checkout.confirm', [
         'package' => 'full',
@@ -279,6 +303,8 @@ test('checkout confirm passes order context and customer defaults for full cash'
             ->where('orderContext.payment', 'cash')
             ->where('orderContext.chapter', null)
             ->where('customerDefaults.name', 'کاربر تست')
+            ->where('auth.user.mobile', '09121234567')
+            ->where('auth.user.mobile_verified_at', fn ($value) => $value !== null)
         );
 });
 

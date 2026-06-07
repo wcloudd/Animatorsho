@@ -35,7 +35,7 @@ function configureCardToCardForTests(): void
 test('authenticated user can create full card-to-card order with reviewing payment', function () {
     configureCardToCardForTests();
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $response = $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -72,7 +72,7 @@ test('authenticated user can create full card-to-card order with reviewing payme
 test('authenticated user can create chapter card-to-card order', function () {
     configureCardToCardForTests();
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'chapter',
@@ -93,7 +93,7 @@ test('authenticated user can create chapter card-to-card order', function () {
 test('card-to-card checkout requires receipt image', function () {
     configureCardToCardForTests();
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)
         ->from(route('checkout.confirm', ['package' => 'full', 'payment' => 'cash']))
@@ -112,7 +112,7 @@ test('card-to-card checkout requires receipt image', function () {
 test('card-to-card checkout rejects invalid receipt files', function () {
     configureCardToCardForTests();
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)
         ->from(route('checkout.confirm', ['package' => 'full', 'payment' => 'cash']))
@@ -131,7 +131,7 @@ test('card-to-card checkout rejects invalid receipt files', function () {
 test('card-to-card checkout ignores tampered amount and uses database snapshot', function () {
     configureCardToCardForTests();
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)->post(route('checkout.orders.store'), [
         'package' => 'full',
@@ -157,7 +157,7 @@ test('card-to-card checkout is rejected when card config is missing', function (
         'card_to_card.card_owner_name' => null,
     ]);
 
-    $user = User::factory()->create();
+    $user = User::factory()->withMobile()->create();
 
     $this->actingAs($user)
         ->from(route('checkout.confirm', ['package' => 'full', 'payment' => 'cash']))
