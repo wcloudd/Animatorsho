@@ -28,6 +28,7 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('licenses', [SpotPlayerLicenseController::class, 'index'])->name('licenses.index');
         Route::post('licenses/{license}/activate', [SpotPlayerLicenseController::class, 'activate'])->name('licenses.activate');
+        Route::post('licenses/{license}/retry-provision', [SpotPlayerLicenseController::class, 'retryProvision'])->name('licenses.retry-provision');
         Route::post('licenses/{license}/revoke', [SpotPlayerLicenseController::class, 'revoke'])->name('licenses.revoke');
 
         Route::get('sms', [SmsController::class, 'index'])->name('sms.index');

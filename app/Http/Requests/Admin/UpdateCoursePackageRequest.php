@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCoursePackageRequest extends FormRequest
@@ -21,6 +22,29 @@ class UpdateCoursePackageRequest extends FormRequest
             'price_toman' => ['required', 'integer', 'min:0'],
             'is_active' => ['required', 'boolean'],
             'display_order' => ['required', 'integer', 'min:0'],
+            'spotplayer_course_ids_input' => ['nullable', 'string', 'max:2000', $this->validateCourseIds(...)],
+            'spotplayer_access_limit' => ['nullable', 'string', 'max:255', 'regex:/^[0-9,\-\s]+$/'],
         ];
+    }
+
+    private function validateCourseIds(string $attribute, mixed $value, Closure $fail): void
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return;
+        }
+
+        $parts = preg_split('/[\s,]+/', trim($value)) ?: [];
+
+        foreach ($parts as $part) {
+            $id = trim($part);
+
+            if ($id === '') {
+                continue;
+            }
+
+            if (! preg_match('/^[A-Za-z0-9_-]+$/', $id)) {
+                $fail('شناسه دوره SpotPlayer نامعتبر است.');
+            }
+        }
     }
 }

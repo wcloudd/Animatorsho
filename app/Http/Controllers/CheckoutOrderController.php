@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Requests\StoreCheckoutOrderRequest;
 use App\Models\Order;
@@ -86,13 +87,17 @@ class CheckoutOrderController extends Controller
             return Inertia::location($gatewayResult->paymentUrl);
         }
 
-        DB::transaction(function () use ($payment, $gatewayResult): void {
+        DB::transaction(function () use ($payment, $order, $gatewayResult): void {
             $payment->update([
                 'status' => PaymentStatus::Failed,
                 'meta' => array_merge($payment->meta ?? [], [
                     'gateway_error' => $gatewayResult->errorMessage,
                     'failed_at' => now()->toIso8601String(),
                 ]),
+            ]);
+
+            $order->update([
+                'status' => OrderStatus::Failed,
             ]);
         });
 

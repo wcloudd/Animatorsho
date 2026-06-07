@@ -8,7 +8,6 @@ use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\OrderPaymentCompletionService;
-use App\Services\SpotPlayerLicenseProvisioningService;
 use App\Services\ZarinpalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +17,6 @@ class CheckoutZarinpalCallbackController extends Controller
 {
     public function __construct(
         private readonly ZarinpalService $zarinpal,
-        private readonly SpotPlayerLicenseProvisioningService $spotPlayerLicenses,
         private readonly OrderPaymentCompletionService $orderPaymentCompletion,
     ) {}
 
@@ -44,7 +42,7 @@ class CheckoutZarinpalCallbackController extends Controller
         $order = $payment->order;
 
         if ($payment->status === PaymentStatus::Paid) {
-            $this->spotPlayerLicenses->provisionForPaidOrder($order);
+            $this->orderPaymentCompletion->finalizeLicenseProvisioning($order);
 
             return redirect()->route('checkout.result', [
                 'status' => 'success',

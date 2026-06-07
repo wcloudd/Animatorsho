@@ -5,6 +5,7 @@ namespace App\Services\Admin;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\SpotPlayerLicense;
 use App\Services\Sms\SmsNotifier;
+use App\Services\SpotPlayer\SpotPlayerMetaSanitizer;
 use Illuminate\Auth\Access\AuthorizationException;
 
 class AdminSpotPlayerLicenseService
@@ -27,6 +28,10 @@ class AdminSpotPlayerLicenseService
             'license_key' => $licenseKey,
             'status' => SpotPlayerLicenseStatus::Active,
             'activated_at' => now(),
+            'meta' => SpotPlayerMetaSanitizer::merge($license->meta, [
+                'provisioned_via' => 'manual',
+                'last_api_error' => null,
+            ]),
         ]);
 
         $license = $license->fresh();

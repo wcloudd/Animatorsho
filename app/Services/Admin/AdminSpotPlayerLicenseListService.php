@@ -12,20 +12,7 @@ class AdminSpotPlayerLicenseListService
 {
     /**
      * @return array{
-     *     licenses: LengthAwarePaginator<int, array{
-     *         id: int,
-     *         userName: string,
-     *         userEmail: string,
-     *         packageTitle: string,
-     *         orderNumber: ?string,
-     *         status: string,
-     *         statusValue: string,
-     *         statusTone: string,
-     *         licenseKey: ?string,
-     *         activatedAt: ?string,
-     *         canActivate: bool,
-     *         canRevoke: bool
-     *     }>
+     *     licenses: LengthAwarePaginator<int, array<string, mixed>>
      * }
      */
     public function listForAdmin(): array
@@ -48,26 +35,17 @@ class AdminSpotPlayerLicenseListService
     }
 
     /**
-     * @return array{
-     *     id: int,
-     *     userName: string,
-     *     userEmail: string,
-     *     packageTitle: string,
-     *     orderNumber: ?string,
-     *     status: string,
-     *     statusValue: string,
-     *     statusTone: string,
-     *     licenseKey: ?string,
-     *     activatedAt: ?string,
-     *     canActivate: bool,
-     *     canRevoke: bool
-     * }
+     * @return array<string, mixed>
      */
     private function toListItem(SpotPlayerLicense $license): array
     {
         $status = $license->status;
         $order = $license->order;
         $latestPayment = $order?->payments->first();
+        $meta = is_array($license->meta) ? $license->meta : [];
+        $provisionedVia = is_string($meta['provisioned_via'] ?? null) ? $meta['provisioned_via'] : 'pending';
+        $courseIds = $license->coursePackage?->spotplayer_course_ids;
+        $hasCourseIds = is_array($courseIds) && $courseIds !== [];
 
         return [
             'id' => $license->id,
@@ -100,6 +78,27 @@ class AdminSpotPlayerLicenseListService
                 SpotPlayerLicenseStatus::Revoked,
             ], true),
             'canRevoke' => $status === SpotPlayerLicenseStatus::Active,
+            'provisionedVia' => $provisionedVia,
+            'provisionedViaLabel' => $this->provisionedViaLabel($provisionedVia),
+            'apiFailureSummary' => is_string($meta['last_api_error'] ?? null) ? $meta['last_api_error'] : null,
+            'apiTechnicalDetails' => [
+                'lastApiAttemptAt' => is_string($meta['last_api_attempt_at'] ?? null) ? $meta['last_api_attempt_at'] : null,
+                'lastApiError' => is_string($meta['last_api_error'] ?? null) ? $meta['last_api_error'] : null,
+                'lastApiHttpStatus' => is_int($meta['last_api_http_status'] ?? null) ? $meta['last_api_http_status'] : null,
+                'spotplayerLicenseId' => is_string($meta['spotplayer_license_id'] ?? null) ? $meta['spotplayer_license_id'] : null,
+            ],
+            'canRetryProvision' => $status === SpotPlayerLicenseStatus::Pending
+                && config('spotplayer.enabled')
+                && $hasCourseIds,
         ];
+    }
+
+    private function provisionedViaLabel(string $provisionedVia): string
+    {
+        return match ($provisionedVia) {
+            'api' => 'API',
+            'manual' => 'دستی',
+            default => 'در انتظار',
+        };
     }
 }

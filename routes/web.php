@@ -4,6 +4,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CheckoutOrderController;
 use App\Http\Controllers\CheckoutZarinpalCallbackController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileOrderController;
 use App\Http\Controllers\SupportTicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +32,10 @@ Route::middleware('auth')->group(function () {
     Route::get('support/tickets/{ticket}/attachments/{attachment}', [SupportTicketController::class, 'downloadAttachment'])->name('support.tickets.attachments.download');
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
+    Route::post('profile/orders/{order}/retry-online-payment', [ProfileOrderController::class, 'retryOnlinePayment'])
+        ->name('profile.orders.retry-online-payment');
+    Route::post('profile/orders/{order}/cancel', [ProfileOrderController::class, 'cancel'])
+        ->name('profile.orders.cancel');
 });
 
 Route::redirect('dashboard', '/')->name('dashboard');

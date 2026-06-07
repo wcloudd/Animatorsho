@@ -332,6 +332,49 @@ test('cancelled order only allows duplicate checkout retry', function () {
     expect($user->orders()->count())->toBe(2);
 });
 
+test('gateway failed zarinpal order does not block duplicate checkout', function () {
+    $user = User::factory()->create();
+    $package = fullPackage();
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->create(['status' => OrderStatus::Failed]);
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Zarinpal,
+        'status' => PaymentStatus::Failed,
+    ]);
+
+    storeFullCashOrder($user)
+        ->assertRedirect('https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000000');
+
+    expect($user->orders()->count())->toBe(2);
+});
+
+test('cancelled pending zarinpal order unblocks duplicate checkout', function () {
+    $user = User::factory()->create();
+    $package = fullPackage();
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->create(['status' => OrderStatus::Pending]);
+
+    Payment::factory()->forOrder($order)->create([
+        'method' => PaymentMethod::Zarinpal,
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('profile.orders.cancel', $order));
+
+    storeFullCashOrder($user)
+        ->assertRedirect('https://sandbox.zarinpal.com/pg/StartPay/A00000000000000000000000000000000000');
+
+    expect($user->orders()->count())->toBe(2);
+});
+
 test('revoked license only allows duplicate checkout retry', function () {
     $user = User::factory()->create();
     $package = fullPackage();

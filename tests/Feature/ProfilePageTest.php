@@ -48,6 +48,8 @@ test('authenticated profile loads consolidated access and order history', functi
             ->where('accessItems.0.title', 'دوره جامع انیماتورشو')
             ->where('accessItems.0.accessState', 'payment_pending')
             ->where('accessItems.0.statusLabel', 'در انتظار پرداخت')
+            ->where('accessItems.0.primaryAction.label', 'ادامه پرداخت')
+            ->where('accessItems.0.secondaryAction.label', 'لغو سفارش')
             ->has('orderHistory', 1)
             ->where('orderHistory.0.orderNumber', $order->order_number)
             ->where('orderHistory.0.status', 'در انتظار پرداخت')

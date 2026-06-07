@@ -102,7 +102,7 @@ test('cash checkout sends payment amount from database package price to zarinpal
     ])->assertRedirect();
 });
 
-test('gateway request failure keeps order pending marks payment failed and redirects to failed result', function () {
+test('gateway request failure marks order and payment failed and redirects to failed result', function () {
     $this->mock(ZarinpalService::class, function (MockInterface $mock): void {
         $mock->shouldReceive('request')
             ->once()
@@ -125,8 +125,8 @@ test('gateway request failure keeps order pending marks payment failed and redir
         'order' => $order->order_number,
     ]));
 
-    expect($order->status)->toBe(OrderStatus::Pending)
-        ->and($payment->status)->toBe(PaymentStatus::Failed)
+    expect($order->fresh()->status)->toBe(OrderStatus::Failed)
+        ->and($payment->fresh()->status)->toBe(PaymentStatus::Failed)
         ->and($payment->meta['gateway_error'])->toBe('Could not connect to Zarinpal.')
         ->and($payment->meta)->toHaveKey('failed_at');
 });

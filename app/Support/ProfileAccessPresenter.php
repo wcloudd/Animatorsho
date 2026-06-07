@@ -8,10 +8,15 @@ use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\SpotPlayerLicense;
+use App\Services\OnlinePaymentRecoveryService;
 use Illuminate\Support\Collection;
 
 class ProfileAccessPresenter
 {
+    public function __construct(
+        private readonly OnlinePaymentRecoveryService $onlinePaymentRecovery,
+    ) {}
+
     private const int PRIORITY_ACTIVE_LICENSE = 1;
 
     private const int PRIORITY_REVOKED_LICENSE = 2;
@@ -41,7 +46,9 @@ class ProfileAccessPresenter
      *     amountToman: ?int,
      *     licenseKey: ?string,
      *     rejectionReason: ?string,
-     *     nextAction: ?array{label: string, href: string, external: bool}
+     *     nextAction: ?array{label: string, href: string, external: bool},
+     *     primaryAction: ?array{label: string, href: string, method: string},
+     *     secondaryAction: ?array{label: string, href: string, method: string, requiresConfirm: bool}
      * }>
      */
     public function present(Collection $orders, Collection $licenses): array
@@ -159,7 +166,9 @@ class ProfileAccessPresenter
      *     title: string,
      *     paymentMethod: ?string,
      *     amountToman: ?int,
-     *     licenseKey: ?string
+     *     licenseKey: ?string,
+     *     rejectionReason: ?string,
+     *     recoverableOnline: bool
      * }
      */
     private function candidateFromOrder(Order $order): ?array
@@ -243,8 +252,8 @@ class ProfileAccessPresenter
             );
         }
 
-        if ($order->status === OrderStatus::Pending || $payment?->status === PaymentStatus::Pending) {
-            return $this->candidate(
+        if ($order->status === OrderStatus::Pending && $payment?->status === PaymentStatus::Pending) {
+            return $this->candidateFromOrderWithRecovery($order, $this->candidate(
                 self::PRIORITY_PAYMENT_PENDING,
                 'payment_pending',
                 $sortTimestamp,
@@ -254,7 +263,7 @@ class ProfileAccessPresenter
                 $this->paymentMethodLabel($order, $payment),
                 $order->final_amount_toman,
                 null,
-            );
+            ));
         }
 
         if (
@@ -264,7 +273,7 @@ class ProfileAccessPresenter
         ) {
             $accessState = $order->status === OrderStatus::Cancelled ? 'cancelled' : 'payment_failed';
 
-            return $this->candidate(
+            return $this->candidateFromOrderWithRecovery($order, $this->candidate(
                 self::PRIORITY_FAILED_OR_CANCELLED,
                 $accessState,
                 $sortTimestamp,
@@ -277,7 +286,7 @@ class ProfileAccessPresenter
                 $accessState === 'payment_failed'
                     ? $this->rejectionReasonFromOrder($order)
                     : null,
-            );
+            ));
         }
 
         return null;
@@ -293,7 +302,9 @@ class ProfileAccessPresenter
      *     title: string,
      *     paymentMethod: ?string,
      *     amountToman: ?int,
-     *     licenseKey: ?string
+     *     licenseKey: ?string,
+     *     rejectionReason: ?string,
+     *     recoverableOnline: bool
      * }
      */
     private function candidateFromLicenseOnly(SpotPlayerLicense $license): ?array
@@ -359,7 +370,9 @@ class ProfileAccessPresenter
      *     title: string,
      *     paymentMethod: ?string,
      *     amountToman: ?int,
-     *     licenseKey: ?string
+     *     licenseKey: ?string,
+     *     rejectionReason: ?string,
+     *     recoverableOnline: bool
      * }  $candidate
      * @return array{
      *     id: string,
@@ -374,12 +387,19 @@ class ProfileAccessPresenter
      *     paymentMethod: ?string,
      *     amountToman: ?int,
      *     licenseKey: ?string,
-     *     nextAction: ?array{label: string, href: string, external: bool}
+     *     nextAction: ?array{label: string, href: string, external: bool},
+     *     primaryAction: ?array{label: string, href: string, method: string},
+     *     secondaryAction: ?array{label: string, href: string, method: string, requiresConfirm: bool}
      * }
      */
     private function buildAccessItem(int $packageId, array $candidate): array
     {
-        $copy = $this->copyForState($candidate['accessState']);
+        $copy = $this->copyForState(
+            $candidate['accessState'],
+            $candidate['recoverableOnline'] ?? false,
+        );
+
+        $recoveryActions = $this->recoveryActionsForCandidate($candidate);
 
         return [
             'id' => 'package-'.$packageId,
@@ -400,13 +420,83 @@ class ProfileAccessPresenter
                 ? $candidate['rejectionReason']
                 : null,
             'nextAction' => $this->nextActionForState($candidate['accessState']),
+            'primaryAction' => $recoveryActions['primaryAction'],
+            'secondaryAction' => $recoveryActions['secondaryAction'],
         ];
+    }
+
+    /**
+     * @param  array{
+     *     orderId: ?int,
+     *     recoverableOnline: bool
+     * }  $candidate
+     * @return array{
+     *     primaryAction: ?array{label: string, href: string, method: string},
+     *     secondaryAction: ?array{label: string, href: string, method: string, requiresConfirm: bool}
+     * }
+     */
+    private function recoveryActionsForCandidate(array $candidate): array
+    {
+        if (! ($candidate['recoverableOnline'] ?? false) || $candidate['orderId'] === null) {
+            return [
+                'primaryAction' => null,
+                'secondaryAction' => null,
+            ];
+        }
+
+        return [
+            'primaryAction' => [
+                'label' => 'ادامه پرداخت',
+                'href' => route('profile.orders.retry-online-payment', $candidate['orderId']),
+                'method' => 'post',
+            ],
+            'secondaryAction' => [
+                'label' => 'لغو سفارش',
+                'href' => route('profile.orders.cancel', $candidate['orderId']),
+                'method' => 'post',
+                'requiresConfirm' => true,
+            ],
+        ];
+    }
+
+    /**
+     * @param  array{
+     *     priority: int,
+     *     accessState: string,
+     *     sortTimestamp: int,
+     *     orderId: ?int,
+     *     licenseId: ?int,
+     *     title: string,
+     *     paymentMethod: ?string,
+     *     amountToman: ?int,
+     *     licenseKey: ?string,
+     *     rejectionReason: ?string
+     * }  $candidate
+     * @return array{
+     *     priority: int,
+     *     accessState: string,
+     *     sortTimestamp: int,
+     *     orderId: ?int,
+     *     licenseId: ?int,
+     *     title: string,
+     *     paymentMethod: ?string,
+     *     amountToman: ?int,
+     *     licenseKey: ?string,
+     *     rejectionReason: ?string,
+     *     recoverableOnline: bool
+     * }
+     */
+    private function candidateFromOrderWithRecovery(Order $order, array $candidate): array
+    {
+        $candidate['recoverableOnline'] = $this->onlinePaymentRecovery->isRecoverableOnlineOrder($order);
+
+        return $candidate;
     }
 
     /**
      * @return array{statusLabel: string, statusTone: string, description: string}
      */
-    private function copyForState(string $accessState): array
+    private function copyForState(string $accessState, bool $recoverableOnline = false): array
     {
         return match ($accessState) {
             'access_active' => [
@@ -437,12 +527,16 @@ class ProfileAccessPresenter
             'payment_pending' => [
                 'statusLabel' => 'در انتظار پرداخت',
                 'statusTone' => 'warning',
-                'description' => 'برای تکمیل خرید، پرداخت را انجام دهید یا وضعیت سفارش را پیگیری کنید.',
+                'description' => $recoverableOnline
+                    ? 'برای تکمیل خرید، پرداخت را ادامه دهید یا در صورت نیاز سفارش را لغو کنید.'
+                    : 'برای تکمیل خرید، پرداخت را انجام دهید یا وضعیت سفارش را پیگیری کنید.',
             ],
             'payment_failed' => [
                 'statusLabel' => 'پرداخت ناموفق',
                 'statusTone' => 'neutral',
-                'description' => 'در صورت نیاز دوباره ثبت‌نام کنید یا با پشتیبانی در ارتباط باشید.',
+                'description' => $recoverableOnline
+                    ? 'پرداخت تکمیل نشد. می‌توانید دوباره تلاش کنید یا سفارش را لغو کنید.'
+                    : 'در صورت نیاز دوباره ثبت‌نام کنید یا با پشتیبانی در ارتباط باشید.',
             ],
             'cancelled' => [
                 'statusLabel' => 'لغو شده',
@@ -497,7 +591,9 @@ class ProfileAccessPresenter
      *     paymentMethod: ?string,
      *     amountToman: ?int,
      *     licenseKey: ?string,
-     *     rejectionReason: ?string
+     *     licenseKey: ?string,
+     *     rejectionReason: ?string,
+     *     recoverableOnline: bool
      * }
      */
     private function candidate(
@@ -523,6 +619,7 @@ class ProfileAccessPresenter
             'amountToman' => $amountToman,
             'licenseKey' => $licenseKey,
             'rejectionReason' => $rejectionReason,
+            'recoverableOnline' => false,
         ];
     }
 

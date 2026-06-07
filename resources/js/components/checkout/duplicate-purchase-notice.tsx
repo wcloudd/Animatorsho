@@ -19,6 +19,10 @@ export function DuplicatePurchaseNotice({
             <p className="text-center text-sm font-medium leading-relaxed text-text">
                 {message}
             </p>
+            <p className="text-center text-xs font-medium leading-relaxed text-muted">
+                در پروفایل می‌توانید پرداخت را ادامه دهید یا سفارش را لغو
+                کنید.
+            </p>
             <Link
                 href={profile()}
                 className="flex h-11 w-full items-center justify-center rounded-pill bg-green text-sm font-bold text-white shadow-soft transition-opacity hover:opacity-95"

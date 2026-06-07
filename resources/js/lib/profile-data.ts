@@ -24,6 +24,16 @@ export type ProfileAccessNextAction = {
     external: boolean;
 };
 
+export type ProfileAccessPostAction = {
+    label: string;
+    href: string;
+    method: 'post';
+};
+
+export type ProfileAccessSecondaryAction = ProfileAccessPostAction & {
+    requiresConfirm: boolean;
+};
+
 export type ProfileAccessItem = {
     id: string;
     packageId: number;
@@ -39,6 +49,8 @@ export type ProfileAccessItem = {
     licenseKey: string | null;
     rejectionReason?: string | null;
     nextAction: ProfileAccessNextAction | null;
+    primaryAction: ProfileAccessPostAction | null;
+    secondaryAction: ProfileAccessSecondaryAction | null;
 };
 
 export type ProfileOrderHistoryItem = {

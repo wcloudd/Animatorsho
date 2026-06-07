@@ -79,7 +79,22 @@ export default function AdminLicensesIndex({ licenses }: PageProps) {
                                 label="تاریخ فعال‌سازی"
                                 value={formatAdminDate(license.activatedAt)}
                             />
+                            <AdminDetailRow
+                                label="روش فعال‌سازی"
+                                value={license.provisionedViaLabel}
+                            />
                         </AdminInfoGrid>
+
+                        {license.apiFailureSummary ? (
+                            <div className="rounded-xl bg-gold-soft px-3 py-2 ring-1 ring-gold/20">
+                                <p className="text-xs font-medium text-muted">
+                                    خطای آخرین تلاش API
+                                </p>
+                                <p className="mt-1 text-sm text-text">
+                                    {license.apiFailureSummary}
+                                </p>
+                            </div>
+                        ) : null}
 
                         {shouldShowLicenseKey(license) ? (
                             <div className="rounded-xl bg-purple-soft/50 px-3 py-2 ring-1 ring-purple/15">
@@ -97,6 +112,21 @@ export default function AdminLicensesIndex({ licenses }: PageProps) {
 
                         {license.canActivate ? (
                             <AdminLicenseActivationPanel license={license} />
+                        ) : null}
+
+                        {license.canRetryProvision ? (
+                            <AdminActionRow>
+                                <AdminButton asChild size="sm" adminVariant="outline">
+                                    <Link
+                                        href={`/admin/licenses/${license.id}/retry-provision`}
+                                        method="post"
+                                        as="button"
+                                        preserveScroll
+                                    >
+                                        تلاش مجدد SpotPlayer API
+                                    </Link>
+                                </AdminButton>
+                            </AdminActionRow>
                         ) : null}
 
                         {license.canRevoke ? (
@@ -161,6 +191,41 @@ export default function AdminLicensesIndex({ licenses }: PageProps) {
                                     label="شناسه لایسنس"
                                     value={String(license.id)}
                                 />
+                                <AdminDetailRow
+                                    label="آخرین تلاش API"
+                                    value={formatAdminDate(
+                                        license.apiTechnicalDetails
+                                            .lastApiAttemptAt,
+                                    )}
+                                />
+                                <AdminDetailRow
+                                    label="کد HTTP"
+                                    value={
+                                        license.apiTechnicalDetails
+                                            .lastApiHttpStatus !== null
+                                            ? String(
+                                                  license.apiTechnicalDetails
+                                                      .lastApiHttpStatus,
+                                              )
+                                            : null
+                                    }
+                                />
+                                <AdminDetailRow
+                                    label="شناسه SpotPlayer"
+                                    value={
+                                        license.apiTechnicalDetails
+                                            .spotplayerLicenseId
+                                    }
+                                />
+                                {license.apiTechnicalDetails.lastApiError ? (
+                                    <AdminDetailRow
+                                        label="پیام فنی API"
+                                        value={
+                                            license.apiTechnicalDetails
+                                                .lastApiError
+                                        }
+                                    />
+                                ) : null}
                             </AdminInfoGrid>
                         </AdminMetaDetails>
                     </AdminCommerceCard>

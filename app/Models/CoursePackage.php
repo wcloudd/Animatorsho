@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'price_toman',
     'is_active',
     'display_order',
+    'spotplayer_course_ids',
+    'spotplayer_access_limit',
 ])]
 class CoursePackage extends Model
 {
@@ -37,6 +39,7 @@ class CoursePackage extends Model
             'is_active' => 'boolean',
             'display_order' => 'integer',
             'chapter_number' => 'integer',
+            'spotplayer_course_ids' => 'array',
         ];
     }
 

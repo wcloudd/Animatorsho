@@ -1,7 +1,11 @@
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import type { ProfileAccessItem } from '@/lib/profile-data';
+import type {
+    ProfileAccessItem,
+    ProfileAccessPostAction,
+    ProfileAccessSecondaryAction,
+} from '@/lib/profile-data';
 import { checkout } from '@/routes';
 import { formatTomanPrice } from '@/lib/format-toman';
 import { ProfileSectionCard } from '@/components/profile/profile-section-card';
@@ -42,6 +46,76 @@ function AccessItemAction({
         >
             {nextAction.label}
         </Link>
+    );
+}
+
+function AccessItemPostAction({
+    action,
+    variant,
+}: {
+    action: ProfileAccessPostAction;
+    variant: 'primary' | 'secondary';
+}) {
+    return (
+        <Link
+            href={action.href}
+            method={action.method}
+            as="button"
+            className={cn(
+                'flex h-11 w-full items-center justify-center rounded-pill px-4 text-sm font-bold transition-opacity hover:opacity-95',
+                variant === 'primary'
+                    ? 'btn-cta-green text-white shadow-soft'
+                    : 'bg-surface text-red ring-1 ring-red/30',
+            )}
+        >
+            {action.label}
+        </Link>
+    );
+}
+
+function AccessItemCancelAction({
+    action,
+}: {
+    action: ProfileAccessSecondaryAction;
+}) {
+    const [confirming, setConfirming] = useState(false);
+
+    if (!confirming) {
+        return (
+            <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                className="flex h-11 w-full items-center justify-center rounded-pill bg-surface px-4 text-sm font-bold text-red ring-1 ring-red/30 transition-opacity hover:opacity-95"
+            >
+                {action.label}
+            </button>
+        );
+    }
+
+    return (
+        <div className="flex flex-col gap-2 rounded-xl bg-red-soft/50 p-3 ring-1 ring-red/20">
+            <p className="text-right text-xs font-medium leading-relaxed text-text">
+                با لغو سفارش، ثبت‌نام فعلی حذف می‌شود و می‌توانید دوباره
+                ثبت‌نام کنید.
+            </p>
+            <div className="flex flex-col gap-2">
+                <Link
+                    href={action.href}
+                    method={action.method}
+                    as="button"
+                    className="flex h-10 w-full items-center justify-center rounded-pill bg-red text-sm font-bold text-white transition-opacity hover:opacity-95"
+                >
+                    تأیید لغو سفارش
+                </Link>
+                <button
+                    type="button"
+                    onClick={() => setConfirming(false)}
+                    className="flex h-10 w-full items-center justify-center rounded-pill bg-surface text-sm font-bold text-muted ring-1 ring-border transition-opacity hover:opacity-95"
+                >
+                    انصراف
+                </button>
+            </div>
+        </div>
     );
 }
 
@@ -178,6 +252,19 @@ export function ProfileAccessCard({ accessItems }: ProfileAccessCardProps) {
                             item.licenseKey ? (
                                 <LicenseKeyCopyField
                                     licenseKey={item.licenseKey}
+                                />
+                            ) : null}
+
+                            {item.primaryAction !== null ? (
+                                <AccessItemPostAction
+                                    action={item.primaryAction}
+                                    variant="primary"
+                                />
+                            ) : null}
+
+                            {item.secondaryAction !== null ? (
+                                <AccessItemCancelAction
+                                    action={item.secondaryAction}
                                 />
                             ) : null}
 

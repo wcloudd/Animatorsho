@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\ActivateSpotPlayerLicenseRequest;
 use App\Models\SpotPlayerLicense;
 use App\Services\Admin\AdminSpotPlayerLicenseListService;
 use App\Services\Admin\AdminSpotPlayerLicenseService;
+use App\Services\SpotPlayer\SpotPlayerApiProvisioningService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,6 +17,7 @@ class SpotPlayerLicenseController extends Controller
     public function __construct(
         private readonly AdminSpotPlayerLicenseListService $licenseList,
         private readonly AdminSpotPlayerLicenseService $licenses,
+        private readonly SpotPlayerApiProvisioningService $spotPlayerApi,
     ) {}
 
     public function index(): Response
@@ -37,6 +39,15 @@ class SpotPlayerLicenseController extends Controller
         $this->licenses->revoke($license);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'لایسنس لغو شد.']);
+
+        return redirect()->back();
+    }
+
+    public function retryProvision(SpotPlayerLicense $license): RedirectResponse
+    {
+        $this->spotPlayerApi->attemptForLicense($license);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'درخواست فعال‌سازی مجدد SpotPlayer ثبت شد.']);
 
         return redirect()->back();
     }

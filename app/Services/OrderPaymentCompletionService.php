@@ -8,12 +8,14 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\SpotPlayerLicense;
 use App\Services\Sms\SmsNotifier;
+use App\Services\SpotPlayer\SpotPlayerApiProvisioningService;
 use Illuminate\Support\Facades\DB;
 
 class OrderPaymentCompletionService
 {
     public function __construct(
         private readonly SpotPlayerLicenseProvisioningService $spotPlayerLicenses,
+        private readonly SpotPlayerApiProvisioningService $spotPlayerApi,
         private readonly SmsNotifier $smsNotifier,
     ) {}
 
@@ -24,7 +26,7 @@ class OrderPaymentCompletionService
         }
 
         if ($order->status === OrderStatus::Paid) {
-            return $this->spotPlayerLicenses->provisionForPaidOrder($order);
+            return $this->finalizeLicenseProvisioning($order);
         }
 
         $license = DB::transaction(function () use ($order, $trackingCode): ?SpotPlayerLicense {
@@ -53,6 +55,8 @@ class OrderPaymentCompletionService
             return $this->spotPlayerLicenses->provisionForPaidOrder($order->fresh());
         });
 
+        $license = $this->attemptApiProvisioning($license);
+
         $latestPayment = $order->fresh()->payments()->latest()->first();
 
         if ($latestPayment instanceof Payment) {
@@ -60,5 +64,21 @@ class OrderPaymentCompletionService
         }
 
         return $license;
+    }
+
+    public function finalizeLicenseProvisioning(Order $order): ?SpotPlayerLicense
+    {
+        $license = $this->spotPlayerLicenses->provisionForPaidOrder($order);
+
+        return $this->attemptApiProvisioning($license);
+    }
+
+    private function attemptApiProvisioning(?SpotPlayerLicense $license): ?SpotPlayerLicense
+    {
+        if (! $license instanceof SpotPlayerLicense) {
+            return null;
+        }
+
+        return $this->spotPlayerApi->attemptForLicense($license);
     }
 }

@@ -39,6 +39,8 @@ export type AdminPackageEdit = {
     isActive: boolean;
     displayOrder: number;
     ordersCount: number;
+    spotplayerCourseIdsText: string;
+    spotplayerAccessLimit: string | null;
 };
 
 export type AdminOrderListItem = {
@@ -113,6 +115,16 @@ export type AdminLicenseListItem = {
     activatedAt: string | null;
     canActivate: boolean;
     canRevoke: boolean;
+    provisionedVia: string;
+    provisionedViaLabel: string;
+    apiFailureSummary: string | null;
+    apiTechnicalDetails: {
+        lastApiAttemptAt: string | null;
+        lastApiError: string | null;
+        lastApiHttpStatus: number | null;
+        spotplayerLicenseId: string | null;
+    };
+    canRetryProvision: boolean;
 };
 
 export type AdminSmsSettings = {
