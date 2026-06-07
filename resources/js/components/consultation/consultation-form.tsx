@@ -1,4 +1,7 @@
-import { FormEvent, useState } from 'react';
+import { useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import { useState } from 'react';
+import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -14,6 +17,7 @@ import {
     CONSULTATION_LEVEL_OPTIONS,
 } from '@/lib/consultation-form-data';
 import { cn } from '@/lib/utils';
+import consultation from '@/routes/consultation';
 
 const fieldClassName =
     'border-input bg-surface text-text placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm text-start shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50';
@@ -38,19 +42,19 @@ const selectItemClassName = cn(
 type ConsultationSelectFieldProps = {
     id: string;
     label: string;
-    name: string;
     value: string;
     options: ConsultationFormOption[];
     onValueChange: (value: string) => void;
+    error?: string;
 };
 
 function ConsultationSelectField({
     id,
     label,
-    name,
     value,
     options,
     onValueChange,
+    error,
 }: ConsultationSelectFieldProps) {
     return (
         <div className="grid gap-2">
@@ -74,7 +78,7 @@ function ConsultationSelectField({
                     ))}
                 </SelectContent>
             </Select>
-            <input type="hidden" name={name} value={value} />
+            <InputError message={error} />
         </div>
     );
 }
@@ -87,11 +91,26 @@ export function ConsultationForm() {
         CONSULTATION_INTEREST_OPTIONS[0]?.value ?? '',
     );
 
-    // Backend TODO: add server-side validation, rate limiting, honeypot field,
-    // and optional spam detection when wiring up real submission.
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        full_name: '',
+        mobile: '',
+        age: '',
+        level: CONSULTATION_LEVEL_OPTIONS[0]?.value ?? '',
+        interest: CONSULTATION_INTEREST_OPTIONS[0]?.value ?? '',
+        note: '',
+    });
+
+    const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-    }
+        post(consultation.store.url(), {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+                setLevel(CONSULTATION_LEVEL_OPTIONS[0]?.value ?? '');
+                setInterest(CONSULTATION_INTEREST_OPTIONS[0]?.value ?? '');
+            },
+        });
+    };
 
     return (
         <section
@@ -107,7 +126,7 @@ export function ConsultationForm() {
             </h2>
 
             <form
-                onSubmit={handleSubmit}
+                onSubmit={submit}
                 className="flex flex-col gap-4 rounded-[28px] bg-surface px-5 py-6 shadow-soft ring-1 ring-border"
             >
                 <div className="grid gap-2">
@@ -119,8 +138,14 @@ export function ConsultationForm() {
                         name="full_name"
                         type="text"
                         autoComplete="name"
+                        value={data.full_name}
+                        onChange={(event) =>
+                            setData('full_name', event.target.value)
+                        }
                         className="bg-surface text-text text-start"
+                        required
                     />
+                    <InputError message={errors.name ?? errors.full_name} />
                 </div>
 
                 <div className="grid gap-2">
@@ -131,8 +156,14 @@ export function ConsultationForm() {
                         type="tel"
                         inputMode="tel"
                         dir="ltr"
+                        value={data.mobile}
+                        onChange={(event) =>
+                            setData('mobile', event.target.value)
+                        }
                         className="bg-surface text-text text-start"
+                        required
                     />
+                    <InputError message={errors.mobile} />
                 </div>
 
                 <div className="grid gap-2">
@@ -142,26 +173,35 @@ export function ConsultationForm() {
                         name="age"
                         type="text"
                         inputMode="numeric"
+                        value={data.age}
+                        onChange={(event) => setData('age', event.target.value)}
                         className="bg-surface text-text text-start"
                     />
+                    <InputError message={errors.age} />
                 </div>
 
                 <ConsultationSelectField
                     id="consultation-level"
                     label="سطح فعلی"
-                    name="level"
                     value={level}
                     options={CONSULTATION_LEVEL_OPTIONS}
-                    onValueChange={setLevel}
+                    onValueChange={(value) => {
+                        setLevel(value);
+                        setData('level', value);
+                    }}
+                    error={errors.level}
                 />
 
                 <ConsultationSelectField
                     id="consultation-interest"
                     label="علاقه‌مند به"
-                    name="interest"
                     value={interest}
                     options={CONSULTATION_INTEREST_OPTIONS}
-                    onValueChange={setInterest}
+                    onValueChange={(value) => {
+                        setInterest(value);
+                        setData('interest', value);
+                    }}
+                    error={errors.interest}
                 />
 
                 <div className="grid gap-2">
@@ -170,15 +210,19 @@ export function ConsultationForm() {
                         id="consultation-note"
                         name="note"
                         rows={4}
+                        value={data.note}
+                        onChange={(event) => setData('note', event.target.value)}
                         className={textareaClassName}
                     />
+                    <InputError message={errors.note} />
                 </div>
 
                 <button
                     type="submit"
-                    className="btn-cta-green flex h-12 w-full items-center justify-center rounded-pill text-sm font-bold text-white"
+                    disabled={processing}
+                    className="btn-cta-green flex h-12 w-full items-center justify-center rounded-pill text-sm font-bold text-white disabled:opacity-70"
                 >
-                    ارسال درخواست مشاوره
+                    {processing ? 'در حال ارسال...' : 'ارسال درخواست مشاوره'}
                 </button>
             </form>
         </section>

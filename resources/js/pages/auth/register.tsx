@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthPageHeader } from '@/components/auth/auth-page-header';
@@ -17,12 +17,31 @@ import { cn } from '@/lib/utils';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
-type Props = {
-    passwordRules: string;
+function redirectQueryFromUrl(url: string): { redirect: string } | undefined {
+    const query = url.includes('?') ? url.split('?')[1] : '';
+    const redirect = new URLSearchParams(query).get('redirect');
+
+    return redirect ? { redirect } : undefined;
+}
+
+type PendingRegistration = {
+    name: string;
+    mobile: string;
+    email: string | null;
 };
 
-export default function Register({ passwordRules }: Props) {
+type Props = {
+    passwordRules: string;
+    pendingRegistration?: PendingRegistration | null;
+};
+
+export default function Register({
+    passwordRules,
+    pendingRegistration = null,
+}: Props) {
     const copy = AUTH_REGISTER_COPY;
+    const { url } = usePage();
+    const redirectQuery = redirectQueryFromUrl(url);
 
     return (
         <>
@@ -55,31 +74,13 @@ export default function Register({ passwordRules }: Props) {
                                         tabIndex={1}
                                         autoComplete="name"
                                         name="name"
+                                        defaultValue={
+                                            pendingRegistration?.name ?? ''
+                                        }
                                         placeholder={copy.namePlaceholder}
                                         className={authFieldClassName}
                                     />
                                     <AuthInputError message={errors.name} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label
-                                        htmlFor="email"
-                                        className={authLabelClassName}
-                                    >
-                                        {copy.emailLabel}
-                                    </Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        required
-                                        tabIndex={2}
-                                        autoComplete="email"
-                                        name="email"
-                                        placeholder={copy.emailPlaceholder}
-                                        dir="ltr"
-                                        className={authFieldClassName}
-                                    />
-                                    <AuthInputError message={errors.email} />
                                 </div>
 
                                 <div className="grid gap-2">
@@ -93,10 +94,13 @@ export default function Register({ passwordRules }: Props) {
                                         id="mobile"
                                         type="tel"
                                         required
-                                        tabIndex={3}
+                                        tabIndex={2}
                                         autoComplete="tel"
                                         inputMode="numeric"
                                         name="mobile"
+                                        defaultValue={
+                                            pendingRegistration?.mobile ?? ''
+                                        }
                                         placeholder={copy.mobilePlaceholder}
                                         dir="ltr"
                                         className={authFieldClassName}
@@ -114,7 +118,7 @@ export default function Register({ passwordRules }: Props) {
                                     <PasswordInput
                                         id="password"
                                         required
-                                        tabIndex={4}
+                                        tabIndex={3}
                                         autoComplete="new-password"
                                         name="password"
                                         placeholder={copy.passwordPlaceholder}
@@ -134,16 +138,44 @@ export default function Register({ passwordRules }: Props) {
                                     <PasswordInput
                                         id="password_confirmation"
                                         required
-                                        tabIndex={5}
+                                        tabIndex={4}
                                         autoComplete="new-password"
                                         name="password_confirmation"
-                                        placeholder={copy.passwordConfirmPlaceholder}
+                                        placeholder={
+                                            copy.passwordConfirmPlaceholder
+                                        }
                                         passwordrules={passwordRules}
                                         className={authFieldClassName}
                                     />
                                     <AuthInputError
                                         message={errors.password_confirmation}
                                     />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label
+                                        htmlFor="email"
+                                        className={authLabelClassName}
+                                    >
+                                        {copy.emailLabel}
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        tabIndex={5}
+                                        autoComplete="email"
+                                        name="email"
+                                        defaultValue={
+                                            pendingRegistration?.email ?? ''
+                                        }
+                                        placeholder={copy.emailPlaceholder}
+                                        dir="ltr"
+                                        className={authFieldClassName}
+                                    />
+                                    <p className="text-xs font-medium leading-relaxed text-muted">
+                                        {copy.emailHint}
+                                    </p>
+                                    <AuthInputError message={errors.email} />
                                 </div>
 
                                 <Button
@@ -164,7 +196,11 @@ export default function Register({ passwordRules }: Props) {
                                     {copy.secondaryPrompt}
                                 </p>
                                 <TextLink
-                                    href={login()}
+                                    href={login(
+                                        redirectQuery
+                                            ? { query: redirectQuery }
+                                            : undefined,
+                                    )}
                                     className="text-sm font-bold text-purple"
                                     tabIndex={7}
                                 >

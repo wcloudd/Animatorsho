@@ -241,7 +241,7 @@ test('email registration with invalid mobile fails validation', function () {
     $this->assertGuest();
 });
 
-test('email registration with valid mobile stores normalized mobile', function () {
+test('registration with valid mobile requires otp before account is created', function () {
     $this->skipUnlessFortifyHas(Features::registration());
 
     $this->post(route('register.store'), [
@@ -250,15 +250,10 @@ test('email registration with valid mobile stores normalized mobile', function (
         'mobile' => '+989121234567',
         'password' => 'password',
         'password_confirmation' => 'password',
-    ]);
+    ])->assertRedirect(route('register.verify'));
 
-    $this->assertAuthenticated();
-
-    $user = User::query()->where('email', 'test@example.com')->first();
-
-    expect($user)->not->toBeNull()
-        ->and($user->mobile)->toBe('09121234567')
-        ->and($user->mobile_verified_at)->toBeNull();
+    $this->assertGuest();
+    expect(User::query()->where('email', 'test@example.com')->exists())->toBeFalse();
 });
 
 test('middleware required message constant matches product copy', function () {

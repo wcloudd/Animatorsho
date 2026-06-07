@@ -10,6 +10,7 @@ const navItems = [
     { href: '/admin/payments', label: 'پرداخت‌ها', match: '/admin/payments' },
     { href: '/admin/installments', label: 'پیگیری اقساط', match: '/admin/installments' },
     { href: '/admin/licenses', label: 'لایسنس‌ها', match: '/admin/licenses' },
+    { href: '/admin/consultations', label: 'مشاوره‌ها', match: '/admin/consultations' },
     { href: '/admin/support', label: 'پشتیبانی', match: '/admin/support' },
     { href: '/admin/sms', label: 'پیامک', match: '/admin/sms' },
     { href: '/admin/site-settings', label: 'تنظیمات سایت', match: '/admin/site-settings' },

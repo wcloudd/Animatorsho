@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ConsultationController;
 use App\Http\Controllers\Admin\CoursePackageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InstallmentController;
@@ -44,6 +45,9 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('site-settings', [SiteSettingsController::class, 'index'])->name('site-settings.index');
         Route::patch('site-settings', [SiteSettingsController::class, 'update'])->name('site-settings.update');
+
+        Route::get('consultations', [ConsultationController::class, 'index'])->name('consultations.index');
+        Route::patch('consultations/{consultation}', [ConsultationController::class, 'update'])->name('consultations.update');
 
         Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
         Route::get('support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');

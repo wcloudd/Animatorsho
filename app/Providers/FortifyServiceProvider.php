@@ -23,7 +23,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        Fortify::ignoreRoutes();
     }
 
     /**
@@ -69,14 +69,6 @@ class FortifyServiceProvider extends ServiceProvider
             'status' => $request->session()->get('status'),
         ]));
 
-        Fortify::registerView(function (Request $request) {
-            AuthRedirect::rememberIntendedFromQuery($request);
-
-            return Inertia::render('auth/register', [
-                'passwordRules' => Password::defaults()->toPasswordRulesString(),
-            ]);
-        });
-
     }
 
     /**
@@ -103,10 +95,30 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($mobile.'|'.$request->ip());
         });
 
+        RateLimiter::for('registration-otp-send', function (Request $request) {
+            $mobile = $request->session()->get('registration_otp.mobile')
+                ?? IranianMobile::normalize($request->input('mobile'))
+                ?? 'unknown';
+
+            return Limit::perMinute(3)->by($mobile.'|'.$request->ip());
+        });
+
+        RateLimiter::for('registration-otp-verify', function (Request $request) {
+            $mobile = $request->session()->get('registration_otp.mobile', 'unknown');
+
+            return Limit::perMinute(10)->by($mobile.'|'.$request->ip());
+        });
+
         RateLimiter::for('support-ticket', function (Request $request) {
             $userId = $request->user()?->id ?? $request->ip();
 
             return Limit::perMinute(5)->by('support-ticket|'.$userId);
+        });
+
+        RateLimiter::for('consultation-submit', function (Request $request) {
+            $mobile = IranianMobile::normalize($request->input('mobile')) ?? 'unknown';
+
+            return Limit::perMinute(3)->by('consultation-submit|'.$mobile.'|'.$request->ip());
         });
     }
 }

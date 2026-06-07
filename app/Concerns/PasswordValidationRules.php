@@ -19,6 +19,14 @@ trait PasswordValidationRules
     }
 
     /**
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function storedPasswordRules(): array
+    {
+        return ['required', 'string', Password::default()];
+    }
+
+    /**
      * Get the validation rules used to validate the current password.
      *
      * @return array<int, ValidationRule|array<mixed>|string>

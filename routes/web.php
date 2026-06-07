@@ -3,6 +3,7 @@
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CheckoutOrderController;
 use App\Http\Controllers\CheckoutZarinpalCallbackController;
+use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileMobileVerificationController;
 use App\Http\Controllers\ProfileOrderController;
@@ -20,7 +21,10 @@ Route::inertia('/checkout/result', 'checkout/result')->name('checkout.result');
 Route::get('/checkout/zarinpal/callback', CheckoutZarinpalCallbackController::class)
     ->name('checkout.zarinpal.callback');
 
-Route::inertia('/consultation', 'consultation/index')->name('consultation');
+Route::get('/consultation', [ConsultationController::class, 'index'])->name('consultation');
+Route::post('/consultation', [ConsultationController::class, 'store'])
+    ->middleware('throttle:consultation-submit')
+    ->name('consultation.store');
 
 Route::middleware('auth')->group(function () {
     Route::post('/checkout/orders', [CheckoutOrderController::class, 'store'])
@@ -63,6 +67,7 @@ Route::middleware('auth')->group(function () {
 
 Route::redirect('dashboard', '/')->name('dashboard');
 
+require __DIR__.'/fortify.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/settings.php';
 require __DIR__.'/admin.php';

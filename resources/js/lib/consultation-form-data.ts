@@ -31,7 +31,7 @@ export const CONSULTATION_INTRO_BADGES: ConsultationIntroBadge[] = [
 ];
 
 export const CONSULTATION_TRUST_NOTE =
-    'اطلاعات شما فقط برای پیگیری مشاوره و راهنمایی ثبت‌نام استفاده می‌شود. در مرحله بعد، ثبت واقعی فرم و اطلاع‌رسانی به پشتیبانی فعال خواهد شد.';
+    'اطلاعات شما فقط برای پیگیری مشاوره و راهنمایی ثبت‌نام استفاده می‌شود.';
 
 export const CONSULTATION_SUPPORT_FALLBACK = {
     title: 'سوال فوری داری؟',

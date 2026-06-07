@@ -62,6 +62,86 @@ class MobileOtpAuthService
         $request->session()->put('mobile_otp.sent_at', now()->toIso8601String());
     }
 
+    public function sendRegistrationCode(string $mobile, Request $request): void
+    {
+        $normalizedMobile = IranianMobile::normalize($mobile);
+
+        if ($normalizedMobile === null) {
+            throw ValidationException::withMessages([
+                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+            ]);
+        }
+
+        $this->assertResendCooldown($normalizedMobile, OtpPurpose::Registration);
+
+        $this->invalidateActiveCodes($normalizedMobile, OtpPurpose::Registration);
+
+        $code = $this->generateCode();
+        $expiresMinutes = (int) config('otp.expires_minutes', 5);
+
+        OtpCode::query()->create([
+            'mobile' => $normalizedMobile,
+            'code_hash' => Hash::make($code),
+            'purpose' => OtpPurpose::Registration,
+            'expires_at' => now()->addMinutes($expiresMinutes),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        $message = $this->templates->render(SmsMessageType::OtpLogin, [
+            'code' => $code,
+        ]);
+
+        $this->sms->send(
+            $normalizedMobile,
+            $message,
+            SmsMessageType::OtpLogin,
+            ['purpose' => OtpPurpose::Registration->value],
+        );
+
+        $request->session()->put('registration_otp.mobile', $normalizedMobile);
+        $request->session()->put('registration_otp.sent_at', now()->toIso8601String());
+    }
+
+    public function verifyRegistrationCode(string $mobile, string $code): void
+    {
+        $normalizedMobile = IranianMobile::normalize($mobile);
+
+        if ($normalizedMobile === null) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        $otpCode = OtpCode::query()
+            ->forMobile($normalizedMobile, OtpPurpose::Registration)
+            ->active()
+            ->latest('id')
+            ->first();
+
+        if ($otpCode === null) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        if ($otpCode->hasExceededAttempts()) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        if (! Hash::check($code, $otpCode->code_hash)) {
+            $otpCode->increment('attempts');
+
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        $otpCode->update(['consumed_at' => now()]);
+    }
+
     public function verifyLoginCode(string $mobile, string $code): User
     {
         $normalizedMobile = IranianMobile::normalize($mobile);

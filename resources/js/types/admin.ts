@@ -274,6 +274,22 @@ export type AdminSupportTicketListItem = {
     createdAt: string | null;
 };
 
+export type AdminConsultationListItem = {
+    id: number;
+    name: string;
+    mobile: string;
+    note: string | null;
+    level: string | null;
+    interest: string | null;
+    age: string | null;
+    status: string;
+    statusValue: string;
+    statusTone: AdminStatusTone;
+    adminNote: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
+};
+
 export type AdminSupportTicketDetail = {
     id: number;
     subject: string;

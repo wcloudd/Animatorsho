@@ -37,8 +37,9 @@ export const AUTH_REGISTER_COPY = {
         'حساب کاربری بساز تا سفارش‌ها، لایسنس‌ها و مسیر یادگیری‌ات ذخیره شود.',
     nameLabel: 'نام و نام خانوادگی',
     namePlaceholder: 'نام کامل',
-    emailLabel: 'ایمیل',
+    emailLabel: 'ایمیل (اختیاری)',
     emailPlaceholder: 'example@email.com',
+    emailHint: 'اختیاری؛ برای بازیابی رمز در صورت قطع بودن پیامک',
     mobileLabel: 'شماره موبایل',
     mobilePlaceholder: '09123456789',
     passwordLabel: 'رمز عبور',
@@ -48,6 +49,20 @@ export const AUTH_REGISTER_COPY = {
     submitLabel: 'ساخت حساب کاربری',
     secondaryPrompt: 'قبلاً ثبت‌نام کردی؟',
     secondaryLinkLabel: 'ورود به حساب',
+} as const;
+
+export const AUTH_REGISTER_VERIFY_COPY = {
+    headTitle: 'تأیید ثبت‌نام',
+    title: 'کد تأیید را وارد کن',
+    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کن تا ثبت‌نام کامل شود.',
+    codeLabel: 'کد تأیید',
+    codePlaceholder: '123456',
+    submitLabel: 'تکمیل ثبت‌نام',
+    resendLabel: 'ارسال مجدد کد',
+    resendWaitLabel: 'ارسال مجدد تا {seconds} ثانیه دیگر',
+    changeMobileLabel: 'تغییر شماره موبایل',
+    changeMobileSubmitLabel: 'ارسال کد به شماره جدید',
+    sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
 } as const;
 
 export const AUTH_FORGOT_PASSWORD_COPY = {
