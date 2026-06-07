@@ -16,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class MobileOtpAuthService
 {
+    public const NO_ACCOUNT_MESSAGE = 'برای ساخت حساب جدید، ابتدا ثبت‌نام کنید.';
+
     public function __construct(
         private readonly SmsService $sms,
         private readonly SmsTemplateService $templates,
@@ -30,6 +32,8 @@ class MobileOtpAuthService
                 'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
             ]);
         }
+
+        $this->assertExistingUserForLogin($normalizedMobile);
 
         $this->assertResendCooldown($normalizedMobile, OtpPurpose::Login);
 
@@ -180,7 +184,7 @@ class MobileOtpAuthService
 
         $otpCode->update(['consumed_at' => now()]);
 
-        return $this->findOrCreateUser($normalizedMobile);
+        return $this->findLoginUser($normalizedMobile);
     }
 
     public function sendVerificationCode(User $user, string $mobile, Request $request): void
@@ -271,26 +275,21 @@ class MobileOtpAuthService
         ])->save();
     }
 
-    public function findOrCreateUser(string $mobile): User
+    public function findLoginUser(string $mobile): User
     {
         $user = User::query()->where('mobile', $mobile)->first();
 
-        if ($user !== null) {
-            if ($user->mobile_verified_at === null) {
-                $user->forceFill(['mobile_verified_at' => now()])->save();
-            }
-
-            return $user;
+        if ($user === null) {
+            throw ValidationException::withMessages([
+                'code' => self::NO_ACCOUNT_MESSAGE,
+            ]);
         }
 
-        return User::query()->create([
-            'name' => config('otp.default_user_name', 'کاربر انیماتورشو'),
-            'email' => null,
-            'password' => null,
-            'mobile' => $mobile,
-            'mobile_verified_at' => now(),
-            'is_admin' => false,
-        ]);
+        if ($user->mobile_verified_at === null) {
+            $user->forceFill(['mobile_verified_at' => now()])->save();
+        }
+
+        return $user;
     }
 
     public function resendAvailableAt(?string $sentAt): ?Carbon
@@ -354,6 +353,15 @@ class MobileOtpAuthService
         if ($existingUser !== null && $existingUser->id !== $user->id) {
             throw ValidationException::withMessages([
                 'mobile' => 'این شماره موبایل قبلاً ثبت شده است.',
+            ]);
+        }
+    }
+
+    private function assertExistingUserForLogin(string $mobile): void
+    {
+        if (! User::query()->where('mobile', $mobile)->exists()) {
+            throw ValidationException::withMessages([
+                'mobile' => self::NO_ACCOUNT_MESSAGE,
             ]);
         }
     }

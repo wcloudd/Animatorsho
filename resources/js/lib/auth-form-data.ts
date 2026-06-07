@@ -96,19 +96,22 @@ export const AUTH_FORGOT_PASSWORD_COPY = {
 } as const;
 
 export const AUTH_MOBILE_COPY = {
-    headTitle: 'ورود با موبایل',
-    title: 'ورود با شماره موبایل',
-    subtitle: 'شماره موبایلت را وارد کن تا کد ورود برایت ارسال شود.',
+    headTitle: 'ورود با کد یکبار مصرف',
+    title: 'ورود با کد یکبارمصرف',
+    subtitle:
+        'اگر قبلاً ثبت‌نام کرده‌ای، شماره موبایلت را وارد کن تا کد ورود برایت ارسال شود.',
     mobileLabel: 'شماره موبایل',
     mobilePlaceholder: '09123456789',
     submitLabel: 'دریافت کد ورود',
     secondaryPrompt: 'یا',
-    secondaryLinkLabel: 'ورود با ایمیل',
+    secondaryLinkLabel: 'ورود با شماره موبایل و رمز عبور',
+    registerPrompt: 'هنوز ثبت‌نام نکردی؟',
+    registerLinkLabel: 'ثبت‌نام',
     sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
 } as const;
 
 export const AUTH_MOBILE_VERIFY_COPY = {
-    headTitle: 'تأیید کد',
+    headTitle: 'ورود با کد یکبار مصرف',
     title: 'کد ورود را وارد کن',
     subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کن.',
     codeLabel: 'کد ورود',
@@ -117,6 +120,9 @@ export const AUTH_MOBILE_VERIFY_COPY = {
     resendLabel: 'ارسال مجدد کد',
     resendWaitLabel: 'ارسال مجدد تا {seconds} ثانیه دیگر',
     changeMobileLabel: 'تغییر شماره موبایل',
+    secondaryLinkLabel: 'ورود با شماره موبایل و رمز عبور',
+    registerPrompt: 'هنوز ثبت‌نام نکردی؟',
+    registerLinkLabel: 'ثبت‌نام',
     sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
 } as const;
 

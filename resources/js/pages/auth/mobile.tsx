@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { AUTH_MOBILE_COPY } from '@/lib/auth-form-data';
 import { cn } from '@/lib/utils';
-import { login } from '@/routes';
+import { login, register } from '@/routes';
 import { sendCode } from '@/routes/auth/mobile';
 
 function redirectQueryFromUrl(url: string): { redirect: string } | undefined {
@@ -81,17 +81,36 @@ export default function MobileAuth({ status }: Props) {
                                 </Button>
                             </div>
 
-                            <div className="flex flex-col items-center gap-1 text-center">
-                                <p className="text-sm font-medium text-muted">{copy.secondaryPrompt}</p>
-                                <TextLink
-                                    href={login(
-                                        redirectQuery ? { query: redirectQuery } : undefined,
-                                    )}
-                                    className="text-sm font-bold text-purple"
-                                    tabIndex={3}
-                                >
-                                    {copy.secondaryLinkLabel}
-                                </TextLink>
+                            <div className="flex flex-col items-center gap-3 text-center">
+                                <div className="flex flex-col items-center gap-1">
+                                    <p className="text-sm font-medium text-muted">
+                                        {copy.secondaryPrompt}
+                                    </p>
+                                    <TextLink
+                                        href={login(
+                                            redirectQuery ? { query: redirectQuery } : undefined,
+                                        )}
+                                        className="text-sm font-bold text-purple"
+                                        tabIndex={3}
+                                    >
+                                        {copy.secondaryLinkLabel}
+                                    </TextLink>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-1">
+                                    <p className="text-sm font-medium text-muted">
+                                        {copy.registerPrompt}
+                                    </p>
+                                    <TextLink
+                                        href={register(
+                                            redirectQuery ? { query: redirectQuery } : undefined,
+                                        )}
+                                        className="text-sm font-bold text-purple"
+                                        tabIndex={4}
+                                    >
+                                        {copy.registerLinkLabel}
+                                    </TextLink>
+                                </div>
                             </div>
                         </>
                     )}

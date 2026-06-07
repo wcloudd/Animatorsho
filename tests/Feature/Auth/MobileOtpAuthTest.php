@@ -5,6 +5,7 @@ use App\Models\OtpCode;
 use App\Models\Setting;
 use App\Models\SmsMessage;
 use App\Models\User;
+use App\Services\Auth\MobileOtpAuthService;
 use App\Services\Sms\SmsSettingsService;
 use Database\Seeders\SmsTemplateSeeder;
 use Illuminate\Support\Facades\Hash;
@@ -32,14 +33,24 @@ function sendOtp(string $mobile = '09121234567'): TestResponse
     ]);
 }
 
+function createExistingUserForOtp(string $mobile = '09121234567'): User
+{
+    return User::factory()->withMobile($mobile)->create([
+        'email' => null,
+        'password' => null,
+    ]);
+}
+
 test('mobile auth entry page renders', function () {
     $this->get(route('auth.mobile.create'))
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page->component('auth/mobile'));
 });
 
-test('valid mobile sends otp and creates otp_codes row', function () {
+test('valid mobile sends otp and creates otp_codes row for existing user', function () {
     enableSmsForOtpTests();
+
+    createExistingUserForOtp('09121234567');
 
     $response = sendOtp('09121234567');
 
@@ -56,8 +67,36 @@ test('invalid mobile is rejected', function () {
     expect(OtpCode::query()->count())->toBe(0);
 });
 
+test('unknown mobile is rejected and guided to registration', function () {
+    enableSmsForOtpTests();
+
+    $initialCount = User::query()->count();
+
+    sendOtp('09129998877')
+        ->assertSessionHasErrors([
+            'mobile' => MobileOtpAuthService::NO_ACCOUNT_MESSAGE,
+        ])
+        ->assertRedirect();
+
+    expect(OtpCode::query()->where('mobile', '09129998877')->count())->toBe(0)
+        ->and(User::query()->count())->toBe($initialCount)
+        ->and(session('mobile_otp.mobile'))->toBeNull();
+});
+
+test('unknown mobile does not create a user when otp login is attempted', function () {
+    enableSmsForOtpTests();
+
+    $initialCount = User::query()->count();
+
+    sendOtp('09128887766');
+
+    expect(User::query()->count())->toBe($initialCount);
+});
+
 test('otp code is hashed and plain code is not stored', function () {
     enableSmsForOtpTests();
+
+    createExistingUserForOtp('09121234567');
 
     sendOtp('09121234567');
 
@@ -68,8 +107,15 @@ test('otp code is hashed and plain code is not stored', function () {
         ->and(Hash::isHashed($otpCode->code_hash))->toBeTrue();
 });
 
-test('correct code logs user in and creates user without email or password', function () {
+test('existing user can login via otp without creating a new account', function () {
     enableSmsForOtpTests();
+
+    $initialCount = User::query()->count();
+
+    User::factory()->withMobile('09129876543')->create([
+        'email' => null,
+        'password' => null,
+    ]);
 
     sendOtp('09129876543');
 
@@ -86,16 +132,36 @@ test('correct code logs user in and creates user without email or password', fun
     $user = User::query()->where('mobile', '09129876543')->first();
 
     expect($user)->not->toBeNull()
-        ->and($user->email)->toBeNull()
-        ->and($user->password)->toBeNull()
-        ->and($user->mobile_verified_at)->not->toBeNull()
-        ->and($user->name)->toBe(config('otp.default_user_name'))
-        ->and($user->is_admin)->toBeFalse();
+        ->and(User::query()->count())->toBe($initialCount + 1)
+        ->and($user->mobile_verified_at)->not->toBeNull();
 
     $response->assertRedirect(route('home', absolute: false));
 });
 
-test('existing user with mobile logs in', function () {
+test('legacy user without verified mobile gets mobile_verified_at backfilled on otp login', function () {
+    enableSmsForOtpTests();
+
+    $user = User::factory()->withUnverifiedMobile('09127776655')->create([
+        'email' => 'legacy@example.com',
+        'password' => 'password',
+    ]);
+
+    expect($user->mobile_verified_at)->toBeNull();
+
+    sendOtp('09127776655');
+
+    $code = OtpTestHelper::extractCodeFromLastSms('09127776655');
+
+    $this->post(route('auth.mobile.verify.store'), [
+        'code' => $code,
+    ]);
+
+    $this->assertAuthenticatedAs($user);
+
+    expect($user->fresh()->mobile_verified_at)->not->toBeNull();
+});
+
+test('existing user with verified mobile logs in via otp', function () {
     enableSmsForOtpTests();
 
     $user = User::factory()->withMobile('09121112233')->create([
@@ -166,6 +232,8 @@ test('too many attempts rejected', function () {
 test('new send invalidates previous active code', function () {
     enableSmsForOtpTests();
 
+    createExistingUserForOtp('09121234567');
+
     sendOtp('09121234567');
     $firstCode = OtpTestHelper::extractCodeFromLastSms('09121234567');
 
@@ -182,17 +250,26 @@ test('new send invalidates previous active code', function () {
     $this->assertGuest();
 });
 
-test('send-code response is generic and does not reveal user existence', function () {
+test('existing user send-code redirects to verify page', function () {
     enableSmsForOtpTests();
 
     User::factory()->withMobile('09123334455')->create();
 
     sendOtp('09123334455')->assertRedirect(route('auth.mobile.verify'));
-    sendOtp('09124445566')->assertRedirect(route('auth.mobile.verify'));
+});
+
+test('unknown mobile send-code does not redirect to verify page', function () {
+    enableSmsForOtpTests();
+
+    sendOtp('09124445566')
+        ->assertSessionHasErrors('mobile')
+        ->assertRedirect();
 });
 
 test('sms log is created when sms is enabled', function () {
     enableSmsForOtpTests();
+
+    createExistingUserForOtp('09121234567');
 
     sendOtp('09121234567');
 
@@ -210,6 +287,8 @@ test('sms skipped safely when globally disabled', function () {
         'value' => '0',
     ]);
 
+    createExistingUserForOtp('09121234567');
+
     sendOtp('09121234567')->assertRedirect(route('auth.mobile.verify'));
 
     $message = SmsMessage::query()->where('mobile', '09121234567')->first();
@@ -222,6 +301,8 @@ test('send-code route is rate limited', function () {
     enableSmsForOtpTests();
     config(['otp.resend_cooldown_seconds' => 0]);
 
+    createExistingUserForOtp('09121234567');
+
     sendOtp('09121234567')->assertRedirect(route('auth.mobile.verify'));
     sendOtp('09121234567')->assertRedirect(route('auth.mobile.verify'));
     sendOtp('09121234567')->assertRedirect(route('auth.mobile.verify'));
@@ -231,6 +312,8 @@ test('send-code route is rate limited', function () {
 test('verify route is rate limited', function () {
     config(['otp.resend_cooldown_seconds' => 0]);
     enableSmsForOtpTests();
+
+    createExistingUserForOtp('09121234567');
 
     sendOtp('09121234567');
 
@@ -250,6 +333,8 @@ test('verify route is rate limited', function () {
 test('mobile auth preserves intended redirect after verify', function () {
     enableSmsForOtpTests();
 
+    User::factory()->withMobile('09125556677')->create();
+
     $target = route('checkout.confirm', [
         'package' => 'full',
         'payment' => 'cash',
@@ -268,6 +353,8 @@ test('mobile auth preserves intended redirect after verify', function () {
 
 test('otp code is not exposed in inertia props', function () {
     enableSmsForOtpTests();
+
+    createExistingUserForOtp('09121234567');
 
     sendOtp('09121234567');
 

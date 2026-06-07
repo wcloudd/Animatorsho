@@ -11,8 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { AUTH_MOBILE_VERIFY_COPY } from '@/lib/auth-form-data';
 import { cn } from '@/lib/utils';
-import { resendCode } from '@/routes/auth/mobile';
-import { create } from '@/routes/auth/mobile';
+import { login, register } from '@/routes';
+import { create, resendCode } from '@/routes/auth/mobile';
 import { store as verifyStore } from '@/routes/auth/mobile/verify';
 
 type Props = {
@@ -151,6 +151,27 @@ export default function MobileVerifyAuth({
                                 >
                                     {copy.changeMobileLabel}
                                 </TextLink>
+
+                                <TextLink
+                                    href={login()}
+                                    className="text-sm font-bold text-purple"
+                                    tabIndex={4}
+                                >
+                                    {copy.secondaryLinkLabel}
+                                </TextLink>
+
+                                <div className="flex flex-col items-center gap-1">
+                                    <p className="text-sm font-medium text-muted">
+                                        {copy.registerPrompt}
+                                    </p>
+                                    <TextLink
+                                        href={register()}
+                                        className="text-sm font-bold text-purple"
+                                        tabIndex={5}
+                                    >
+                                        {copy.registerLinkLabel}
+                                    </TextLink>
+                                </div>
                             </div>
                         </>
                     )}
