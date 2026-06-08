@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { User } from 'lucide-react';
 import { useState } from 'react';
 import { ProfileUserAvatar } from '@/components/profile/profile-user-avatar';
@@ -12,7 +12,14 @@ import { LandingMediaVideo } from '@/components/landing/landing-media-video';
 import { StudentWorksSection } from '@/components/landing/student-works-section';
 import { CHECKOUT_FULL_URL } from '@/lib/checkout-urls';
 import { login, profile } from '@/routes';
+import { SeoHead } from '@/components/seo/seo-head';
+import { PUBLIC_PAGE_SEO, canonicalFromPath, defaultOpenGraph } from '@/lib/seo';
 import { cn } from '@/lib/utils';
+import type { HomeSeoProps, SharedPageProps } from '@/types/seo';
+
+type AnimatorshoIndexProps = {
+    seo?: HomeSeoProps;
+};
 
 const HERO_VIDEO_SRC = '/videos/animatorsho-hero.mp4';
 const HERO_POSTER_SRC = '/images/animatorsho/hero-poster.webp';
@@ -329,10 +336,29 @@ function AfterRegistrationSection() {
     );
 }
 
-export default function AnimatorshoIndex() {
+export default function AnimatorshoIndex({ seo }: AnimatorshoIndexProps) {
+    const { appUrl } = usePage<SharedPageProps>().props;
+    const meta = PUBLIC_PAGE_SEO.home;
+    const jsonLd = seo
+        ? [seo.organization, ...(seo.course ? [seo.course] : [])]
+        : undefined;
+
     return (
         <>
-            <Head title="انیماتورشو" />
+            <SeoHead
+                title={meta.title}
+                description={meta.description}
+                canonical={canonicalFromPath(appUrl, '/')}
+                openGraph={{
+                    ...defaultOpenGraph(appUrl, {
+                        title: meta.title,
+                        description: meta.description,
+                        path: '/',
+                    }),
+                    image: seo?.ogImage,
+                }}
+                jsonLd={jsonLd}
+            />
             <div className="w-full bg-bg">
                 <div className="mx-auto flex w-full max-w-[390px] flex-col gap-5 px-4 pt-4 pb-8">
                     <HeroHeader />

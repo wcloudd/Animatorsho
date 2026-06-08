@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
@@ -9,9 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { SeoHead } from '@/components/seo/seo-head';
 import { AUTH_FORGOT_PASSWORD_COPY } from '@/lib/auth-form-data';
 import { localizeAuthStatus } from '@/lib/auth-validation-messages';
+import { PUBLIC_PAGE_SEO, canonicalFromPath } from '@/lib/seo';
 import { cn } from '@/lib/utils';
+import type { SharedPageProps } from '@/types/seo';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 import { sendCode } from '@/routes/password/mobile';
@@ -26,13 +29,19 @@ type Props = {
 export default function ForgotPassword({ status, smsAvailable }: Props) {
     const copy = AUTH_FORGOT_PASSWORD_COPY;
     const localizedStatus = localizeAuthStatus(status);
+    const { appUrl } = usePage<SharedPageProps>().props;
+    const meta = PUBLIC_PAGE_SEO.forgotPassword;
     const [method, setMethod] = useState<RecoveryMethod>(
         smsAvailable ? 'mobile' : 'email',
     );
 
     return (
         <>
-            <Head title={copy.headTitle} />
+            <SeoHead
+                title={meta.title}
+                description={meta.description}
+                canonical={canonicalFromPath(appUrl, '/forgot-password')}
+            />
 
             <AuthPageHeader title={copy.title} subtitle={copy.subtitle} />
 

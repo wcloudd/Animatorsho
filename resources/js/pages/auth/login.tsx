@@ -1,4 +1,4 @@
-import { Form, Head, usePage } from '@inertiajs/react';
+import { Form, usePage } from '@inertiajs/react';
 import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthPageHeader } from '@/components/auth/auth-page-header';
@@ -10,9 +10,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { SeoHead } from '@/components/seo/seo-head';
 import { AUTH_LOGIN_COPY } from '@/lib/auth-form-data';
 import { localizeAuthStatus } from '@/lib/auth-validation-messages';
+import { PUBLIC_PAGE_SEO, canonicalFromPath } from '@/lib/seo';
 import { cn } from '@/lib/utils';
+import type { SharedPageProps } from '@/types/seo';
 import { create as mobileAuthCreate } from '@/routes/auth/mobile';
 import { register } from '@/routes';
 import { email as loginEmail, store } from '@/routes/login';
@@ -33,12 +36,17 @@ type Props = {
 export default function Login({ status, canResetPassword }: Props) {
     const copy = AUTH_LOGIN_COPY;
     const localizedStatus = localizeAuthStatus(status);
-    const { url } = usePage();
-    const redirectQuery = redirectQueryFromUrl(url);
+    const page = usePage<SharedPageProps>();
+    const redirectQuery = redirectQueryFromUrl(page.url);
+    const meta = PUBLIC_PAGE_SEO.login;
 
     return (
         <>
-            <Head title={copy.headTitle} />
+            <SeoHead
+                title={meta.title}
+                description={meta.description}
+                canonical={canonicalFromPath(page.props.appUrl, '/login')}
+            />
 
             <AuthPageHeader title={copy.title} subtitle={copy.subtitle} />
 

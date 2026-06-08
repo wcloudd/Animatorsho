@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { AdminTextLink } from '@/components/admin/admin-text-link';
+import { NoIndexSeoHead } from '@/components/seo/seo-head';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -142,6 +143,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
     return (
         <div className="min-h-dvh overflow-x-hidden bg-bg text-text" dir="rtl">
+            <NoIndexSeoHead />
             <header className="sticky top-0 z-10 border-b border-purple/10 bg-surface/95 shadow-soft backdrop-blur-sm">
                 <div className="mx-auto flex w-full max-w-[390px] flex-col gap-3 px-4 py-4 sm:max-w-5xl">
                     <div className="flex items-center justify-between gap-3">

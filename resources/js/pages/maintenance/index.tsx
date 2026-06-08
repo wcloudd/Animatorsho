@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { NoIndexSeoHead } from '@/components/seo/seo-head';
 import { login, logout } from '@/routes';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,7 @@ export default function MaintenanceIndex({
     return (
         <div dir="rtl" className="min-h-dvh bg-bg text-text">
             <Head title={pageTitle} />
+            <NoIndexSeoHead />
             <main className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col items-center justify-center gap-5 px-4 py-12 text-center">
                 <h1 className="font-display text-2xl font-bold text-purple">
                     {pageTitle}
