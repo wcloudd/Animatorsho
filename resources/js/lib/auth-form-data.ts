@@ -164,6 +164,11 @@ export const AUTH_MOBILE_VERIFY_COPY = {
     sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
 } as const;
 
+export const VERIFY_MOBILE_CTA = {
+    message: 'برای ادامه، ابتدا شماره موبایل خود را ثبت و تأیید کنید.',
+    ctaLabel: 'تأیید شماره موبایل',
+} as const;
+
 export const PROFILE_MOBILE_VERIFY_COPY = {
     headTitle: 'تأیید موبایل',
     title: 'ثبت و تأیید شماره موبایل',

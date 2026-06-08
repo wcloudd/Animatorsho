@@ -21,15 +21,15 @@ function firstNameFromDisplayName(displayName: string): string {
 }
 
 function contactLine(user: ProfileUser): string {
-    if (user.email) {
-        return user.email;
-    }
-
     if (user.maskedMobile) {
         return user.maskedMobile;
     }
 
-    return 'ایمیل ثبت نشده';
+    if (user.email) {
+        return user.email;
+    }
+
+    return 'شماره موبایل ثبت نشده';
 }
 
 export function ProfileWelcomeCard({ user }: ProfileWelcomeCardProps) {

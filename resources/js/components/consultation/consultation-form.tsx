@@ -12,17 +12,17 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type { ConsultationFormOption } from '@/lib/consultation-form-data';
+import { VerifyMobileCtaCard } from '@/components/auth/verify-mobile-cta-card';
 import {
     CONSULTATION_GUEST_CTA,
     CONSULTATION_INTEREST_OPTIONS,
     CONSULTATION_LEVEL_OPTIONS,
     CONSULTATION_VERIFIED_MOBILE_COPY,
-    CONSULTATION_VERIFY_MOBILE_CTA,
 } from '@/lib/consultation-form-data';
+import { userHasVerifiedMobile } from '@/lib/auth-user';
 import { cn } from '@/lib/utils';
 import { login, register } from '@/routes';
 import consultation from '@/routes/consultation';
-import { create as profileMobileCreate } from '@/routes/profile/mobile';
 
 const fieldClassName =
     'border-input bg-surface text-text placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm text-start shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50';
@@ -119,31 +119,6 @@ function ConsultationGuestCta({ redirectQuery }: { redirectQuery: { redirect: st
                     {copy.registerLabel}
                 </Link>
             </div>
-        </div>
-    );
-}
-
-function ConsultationVerifyMobileCta({
-    redirectQuery,
-}: {
-    redirectQuery: { redirect: string };
-}) {
-    const copy = CONSULTATION_VERIFY_MOBILE_CTA;
-
-    return (
-        <div
-            className={ctaCardClassName}
-            data-test="consultation-verify-mobile-cta"
-        >
-            <p className="text-center text-sm font-medium leading-relaxed text-text">
-                {copy.message}
-            </p>
-            <Link
-                href={profileMobileCreate({ query: redirectQuery })}
-                className="flex h-11 w-full items-center justify-center rounded-pill bg-green text-sm font-bold text-white shadow-soft transition-opacity hover:opacity-95"
-            >
-                {copy.ctaLabel}
-            </Link>
         </div>
     );
 }
@@ -289,18 +264,6 @@ function ConsultationSubmitForm({ verifiedMobile }: ConsultationSubmitFormProps)
     );
 }
 
-function userHasVerifiedMobile(user: {
-    mobile?: unknown;
-    mobile_verified_at?: unknown;
-}): boolean {
-    return (
-        typeof user.mobile === 'string' &&
-        user.mobile !== '' &&
-        user.mobile_verified_at !== null &&
-        user.mobile_verified_at !== undefined
-    );
-}
-
 export function ConsultationForm() {
     const { auth, url } = usePage().props;
     const user = auth.user;
@@ -326,7 +289,10 @@ export function ConsultationForm() {
                     verifiedMobile={user.mobile as string}
                 />
             ) : (
-                <ConsultationVerifyMobileCta redirectQuery={redirectQuery} />
+                <VerifyMobileCtaCard
+                    redirectQuery={redirectQuery}
+                    testId="consultation-verify-mobile-cta"
+                />
             )}
         </section>
     );

@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { VerifyMobileCtaCard } from '@/components/auth/verify-mobile-cta-card';
 import { AccountNoticeCard } from '@/components/checkout/account-notice-card';
 import { CheckoutOrderForm } from '@/components/checkout/checkout-order-form';
 import { ConfirmPageHeader } from '@/components/checkout/confirm-page-header';
@@ -19,6 +20,7 @@ import type {
     OrderSummaryContent,
 } from '@/lib/checkout-confirm';
 import type { CheckoutOrderContext } from '@/lib/checkout-order';
+import { userHasVerifiedMobile } from '@/lib/auth-user';
 
 type CheckoutConfirmProps = {
     summary: OrderSummaryContent | null;
@@ -53,15 +55,19 @@ export default function CheckoutConfirm({
     cardToCardTransfer,
     cardToCardUnavailableMessage,
 }: CheckoutConfirmProps) {
-    const { auth } = usePage().props;
-    const isAuthenticated = auth.user !== null;
+    const { auth, url } = usePage().props;
+    const user = auth.user;
+    const isAuthenticated = user !== null;
+    const hasVerifiedMobile =
+        user !== null && userHasVerifiedMobile(user);
     const isCashCheckout = orderContext?.payment === 'cash';
     const canSubmitOrder =
-        isAuthenticated &&
+        hasVerifiedMobile &&
         orderContext !== null &&
         !showChapterSelector &&
         !duplicatePurchaseBlocked &&
         !purchasesDisabled;
+    const redirectQuery = { redirect: url };
     const [selectedPaymentMethod, setSelectedPaymentMethod] =
         useState<CheckoutPaymentMethodId>('online');
 
@@ -209,7 +215,14 @@ export default function CheckoutConfirm({
                         <OrderSummaryFallbackCard />
                     )}
 
-                    {!isAuthenticated ? <AccountNoticeCard /> : null}
+                    {!isAuthenticated ? (
+                        <AccountNoticeCard />
+                    ) : !hasVerifiedMobile ? (
+                        <VerifyMobileCtaCard
+                            redirectQuery={redirectQuery}
+                            testId="checkout-verify-mobile-cta"
+                        />
+                    ) : null}
 
                     <TrustNote />
                 </div>

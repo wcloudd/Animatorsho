@@ -7,8 +7,8 @@ const fieldClassName =
 
 export const CHECKOUT_ACCOUNT_MOBILE_COPY = {
     snapshotNote:
-        'شماره تماس سفارش از شماره موبایل حساب کاربری شما ثبت می‌شود.',
-    verifiedLabel: 'شماره ثبت نام کننده:',
+        'شماره تماس سفارش از شماره موبایل تأییدشده حساب شما ثبت می‌شود.',
+    verifiedLabel: 'شماره موبایل تأییدشده',
 } as const;
 
 type CustomerInfoFieldsProps = {
@@ -28,7 +28,8 @@ export function CustomerInfoFields({
     accountMobileVerified = false,
     className,
 }: CustomerInfoFieldsProps) {
-    const usesAccountMobile = Boolean(accountMobile);
+    const usesAccountMobile =
+        Boolean(accountMobile) && accountMobileVerified;
 
     return (
         <section
@@ -88,11 +89,6 @@ export function CustomerInfoFields({
                         dir="ltr"
                         className={cn(fieldClassName, 'h-10')}
                     />
-                    {!accountMobileVerified ? (
-                        <p className="text-sm text-purple">
-                            مهم: از این شماره برای ارتباط با پشتیبان و رفع مشکلات لایسنس استفاده میشه، در روند خرید لازمه تاییدش کنی.
-                        </p>
-                    ) : null}
                 </div>
             ) : (
                 <div className="grid gap-2">

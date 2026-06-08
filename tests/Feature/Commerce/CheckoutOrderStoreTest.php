@@ -210,6 +210,19 @@ test('checkout without verified account mobile is redirected before validation',
     expect(Order::query()->count())->toBe(0);
 });
 
+test('checkout with unverified account mobile is redirected and does not snapshot posted mobile', function () {
+    $user = User::factory()->withUnverifiedMobile('09121234567')->create();
+
+    $this->actingAs($user)->post(route('checkout.orders.store'), [
+        'package' => 'full',
+        'payment' => 'cash',
+        'customer_name' => 'علی رضایی',
+        'customer_mobile' => '09121234567',
+    ])->assertRedirect(route('profile.mobile.create'));
+
+    expect(Order::query()->count())->toBe(0);
+});
+
 test('checkout requires customer name and uses account mobile when available', function () {
     $user = User::factory()->withMobile('09121234567')->create();
 

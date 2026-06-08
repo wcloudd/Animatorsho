@@ -34,7 +34,7 @@ trait CustomerValidationRules
 
     protected function usesAccountMobileSnapshot(?User $user): bool
     {
-        return $user !== null && filled($user->mobile);
+        return $user !== null && $user->hasVerifiedMobile();
     }
 
     /**

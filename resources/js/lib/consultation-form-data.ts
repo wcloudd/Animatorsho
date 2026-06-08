@@ -40,10 +40,7 @@ export const CONSULTATION_GUEST_CTA = {
     registerLabel: 'ثبت‌نام',
 } as const;
 
-export const CONSULTATION_VERIFY_MOBILE_CTA = {
-    message: 'برای ادامه، ابتدا شماره موبایل خود را ثبت و تأیید کنید.',
-    ctaLabel: 'تأیید شماره موبایل',
-} as const;
+export { VERIFY_MOBILE_CTA as CONSULTATION_VERIFY_MOBILE_CTA } from '@/lib/auth-form-data';
 
 export const CONSULTATION_VERIFIED_MOBILE_COPY = {
     snapshotNote:
