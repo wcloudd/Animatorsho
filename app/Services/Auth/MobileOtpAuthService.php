@@ -7,6 +7,7 @@ use App\Enums\SmsMessageType;
 use App\Models\OtpCode;
 use App\Models\User;
 use App\Services\Sms\SmsService;
+use App\Services\Sms\SmsSettingsService;
 use App\Services\Sms\SmsTemplateService;
 use App\Support\IranianMobile;
 use Illuminate\Http\Request;
@@ -18,9 +19,12 @@ class MobileOtpAuthService
 {
     public const NO_ACCOUNT_MESSAGE = 'برای ساخت حساب جدید، ابتدا ثبت‌نام کنید.';
 
+    public const SMS_UNAVAILABLE_MESSAGE = 'بازیابی با شماره موبایل فعلاً در دسترس نیست. اگر ایمیل بازیابی ثبت کرده‌اید، از بازیابی با ایمیل استفاده کنید.';
+
     public function __construct(
         private readonly SmsService $sms,
         private readonly SmsTemplateService $templates,
+        private readonly SmsSettingsService $smsSettings,
     ) {}
 
     public function sendLoginCode(string $mobile, Request $request): void
@@ -185,6 +189,102 @@ class MobileOtpAuthService
         $otpCode->update(['consumed_at' => now()]);
 
         return $this->findLoginUser($normalizedMobile);
+    }
+
+    public function sendPasswordResetCode(string $mobile, Request $request): void
+    {
+        $this->assertOtpDeliveryAvailable();
+
+        $normalizedMobile = IranianMobile::normalize($mobile);
+
+        if ($normalizedMobile === null) {
+            throw ValidationException::withMessages([
+                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+            ]);
+        }
+
+        $user = User::query()->where('mobile', $normalizedMobile)->first();
+
+        if ($user !== null && $user->hasVerifiedMobile()) {
+            $this->assertResendCooldown($normalizedMobile, OtpPurpose::PasswordReset);
+
+            $this->invalidateActiveCodes($normalizedMobile, OtpPurpose::PasswordReset);
+
+            $code = $this->generateCode();
+            $expiresMinutes = (int) config('otp.expires_minutes', 5);
+
+            OtpCode::query()->create([
+                'mobile' => $normalizedMobile,
+                'code_hash' => Hash::make($code),
+                'purpose' => OtpPurpose::PasswordReset,
+                'expires_at' => now()->addMinutes($expiresMinutes),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            $message = $this->templates->render(SmsMessageType::OtpLogin, [
+                'code' => $code,
+            ]);
+
+            $this->sms->send(
+                $normalizedMobile,
+                $message,
+                SmsMessageType::OtpLogin,
+                ['purpose' => OtpPurpose::PasswordReset->value],
+            );
+        }
+
+        $request->session()->put('password_reset_otp.mobile', $normalizedMobile);
+        $request->session()->put('password_reset_otp.sent_at', now()->toIso8601String());
+    }
+
+    public function verifyPasswordResetCode(string $mobile, string $code): User
+    {
+        $normalizedMobile = IranianMobile::normalize($mobile);
+
+        if ($normalizedMobile === null) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        $otpCode = OtpCode::query()
+            ->forMobile($normalizedMobile, OtpPurpose::PasswordReset)
+            ->active()
+            ->latest('id')
+            ->first();
+
+        if ($otpCode === null) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        if ($otpCode->hasExceededAttempts()) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        if (! Hash::check($code, $otpCode->code_hash)) {
+            $otpCode->increment('attempts');
+
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        $otpCode->update(['consumed_at' => now()]);
+
+        $user = User::query()->where('mobile', $normalizedMobile)->first();
+
+        if ($user === null || ! $user->hasVerifiedMobile()) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
+
+        return $user;
     }
 
     public function sendVerificationCode(User $user, string $mobile, Request $request): void
@@ -362,6 +462,15 @@ class MobileOtpAuthService
         if (! User::query()->where('mobile', $mobile)->exists()) {
             throw ValidationException::withMessages([
                 'mobile' => self::NO_ACCOUNT_MESSAGE,
+            ]);
+        }
+    }
+
+    private function assertOtpDeliveryAvailable(): void
+    {
+        if (! $this->smsSettings->isOtpDeliveryAvailable()) {
+            throw ValidationException::withMessages([
+                'mobile' => self::SMS_UNAVAILABLE_MESSAGE,
             ]);
         }
     }

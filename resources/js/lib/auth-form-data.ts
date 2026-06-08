@@ -87,12 +87,50 @@ export const AUTH_REGISTER_VERIFY_COPY = {
 export const AUTH_FORGOT_PASSWORD_COPY = {
     headTitle: 'بازیابی رمز عبور',
     title: 'بازیابی رمز عبور',
-    subtitle: 'ایمیل حسابت را وارد کن تا لینک بازیابی برایت ارسال شود.',
+    subtitle: 'روش بازیابی را انتخاب کن.',
+    mobileTabLabel: 'بازیابی با شماره موبایل',
+    emailTabLabel: 'بازیابی با ایمیل',
+    mobileSubtitle: 'شماره موبایل تأییدشده حسابت را وارد کن تا کد بازیابی ارسال شود.',
+    emailSubtitle: 'ایمیل بازیابی حسابت را وارد کن تا لینک بازیابی ارسال شود.',
+    mobileLabel: 'شماره موبایل',
+    mobilePlaceholder: '09123456789',
+    mobileSubmitLabel: 'دریافت کد بازیابی',
     emailLabel: 'ایمیل',
     emailPlaceholder: 'example@email.com',
-    submitLabel: 'ارسال لینک بازیابی',
+    emailSubmitLabel: 'ارسال لینک بازیابی',
+    smsUnavailableMessage:
+        'بازیابی با شماره موبایل فعلاً در دسترس نیست. اگر ایمیل بازیابی ثبت کرده‌اید، از بازیابی با ایمیل استفاده کنید.',
+    emailFallbackHint:
+        'اگر پیامک در دسترس نبود، از بازیابی با ایمیل استفاده کنید.',
     secondaryPrompt: 'یا',
     secondaryLinkLabel: 'بازگشت به ورود',
+    sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
+} as const;
+
+export const AUTH_FORGOT_PASSWORD_VERIFY_COPY = {
+    headTitle: 'تأیید کد بازیابی',
+    title: 'کد بازیابی را وارد کن',
+    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کن.',
+    codeLabel: 'کد بازیابی',
+    codePlaceholder: '123456',
+    submitLabel: 'ادامه',
+    resendLabel: 'ارسال مجدد کد',
+    resendWaitLabel: 'ارسال مجدد تا {seconds} ثانیه دیگر',
+    changeMobileLabel: 'تغییر شماره موبایل',
+    emailFallbackHint:
+        'اگر پیامک در دسترس نبود، از بازیابی با ایمیل استفاده کنید.',
+    sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
+} as const;
+
+export const AUTH_RESET_PASSWORD_MOBILE_COPY = {
+    headTitle: 'رمز عبور جدید',
+    title: 'تنظیم رمز عبور جدید',
+    subtitle: 'رمز عبور جدید حساب {mobile} را وارد کن.',
+    passwordLabel: 'رمز عبور جدید',
+    passwordPlaceholder: 'رمز عبور جدید',
+    passwordConfirmLabel: 'تکرار رمز عبور',
+    passwordConfirmPlaceholder: 'تکرار رمز عبور',
+    submitLabel: 'ذخیره رمز عبور جدید',
 } as const;
 
 export const AUTH_MOBILE_COPY = {

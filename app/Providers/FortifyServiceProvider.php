@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Fortify\LoginRateLimiter;
 use App\Models\User;
+use App\Services\Sms\SmsSettingsService;
 use App\Support\IranianMobile;
 use App\Support\LoginIdentifier;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -92,6 +93,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::requestPasswordResetLinkView(fn (Request $request) => Inertia::render('auth/forgot-password', [
             'status' => $request->session()->get('status'),
+            'smsAvailable' => app(SmsSettingsService::class)->isOtpDeliveryAvailable(),
         ]));
 
     }
@@ -128,6 +130,20 @@ class FortifyServiceProvider extends ServiceProvider
 
         RateLimiter::for('registration-otp-verify', function (Request $request) {
             $mobile = $request->session()->get('registration_otp.mobile', 'unknown');
+
+            return Limit::perMinute(10)->by($mobile.'|'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-otp-send', function (Request $request) {
+            $mobile = $request->session()->get('password_reset_otp.mobile')
+                ?? IranianMobile::normalize($request->input('mobile'))
+                ?? 'unknown';
+
+            return Limit::perMinute(3)->by($mobile.'|'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-otp-verify', function (Request $request) {
+            $mobile = $request->session()->get('password_reset_otp.mobile', 'unknown');
 
             return Limit::perMinute(10)->by($mobile.'|'.$request->ip());
         });

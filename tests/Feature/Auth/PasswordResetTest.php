@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
 
@@ -59,6 +60,9 @@ test('password can be reset with valid token', function () {
         $response
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('login'));
+
+        $user->refresh();
+        expect(Hash::check('password', $user->password))->toBeTrue();
 
         return true;
     });

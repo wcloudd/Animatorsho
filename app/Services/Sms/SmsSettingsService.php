@@ -2,11 +2,16 @@
 
 namespace App\Services\Sms;
 
+use App\Enums\SmsMessageType;
 use App\Models\Setting;
 use App\Support\IranianMobile;
 
 class SmsSettingsService
 {
+    public function __construct(
+        private readonly SmsTemplateService $templates,
+    ) {}
+
     public function isEnabled(): bool
     {
         return $this->booleanSetting(Setting::KEY_ENABLED, (bool) config('sms.defaults.enabled', false));
@@ -35,6 +40,13 @@ class SmsSettingsService
         $driver = config('sms.driver');
 
         return is_string($driver) && $driver !== '' ? $driver : 'log';
+    }
+
+    public function isOtpDeliveryAvailable(): bool
+    {
+        return $this->isEnabled()
+            && $this->isDriverConfigured($this->currentDriver())
+            && $this->templates->isEnabled(SmsMessageType::OtpLogin);
     }
 
     /**

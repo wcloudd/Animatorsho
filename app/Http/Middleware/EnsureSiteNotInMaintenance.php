@@ -52,6 +52,8 @@ class EnsureSiteNotInMaintenance
             'forgot-password',
             'reset-password',
             'reset-password/*',
+            'password/mobile',
+            'password/mobile/*',
             'auth/mobile',
             'auth/mobile/*',
             'up',
