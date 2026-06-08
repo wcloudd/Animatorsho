@@ -5,7 +5,10 @@ import {
     CreditCard,
     KeyRound,
     MessageCircle,
+    MessageSquare,
     Smartphone,
+    UserPlus,
+    Users,
     Wallet,
 } from 'lucide-react';
 import type { AdminDashboardSummaryCard } from '@/types/admin';
@@ -30,11 +33,16 @@ const labelToneStyles = {
 } as const;
 
 const summaryIcons: Record<string, LucideIcon> = {
+    registrations_today: UserPlus,
+    registrations_last_7_days: Users,
     pending_card_to_card: CreditCard,
     pending_installment: Wallet,
+    new_consultations: MessageSquare,
+    follow_up_consultations: MessageSquare,
     pending_licenses: KeyRound,
     license_api_failures: AlertTriangle,
     open_support_tickets: MessageCircle,
+    support_waiting_user: MessageCircle,
     sms_issues: Smartphone,
 };
 
@@ -47,14 +55,8 @@ export function AdminDashboardSummaryCardLink({
 }: AdminDashboardSummaryCardProps) {
     const Icon = summaryIcons[card.key];
 
-    return (
-        <Link
-            href={card.href}
-            className={cn(
-                'flex min-h-[5.75rem] flex-col justify-between rounded-2xl px-3.5 py-3 shadow-soft ring-1 transition hover:ring-purple/25',
-                toneStyles[card.tone],
-            )}
-        >
+    const content = (
+        <>
             <div className="flex items-start justify-between gap-2">
                 <span
                     className={cn(
@@ -83,6 +85,31 @@ export function AdminDashboardSummaryCardLink({
             >
                 {card.count.toLocaleString('fa-IR')}
             </span>
+        </>
+    );
+
+    if (card.href === null) {
+        return (
+            <div
+                className={cn(
+                    'flex min-h-[5.75rem] flex-col justify-between rounded-2xl px-3.5 py-3 shadow-soft ring-1',
+                    toneStyles[card.tone],
+                )}
+            >
+                {content}
+            </div>
+        );
+    }
+
+    return (
+        <Link
+            href={card.href}
+            className={cn(
+                'flex min-h-[5.75rem] flex-col justify-between rounded-2xl px-3.5 py-3 shadow-soft ring-1 transition hover:ring-purple/25',
+                toneStyles[card.tone],
+            )}
+        >
+            {content}
         </Link>
     );
 }

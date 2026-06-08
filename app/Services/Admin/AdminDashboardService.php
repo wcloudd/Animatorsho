@@ -2,17 +2,21 @@
 
 namespace App\Services\Admin;
 
+use App\Enums\ConsultationRequestStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\SmsMessageStatus;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Enums\SupportTicketStatus;
+use App\Models\ConsultationRequest;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\SmsMessage;
 use App\Models\SpotPlayerLicense;
 use App\Models\SupportTicket;
+use App\Models\User;
 use App\Support\AdminStatusLabels;
+use App\Support\ConsultationRequestStatusLabels;
 use App\Support\ProfileStatusLabels;
 use App\Support\SupportTicketStatusLabels;
 use App\Support\TomanFormatter;
@@ -30,11 +34,19 @@ class AdminDashboardService
 
     /**
      * @return array{
+     *     activityMetrics: list<array{
+     *         key: string,
+     *         label: string,
+     *         count: int,
+     *         href: string|null,
+     *         tone: 'warning'|'danger'|'neutral'
+     *     }>,
+     *     loginMetricsNote: string,
      *     summary: list<array{
      *         key: string,
      *         label: string,
      *         count: int,
-     *         href: string,
+     *         href: string|null,
      *         tone: 'warning'|'danger'|'neutral'
      *     }>,
      *     actionQueues: list<array{
@@ -71,9 +83,11 @@ class AdminDashboardService
         $actionQueues = $this->nonEmptyQueues([
             $this->pendingCardToCardQueue(),
             $this->pendingInstallmentQueue(),
+            $this->newConsultationsQueue(),
+            $this->followUpConsultationsQueue(),
+            $this->openSupportTicketsQueue(),
             $this->pendingLicensesQueue(),
             $this->licenseApiFailuresQueue(),
-            $this->openSupportTicketsQueue(),
         ]);
 
         $activityQueues = $this->nonEmptyQueues([
@@ -83,6 +97,8 @@ class AdminDashboardService
         ]);
 
         return [
+            'activityMetrics' => $this->activityMetrics(),
+            'loginMetricsNote' => 'آمار ورود نیازمند ثبت رویداد ورود است.',
             'summary' => $this->summaryCards(),
             'actionQueues' => $actionQueues,
             'activityQueues' => $activityQueues,
@@ -91,18 +107,53 @@ class AdminDashboardService
     }
 
     /**
-     * @return list<array{key: string, label: string, count: int, href: string, tone: 'warning'|'danger'|'neutral'}>
+     * @return list<array{key: string, label: string, count: int, href: string|null, tone: 'warning'|'danger'|'neutral'}>
+     */
+    private function activityMetrics(): array
+    {
+        $startOfToday = now()->startOfDay();
+        $startOfSevenDayWindow = now()->subDays(7)->startOfDay();
+
+        return [
+            $this->summaryCard(
+                key: 'registrations_today',
+                label: 'ثبت‌نام امروز',
+                count: User::query()->where('created_at', '>=', $startOfToday)->count(),
+                href: null,
+                informational: true,
+            ),
+            $this->summaryCard(
+                key: 'registrations_last_7_days',
+                label: 'ثبت‌نام ۷ روز اخیر',
+                count: User::query()->where('created_at', '>=', $startOfSevenDayWindow)->count(),
+                href: null,
+                informational: true,
+            ),
+        ];
+    }
+
+    /**
+     * @return list<array{key: string, label: string, count: int, href: string|null, tone: 'warning'|'danger'|'neutral'}>
      */
     private function summaryCards(): array
     {
         $pendingCardToCard = $this->pendingCardToCardQuery()->count();
         $pendingInstallment = $this->pendingInstallmentQuery()->count();
+        $newConsultations = ConsultationRequest::query()
+            ->where('status', ConsultationRequestStatus::New)
+            ->count();
+        $followUpConsultations = ConsultationRequest::query()
+            ->where('status', ConsultationRequestStatus::FollowUp)
+            ->count();
         $pendingLicenses = SpotPlayerLicense::query()
             ->where('status', SpotPlayerLicenseStatus::Pending)
             ->count();
         $licenseApiFailures = $this->licenseApiFailureQuery()->count();
         $openTickets = SupportTicket::query()
             ->where('status', SupportTicketStatus::Open)
+            ->count();
+        $supportWaitingUser = SupportTicket::query()
+            ->where('status', SupportTicketStatus::WaitingUser)
             ->count();
         $smsIssues = $this->actionableSmsIssuesQuery()->count();
 
@@ -117,7 +168,31 @@ class AdminDashboardService
                 key: 'pending_installment',
                 label: 'اقساطی در انتظار',
                 count: $pendingInstallment,
-                href: route('admin.payments.index', ['status' => PaymentStatus::Reviewing->value]),
+                href: route('admin.installments.index', ['status' => 'awaiting_review']),
+            ),
+            $this->summaryCard(
+                key: 'new_consultations',
+                label: 'مشاوره جدید',
+                count: $newConsultations,
+                href: route('admin.consultations.index', ['status' => ConsultationRequestStatus::New->value]),
+            ),
+            $this->summaryCard(
+                key: 'follow_up_consultations',
+                label: 'مشاوره نیازمند پیگیری',
+                count: $followUpConsultations,
+                href: route('admin.consultations.index', ['status' => ConsultationRequestStatus::FollowUp->value]),
+            ),
+            $this->summaryCard(
+                key: 'open_support_tickets',
+                label: 'تیکت باز',
+                count: $openTickets,
+                href: route('admin.support.index', ['status' => SupportTicketStatus::Open->value]),
+            ),
+            $this->summaryCard(
+                key: 'support_waiting_user',
+                label: 'تیکت منتظر کاربر',
+                count: $supportWaitingUser,
+                href: route('admin.support.index', ['status' => SupportTicketStatus::WaitingUser->value]),
             ),
             $this->summaryCard(
                 key: 'pending_licenses',
@@ -133,12 +208,6 @@ class AdminDashboardService
                 danger: true,
             ),
             $this->summaryCard(
-                key: 'open_support_tickets',
-                label: 'تیکت باز',
-                count: $openTickets,
-                href: route('admin.support.index', ['status' => SupportTicketStatus::Open->value]),
-            ),
-            $this->summaryCard(
                 key: 'sms_issues',
                 label: 'خطای واقعی پیامک',
                 count: $smsIssues,
@@ -148,18 +217,19 @@ class AdminDashboardService
     }
 
     /**
-     * @return array{key: string, label: string, count: int, href: string, tone: 'warning'|'danger'|'neutral'}
+     * @return array{key: string, label: string, count: int, href: string|null, tone: 'warning'|'danger'|'neutral'}
      */
     private function summaryCard(
         string $key,
         string $label,
         int $count,
-        string $href,
+        ?string $href,
         bool $danger = false,
+        bool $informational = false,
     ): array {
         $tone = 'neutral';
 
-        if ($count > 0) {
+        if (! $informational && $count > 0) {
             $tone = $danger ? 'danger' : 'warning';
         }
 
@@ -253,7 +323,10 @@ class AdminDashboardService
             ->get()
             ->map(fn (Payment $payment): array => $this->paymentQueueItem(
                 $payment,
-                $this->paymentFocusHref($payment),
+                route('admin.installments.index', [
+                    'status' => 'awaiting_review',
+                    'focus' => $payment->order_id,
+                ]),
             ))
             ->values()
             ->all();
@@ -261,7 +334,75 @@ class AdminDashboardService
         return [
             'key' => 'pending_installment',
             'title' => 'درخواست‌های اقساطی',
-            'viewAllHref' => route('admin.payments.index', ['status' => PaymentStatus::Reviewing->value]),
+            'viewAllHref' => route('admin.installments.index', ['status' => 'awaiting_review']),
+            'items' => $items,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     key: string,
+     *     title: string,
+     *     viewAllHref: string,
+     *     items: list<array{
+     *         id: int,
+     *         title: string,
+     *         subtitle: string,
+     *         meta: string,
+     *         href: string,
+     *         badge: ?array{label: string, tone: string}
+     *     }>
+     * }
+     */
+    private function newConsultationsQueue(): array
+    {
+        $items = ConsultationRequest::query()
+            ->where('status', ConsultationRequestStatus::New)
+            ->latest()
+            ->limit(self::ACTION_QUEUE_LIMIT)
+            ->get()
+            ->map(fn (ConsultationRequest $request): array => $this->consultationQueueItem($request))
+            ->values()
+            ->all();
+
+        return [
+            'key' => 'new_consultations',
+            'title' => 'درخواست‌های مشاوره جدید',
+            'viewAllHref' => route('admin.consultations.index', ['status' => ConsultationRequestStatus::New->value]),
+            'items' => $items,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     key: string,
+     *     title: string,
+     *     viewAllHref: string,
+     *     items: list<array{
+     *         id: int,
+     *         title: string,
+     *         subtitle: string,
+     *         meta: string,
+     *         href: string,
+     *         badge: ?array{label: string, tone: string}
+     *     }>
+     * }
+     */
+    private function followUpConsultationsQueue(): array
+    {
+        $items = ConsultationRequest::query()
+            ->where('status', ConsultationRequestStatus::FollowUp)
+            ->latest()
+            ->limit(self::ACTION_QUEUE_LIMIT)
+            ->get()
+            ->map(fn (ConsultationRequest $request): array => $this->consultationQueueItem($request))
+            ->values()
+            ->all();
+
+        return [
+            'key' => 'follow_up_consultations',
+            'title' => 'مشاوره‌های نیازمند پیگیری',
+            'viewAllHref' => route('admin.consultations.index', ['status' => ConsultationRequestStatus::FollowUp->value]),
             'items' => $items,
         ];
     }
@@ -503,6 +644,36 @@ class AdminDashboardService
             'title' => 'خطاهای واقعی پیامک',
             'viewAllHref' => route('admin.sms.logs.index'),
             'items' => $items,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     id: int,
+     *     title: string,
+     *     subtitle: string,
+     *     meta: string,
+     *     href: string,
+     *     badge: array{label: string, tone: string}
+     * }
+     */
+    private function consultationQueueItem(ConsultationRequest $request): array
+    {
+        $interest = ConsultationRequestStatusLabels::interest($request->interest);
+
+        return [
+            'id' => $request->id,
+            'title' => $request->name,
+            'subtitle' => $request->mobile,
+            'meta' => $interest ?? ConsultationRequestStatusLabels::level($request->level) ?? '—',
+            'href' => route('admin.consultations.index', [
+                'status' => $request->status->value,
+                'q' => $request->mobile,
+            ]),
+            'badge' => [
+                'label' => ConsultationRequestStatusLabels::status($request->status),
+                'tone' => ConsultationRequestStatusLabels::statusTone($request->status),
+            ],
         ];
     }
 

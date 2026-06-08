@@ -1,11 +1,14 @@
 <?php
 
+use App\Enums\ConsultationRequestStatus;
 use App\Enums\OrderPaymentType;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\SmsMessageStatus;
 use App\Enums\SpotPlayerLicenseStatus;
+use App\Enums\SupportTicketStatus;
+use App\Models\ConsultationRequest;
 use App\Models\CoursePackage;
 use App\Models\Order;
 use App\Models\Payment;
@@ -50,10 +53,18 @@ test('admin dashboard props include summary and queue sections', function () {
         ->get(route('admin.dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->has('summary', 6)
+            ->has('activityMetrics', 2)
+            ->where('loginMetricsNote', 'آمار ورود نیازمند ثبت رویداد ورود است.')
+            ->has('summary', 9)
             ->has('actionQueues')
             ->has('activityQueues')
             ->where('allActionQueuesEmpty', true)
+            ->has('activityMetrics.0', fn (Assert $card) => $card
+                ->has('key')
+                ->has('label')
+                ->has('count')
+                ->where('href', null)
+                ->has('tone'))
             ->has('summary.0', fn (Assert $card) => $card
                 ->has('key')
                 ->has('label')
@@ -156,7 +167,14 @@ test('admin dashboard exposes pending actionable items in props', function () {
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'pending_card_to_card', $cardToCardPayment->id))
             ->where('actionQueues', fn ($queues): bool => queueItemHrefContainsFocus($queues, 'pending_card_to_card', $cardToCardPayment->id))
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'pending_installment', $installmentPayment->id))
-            ->where('actionQueues', fn ($queues): bool => queueItemHrefContainsFocus($queues, 'pending_installment', $installmentPayment->id))
+            ->where('actionQueues', fn ($queues): bool => queueItemHrefContains(
+                $queues,
+                'pending_installment',
+                route('admin.installments.index', [
+                    'status' => 'awaiting_review',
+                    'focus' => $installmentPayment->order_id,
+                ]),
+            ))
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'pending_licenses', $pendingLicense->id))
             ->where('actionQueues', fn ($queues): bool => queueItemHrefContainsFocus($queues, 'pending_licenses', $pendingLicense->id))
             ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'license_api_failures', $failedLicense->id))
@@ -165,6 +183,72 @@ test('admin dashboard exposes pending actionable items in props', function () {
             ->where('actionQueues', fn ($queues): bool => queueItemHrefContains($queues, 'open_support_tickets', route('admin.support.show', $openTicket)))
             ->where('actionQueues', fn ($queues): bool => ! queueKeyExists($queues, 'recent_orders'))
             ->where('activityQueues', fn ($queues): bool => queueContainsItemId($queues, 'recent_sms_issues', $failedSms->id)));
+});
+
+test('admin dashboard shows registration metrics', function () {
+    $admin = User::factory()->admin()->create([
+        'created_at' => now()->subDays(20),
+    ]);
+
+    User::factory()->create(['created_at' => now()]);
+    User::factory()->create(['created_at' => now()->startOfDay()]);
+    User::factory()->create(['created_at' => now()->subDays(3)]);
+    User::factory()->create(['created_at' => now()->subDays(8)]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('activityMetrics', fn ($metrics): bool => summaryCardCountEquals($metrics, 'registrations_today', 2))
+            ->where('activityMetrics', fn ($metrics): bool => summaryCardCountEquals($metrics, 'registrations_last_7_days', 3)));
+});
+
+test('admin dashboard shows consultation metrics', function () {
+    $admin = User::factory()->admin()->create();
+
+    ConsultationRequest::factory()->count(2)->withStatus(ConsultationRequestStatus::New)->create();
+    ConsultationRequest::factory()->withStatus(ConsultationRequestStatus::FollowUp)->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('summary', fn ($summary): bool => summaryCardCountEquals($summary, 'new_consultations', 2))
+            ->where('summary', fn ($summary): bool => summaryCardCountEquals($summary, 'follow_up_consultations', 1))
+            ->where('actionQueues', fn ($queues): bool => queueKeyExists($queues, 'new_consultations'))
+            ->where('actionQueues', fn ($queues): bool => queueKeyExists($queues, 'follow_up_consultations')));
+});
+
+test('admin dashboard shows support ticket status metrics', function () {
+    $admin = User::factory()->admin()->create();
+
+    SupportTicket::factory()->open()->create();
+    SupportTicket::factory()->create([
+        'status' => SupportTicketStatus::WaitingUser,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('summary', fn ($summary): bool => summaryCardCountEquals($summary, 'open_support_tickets', 1))
+            ->where('summary', fn ($summary): bool => summaryCardCountEquals($summary, 'support_waiting_user', 1)));
+});
+
+test('admin dashboard shows pending payment installment and license counts', function () {
+    $admin = User::factory()->admin()->create();
+
+    createDashboardReviewingCardToCardPayment();
+    createDashboardReviewingInstallmentPayment();
+    createDashboardFailedLicense();
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'pending_card_to_card', 1))
+            ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'pending_installment', 1))
+            ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'license_api_failures', 1)));
 });
 
 function summaryCardCountAtLeast(mixed $summary, string $key, int $minimum): bool

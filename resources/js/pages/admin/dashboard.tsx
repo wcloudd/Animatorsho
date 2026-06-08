@@ -7,6 +7,8 @@ import { AdminSectionTitle } from '@/components/admin/admin-section-title';
 import type { AdminDashboardPageProps } from '@/types/admin';
 
 export default function AdminDashboard({
+    activityMetrics,
+    loginMetricsNote,
     summary,
     actionQueues,
     activityQueues,
@@ -19,6 +21,21 @@ export default function AdminDashboard({
                 title="داشبورد مدیریت"
                 description="کارهای امروز و موارد نیازمند بررسی"
             />
+
+            <section className="mb-6">
+                <AdminSectionTitle>آمار ثبت‌نام</AdminSectionTitle>
+                <div className="grid grid-cols-2 gap-2.5">
+                    {activityMetrics.map((card) => (
+                        <AdminDashboardSummaryCardLink
+                            key={card.key}
+                            card={card}
+                        />
+                    ))}
+                </div>
+                <p className="mt-3 rounded-xl bg-purple-soft px-3.5 py-3 text-sm text-muted ring-1 ring-purple/10">
+                    {loginMetricsNote}
+                </p>
+            </section>
 
             <section className="mb-6">
                 <AdminSectionTitle>خلاصه وضعیت</AdminSectionTitle>

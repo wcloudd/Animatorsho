@@ -6,7 +6,7 @@ export type AdminDashboardSummaryCard = {
     key: string;
     label: string;
     count: number;
-    href: string;
+    href: string | null;
     tone: AdminDashboardSummaryTone;
 };
 
@@ -27,6 +27,8 @@ export type AdminDashboardQueue = {
 };
 
 export type AdminDashboardPageProps = {
+    activityMetrics: AdminDashboardSummaryCard[];
+    loginMetricsNote: string;
     summary: AdminDashboardSummaryCard[];
     actionQueues: AdminDashboardQueue[];
     activityQueues: AdminDashboardQueue[];
