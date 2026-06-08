@@ -7,47 +7,15 @@ import {
     DialogContent,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    LANDING_STUDENT_WORKS,
+    type StudentWorkMediaSlot,
+} from '@/lib/landing-media';
 import { cn } from '@/lib/utils';
 
-type StudentWork = {
-    id: string;
-    studentName: string;
-    badgeLabel: string;
-    projectTitle: string;
-    videoSrc: string;
-    posterSrc: string;
-    avatarSrc: string;
-};
+type StudentWork = StudentWorkMediaSlot;
 
-const STUDENT_WORKS = [
-    {
-        id: 'student-1',
-        studentName: 'علی رضایی',
-        badgeLabel: 'هنرجوی انیماتورشو',
-        projectTitle: 'اولین انیمیشن کوتاه',
-        videoSrc: '/media/landing/student-works/videos/student-1.mp4',
-        posterSrc: '/media/landing/student-works/posters/student-1.webp',
-        avatarSrc: '/media/landing/student-works/avatars/student-1.webp',
-    },
-    {
-        id: 'student-2',
-        studentName: 'نرگس محمدی',
-        badgeLabel: 'هنرجوی انیماتورشو',
-        projectTitle: 'تمرین حرکت کاراکتر',
-        videoSrc: '/media/landing/student-works/videos/student-2.mp4',
-        posterSrc: '/media/landing/student-works/posters/student-2.webp',
-        avatarSrc: '/media/landing/student-works/avatars/student-2.webp',
-    },
-    {
-        id: 'student-3',
-        studentName: 'امیرحسین کریمی',
-        badgeLabel: 'هنرجوی انیماتورشو',
-        projectTitle: 'تمرین صداگذاری',
-        videoSrc: '/media/landing/student-works/videos/student-3.mp4',
-        posterSrc: '/media/landing/student-works/posters/student-3.webp',
-        avatarSrc: '/media/landing/student-works/avatars/student-3.webp',
-    },
-] as const satisfies readonly StudentWork[];
+const STUDENT_WORKS = LANDING_STUDENT_WORKS;
 
 const CARD_WIDTH_PX = 280;
 

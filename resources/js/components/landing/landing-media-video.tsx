@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { LandingMediaPlaceholder } from '@/components/landing/landing-media-placeholder';
 import { useInViewport } from '@/hooks/use-in-viewport';
 import { cn } from '@/lib/utils';
 
 const SHELL_CLASS =
     'w-full overflow-hidden rounded-[32px] bg-surface';
-
-const PLACEHOLDER_FILL_CLASS = 'bg-[#f0f7f9]';
 
 const MEDIA_CLASS = 'block h-full w-full border-0 object-cover outline-none';
 
@@ -17,6 +16,8 @@ type LandingMediaVideoProps = {
     aspectClassName?: string;
     /** When false, video src is never attached (e.g. inactive chapter tab). */
     enabled?: boolean;
+    placeholderVariant?: 'default' | 'video';
+    placeholderMessage?: string;
 };
 
 function LazyPosterImage({
@@ -50,6 +51,8 @@ export function LandingMediaVideo({
     className,
     aspectClassName = 'aspect-[4/5]',
     enabled = true,
+    placeholderVariant = 'default',
+    placeholderMessage,
 }: LandingMediaVideoProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -105,11 +108,14 @@ export function LandingMediaVideo({
 
     if (mediaState === 'placeholder') {
         return (
-            <div
-                ref={containerRef}
-                className={cn(shellClass, PLACEHOLDER_FILL_CLASS)}
-                aria-label={ariaLabel}
-            />
+            <div ref={containerRef} className={shellClass}>
+                <LandingMediaPlaceholder
+                    ariaLabel={ariaLabel}
+                    className="h-full w-full"
+                    variant={placeholderVariant}
+                    message={placeholderMessage}
+                />
+            </div>
         );
     }
 

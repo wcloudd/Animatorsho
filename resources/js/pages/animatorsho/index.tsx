@@ -1,6 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
 import { User } from 'lucide-react';
-import { useState } from 'react';
 import { ProfileUserAvatar } from '@/components/profile/profile-user-avatar';
 import { resolvePresetAvatar } from '@/lib/resolve-preset-avatar';
 import { CourseChaptersSection } from '@/components/landing/course-chapters-section';
@@ -11,23 +10,23 @@ import { FaqSection } from '@/components/landing/faq-section';
 import { LandingMediaVideo } from '@/components/landing/landing-media-video';
 import { StudentWorksSection } from '@/components/landing/student-works-section';
 import { CHECKOUT_FULL_URL } from '@/lib/checkout-urls';
+import {
+    LANDING_AFTER_REGISTRATION_MEDIA,
+    LANDING_COURSE_OVERVIEW_MEDIA,
+    LANDING_HERO_MEDIA,
+    LANDING_MEET_MEDIA,
+    LANDING_NIMVAJABEE_WORLD_MEDIA,
+} from '@/lib/landing-media';
 import { login, profile } from '@/routes';
 import { SeoHead } from '@/components/seo/seo-head';
 import { PUBLIC_PAGE_SEO, canonicalFromPath, defaultOpenGraph } from '@/lib/seo';
-import { cn } from '@/lib/utils';
 import type { HomeSeoProps, SharedPageProps } from '@/types/seo';
 
 type AnimatorshoIndexProps = {
     seo?: HomeSeoProps;
 };
 
-const HERO_VIDEO_SRC = '/videos/animatorsho-hero.mp4';
-const HERO_POSTER_SRC = '/images/animatorsho/hero-poster.webp';
-
-const MEET_MEDIA = {
-    videoSrc: '/videos/animatorsho-meet.mp4',
-    posterSrc: '/media/landing/posters/meet-intro.webp',
-} as const;
+const NIMVAJABEE_WORLD_CTA_URL = 'https://eitaa.com/nimvajabee/51' as const;
 
 function scrollToSection(sectionId: string) {
     const element = document.getElementById(sectionId);
@@ -47,23 +46,6 @@ function scrollToSection(sectionId: string) {
             : 'smooth',
     });
 }
-
-const COURSE_OVERVIEW_MEDIA = {
-    videoSrc: '/media/landing/videos/course-intro.mp4',
-    posterSrc: '/media/landing/posters/course-intro.webp',
-} as const;
-
-const NIMVAJABEE_WORLD_MEDIA = {
-    videoSrc: '/media/landing/videos/nimvajabee-world.mp4',
-    posterSrc: '/media/landing/posters/nimvajabee-world.webp',
-} as const;
-
-const AFTER_REGISTRATION_MEDIA = {
-    videoSrc: '/media/landing/videos/after-registration.mp4',
-    posterSrc: '/media/landing/posters/after-registration.webp',
-} as const;
-
-const NIMVAJABEE_WORLD_CTA_URL = 'https://eitaa.com/nimvajabee/51' as const;
 
 const heroHeaderActionClassName =
     'inline-flex min-w-0 items-center gap-1.5 rounded-pill border border-border bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-purple-soft';
@@ -106,73 +88,14 @@ function HeroHeader() {
 }
 
 function HeroMediaCard() {
-    const [mediaState, setMediaState] = useState<'video' | 'poster' | 'placeholder'>(
-        'video',
-    );
-
-    const shellClass =
-        'aspect-[4/3] w-full overflow-hidden rounded-[32px] bg-surface shadow-soft ring-1 ring-border';
-
-    if (mediaState === 'placeholder') {
-        return (
-            <div
-                className={cn(
-                    shellClass,
-                    'flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-purple-soft via-surface to-gold-soft',
-                )}
-                aria-label="پیش‌نمایش ویدیو معرفی دوره"
-            >
-                <div className="flex size-14 items-center justify-center rounded-full bg-surface shadow-soft ring-1 ring-border">
-                    <span
-                        className="ms-0.5 block size-0 border-y-[10px] border-y-transparent border-s-[16px] border-s-purple"
-                        aria-hidden
-                    />
-                </div>
-                <p className="text-xs font-medium text-muted">
-                    ویدیو معرفی به‌زودی
-                </p>
-            </div>
-        );
-    }
-
-    if (mediaState === 'poster') {
-        return (
-            <div className={shellClass}>
-                <img
-                    src={HERO_POSTER_SRC}
-                    alt="پیش‌نمایش دوره انیماتورشو"
-                    className="h-full w-full object-cover"
-                    onError={() => setMediaState('placeholder')}
-                />
-            </div>
-        );
-    }
-
-    return (
-        <div className={shellClass}>
-            <video
-                className="block h-full w-full border-0 object-cover outline-none"
-                autoPlay
-                muted
-                loop
-                playsInline
-                poster={HERO_POSTER_SRC}
-                onError={() => setMediaState('poster')}
-            >
-                <source src={HERO_VIDEO_SRC} type="video/mp4" />
-            </video>
-        </div>
-    );
-}
-
-function MeetMediaSlot() {
     return (
         <LandingMediaVideo
-            videoSrc={MEET_MEDIA.videoSrc}
-            posterSrc={MEET_MEDIA.posterSrc}
-            ariaLabel="ویدیو معرفی انیماتورشو"
-            className="mx-auto w-[290px] shrink-0 rounded-2xl"
-            aspectClassName="aspect-square"
+            videoSrc={LANDING_HERO_MEDIA.videoSrc}
+            posterSrc={LANDING_HERO_MEDIA.posterSrc}
+            ariaLabel={LANDING_HERO_MEDIA.ariaLabel}
+            aspectClassName="aspect-[4/3]"
+            placeholderVariant="video"
+            placeholderMessage="ویدیو معرفی به‌زودی"
         />
     );
 }
@@ -184,7 +107,13 @@ function MeetAnimatorshoSection() {
             className="flex h-[760px] w-full scroll-mt-24 flex-col items-center justify-center gap-6 px-4 pt-[93px] pb-12 text-center"
             aria-labelledby="meet-animatorsho-heading"
         >
-            <MeetMediaSlot />
+            <LandingMediaVideo
+                videoSrc={LANDING_MEET_MEDIA.videoSrc}
+                posterSrc={LANDING_MEET_MEDIA.posterSrc}
+                ariaLabel={LANDING_MEET_MEDIA.ariaLabel}
+                className="mx-auto w-[290px] shrink-0 rounded-2xl"
+                aspectClassName="aspect-square"
+            />
 
             <div className="flex flex-col items-center gap-3">
                 <h2
@@ -221,9 +150,9 @@ function CourseOverviewSection() {
             aria-labelledby="course-overview-heading"
         >
             <LandingMediaVideo
-                videoSrc={COURSE_OVERVIEW_MEDIA.videoSrc}
-                posterSrc={COURSE_OVERVIEW_MEDIA.posterSrc}
-                ariaLabel="ویدیو معرفی دوره ساخت انیمیشن"
+                videoSrc={LANDING_COURSE_OVERVIEW_MEDIA.videoSrc}
+                posterSrc={LANDING_COURSE_OVERVIEW_MEDIA.posterSrc}
+                ariaLabel={LANDING_COURSE_OVERVIEW_MEDIA.ariaLabel}
                 aspectClassName="aspect-square"
             />
 
@@ -259,9 +188,9 @@ function NimvajabeeWorldSection() {
         >
             <div className="relative w-full">
                 <LandingMediaVideo
-                    videoSrc={NIMVAJABEE_WORLD_MEDIA.videoSrc}
-                    posterSrc={NIMVAJABEE_WORLD_MEDIA.posterSrc}
-                    ariaLabel="ویدیو دنیای نیم‌وجبی"
+                    videoSrc={LANDING_NIMVAJABEE_WORLD_MEDIA.videoSrc}
+                    posterSrc={LANDING_NIMVAJABEE_WORLD_MEDIA.posterSrc}
+                    ariaLabel={LANDING_NIMVAJABEE_WORLD_MEDIA.ariaLabel}
                     aspectClassName="aspect-square"
                 />
                 <a
@@ -301,9 +230,9 @@ function AfterRegistrationSection() {
             aria-labelledby="after-registration-heading"
         >
             <LandingMediaVideo
-                videoSrc={AFTER_REGISTRATION_MEDIA.videoSrc}
-                posterSrc={AFTER_REGISTRATION_MEDIA.posterSrc}
-                ariaLabel="ویدیو بعد از ثبت‌نام"
+                videoSrc={LANDING_AFTER_REGISTRATION_MEDIA.videoSrc}
+                posterSrc={LANDING_AFTER_REGISTRATION_MEDIA.posterSrc}
+                ariaLabel={LANDING_AFTER_REGISTRATION_MEDIA.ariaLabel}
                 aspectClassName="aspect-square"
             />
 

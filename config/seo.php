@@ -7,6 +7,7 @@ return [
         'alternate_name' => 'Nimvajabee Animatorsho',
     ],
 
+    // Fallback until public/images/seo/animatorsho-og.webp is uploaded (see docs/landing-media-requirements.md).
     'default_og_image' => '/images/animatorsho-logo.svg',
 
     'sitemap_routes' => [

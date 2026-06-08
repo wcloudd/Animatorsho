@@ -1,4 +1,4 @@
-export const ANIMATORSHO_LOGO_SRC = '/images/animatorsho-logo.svg?v=2' as const;
+export { ANIMATORSHO_LOGO_SRC, BRAND_LOGO_SRC } from '@/lib/brand-assets';
 
 export const AUTH_BACK_TO_HOME_LABEL = 'بازگشت به انیماتورشو' as const;
 

@@ -1,10 +1,8 @@
 import { Phone } from 'lucide-react';
-import { useState, type MouseEvent, type ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
+import { LandingMediaImage } from '@/components/landing/landing-media-image';
 import { CHECKOUT_FULL_URL } from '@/lib/checkout-urls';
-import { cn } from '@/lib/utils';
-
-const FINAL_CTA_IMAGE_SRC =
-    '/media/landing/posters/final-cta-section.webp' as const;
+import { LANDING_FINAL_CTA_IMAGE } from '@/lib/landing-media';
 
 const FINAL_CTA_PLANS_HREF = CHECKOUT_FULL_URL;
 
@@ -27,7 +25,7 @@ function EitaaIcon({ className }: { className?: string }) {
     return (
         <svg
             viewBox="0 0 24 24"
-            className={cn('size-5 shrink-0', className)}
+            className={className}
             aria-hidden
         >
             <circle
@@ -43,30 +41,6 @@ function EitaaIcon({ className }: { className?: string }) {
                 d="M8.5 7.5h5.2c2.1 0 3.3 1.1 3.3 2.8 0 1.2-.6 2.1-1.6 2.5l2.1 3.7h-2.4l-1.8-3.2h-2.6v3.2H8.5V7.5zm2.4 4.6h2.5c.9 0 1.4-.4 1.4-1.1s-.5-1.1-1.4-1.1h-2.5v2.2z"
             />
         </svg>
-    );
-}
-
-function FinalCtaBackground() {
-    const [imageFailed, setImageFailed] = useState(false);
-
-    if (imageFailed) {
-        return (
-            <div
-                className="absolute inset-0 bg-[#1c1a22]"
-                aria-hidden
-            />
-        );
-    }
-
-    return (
-        <img
-            src={FINAL_CTA_IMAGE_SRC}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-            onError={() => setImageFailed(true)}
-        />
     );
 }
 
@@ -120,7 +94,13 @@ export function FinalCtaSection() {
             className="relative flex w-full min-h-[828px] scroll-mt-24 flex-col items-center justify-center overflow-hidden"
             aria-labelledby="final-cta-heading"
         >
-            <FinalCtaBackground />
+            <LandingMediaImage
+                src={LANDING_FINAL_CTA_IMAGE.src}
+                ariaLabel={LANDING_FINAL_CTA_IMAGE.ariaLabel}
+                className="absolute inset-0"
+                imageClassName="absolute inset-0 h-full w-full object-cover"
+                placeholderVariant="dark"
+            />
             <div
                 className="absolute inset-0 bg-black/45"
                 aria-hidden
@@ -151,7 +131,7 @@ export function FinalCtaSection() {
                     <GlassContactButton
                         href={FINAL_CTA_EITAA_URL}
                         external
-                        icon={<EitaaIcon className="text-white" />}
+                        icon={<EitaaIcon className="size-5 shrink-0 text-white" />}
                         title="ارتباط با پشتیبان"
                         subtitle="در پیام‌رسان ایتا"
                     />

@@ -1,6 +1,8 @@
+import { BRAND_OG_IMAGE_FALLBACK_PATH } from '@/lib/brand-assets';
 import type { SeoHeadProps } from '@/types/seo';
 
-export const DEFAULT_OG_IMAGE_PATH = '/images/animatorsho-logo.svg';
+/** Fallback OG image until dedicated social asset is uploaded. */
+export const DEFAULT_OG_IMAGE_PATH = BRAND_OG_IMAGE_FALLBACK_PATH;
 
 export const PUBLIC_PAGE_SEO = {
     home: {

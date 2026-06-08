@@ -5,14 +5,18 @@ import { useEffect, useState, type TransitionEvent } from 'react';
 import { useScrollDirectionNavVisible } from '@/hooks/use-scroll-direction';
 import { home, profile } from '@/routes';
 import support from '@/routes/support';
+import {
+    BRAND_LOGO_ACTIVE_SRC,
+    BRAND_LOGO_SRC,
+} from '@/lib/brand-assets';
 import { cn, toUrl } from '@/lib/utils';
 
 const centerSlotClass = 'w-20';
 const pillMinClass = 'min-h-[4.25rem]';
 const centerCardClass = 'h-[5.75rem] w-20';
 
-const LOGO_INACTIVE_SRC = '/images/animatorsho-logo.svg?v=2' as const;
-const LOGO_ACTIVE_SRC = '/images/animatorsho-logo-active.svg?v=2' as const;
+const LOGO_INACTIVE_SRC = BRAND_LOGO_SRC;
+const LOGO_ACTIVE_SRC = BRAND_LOGO_ACTIVE_SRC;
 
 const centerNavLinkClassName = cn(
     'pointer-events-auto flex flex-col items-center justify-end gap-0.5 rounded-[1.125rem] border-2 border-nav px-1 pb-2 pt-2',

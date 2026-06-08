@@ -1,40 +1,8 @@
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { LandingMediaImage } from '@/components/landing/landing-media-image';
+import { LANDING_CONSULTATION_IMAGE } from '@/lib/landing-media';
 import { consultation } from '@/routes';
 import support from '@/routes/support';
-import { cn } from '@/lib/utils';
-
-const CONSULTATION_IMAGE_SRC =
-    '/media/landing/posters/consultation-section.webp';
-
-function ConsultationMediaImage() {
-    const [imageFailed, setImageFailed] = useState(false);
-
-    const shellClass =
-        'aspect-[4/3] w-full overflow-hidden rounded-[32px] bg-surface';
-
-    if (imageFailed) {
-        return (
-            <div
-                className={cn(shellClass, 'bg-[#f0f7f9]')}
-                aria-label="تصویر بخش مشاوره رایگان"
-            />
-        );
-    }
-
-    return (
-        <div className={shellClass}>
-            <img
-                src={CONSULTATION_IMAGE_SRC}
-                alt=""
-                className="block h-full w-full object-cover"
-                loading="lazy"
-                decoding="async"
-                onError={() => setImageFailed(true)}
-            />
-        </div>
-    );
-}
 
 export function ConsultationCtaSection() {
     return (
@@ -43,7 +11,12 @@ export function ConsultationCtaSection() {
             className="flex w-full scroll-mt-24 flex-col gap-8 px-4 py-12"
             aria-labelledby="consultation-cta-heading"
         >
-            <ConsultationMediaImage />
+            <LandingMediaImage
+                src={LANDING_CONSULTATION_IMAGE.src}
+                ariaLabel={LANDING_CONSULTATION_IMAGE.ariaLabel}
+                className="aspect-[4/3] w-full overflow-hidden rounded-[32px] bg-surface"
+                imageClassName="block h-full w-full object-cover"
+            />
 
             <div className="flex w-full flex-col items-start gap-[22px]">
                 <h2
