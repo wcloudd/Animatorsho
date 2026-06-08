@@ -1,6 +1,5 @@
 import { useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import { useEffect } from 'react';
 import { ProfileSectionCard } from '@/components/profile/profile-section-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,14 +25,10 @@ import support from '@/routes/support';
 
 type SupportNewTicketFormProps = {
     categoryOptions: SupportCategoryOption[];
-    category: string;
-    onCategoryChange: (category: string) => void;
 };
 
 export function SupportNewTicketForm({
     categoryOptions,
-    category,
-    onCategoryChange,
 }: SupportNewTicketFormProps) {
     const { data, setData, post, processing, errors, reset } = useForm({
         subject: '',
@@ -41,10 +36,6 @@ export function SupportNewTicketForm({
         message: '',
         attachment: null as File | null,
     });
-
-    useEffect(() => {
-        setData('category', category);
-    }, [category, setData]);
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -97,10 +88,7 @@ export function SupportNewTicketForm({
                         </Label>
                         <Select
                             value={data.category}
-                            onValueChange={(value) => {
-                                setData('category', value);
-                                onCategoryChange(value);
-                            }}
+                            onValueChange={(value) => setData('category', value)}
                         >
                             <SelectTrigger
                                 id="ticket-category"

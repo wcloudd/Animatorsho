@@ -37,11 +37,6 @@ export type SupportTicketMessage = {
     attachment?: SupportTicketMessageAttachment | null;
 };
 
-export type SupportQuickHelpItem = {
-    id: string;
-    label: string;
-};
-
 export type SupportHelpNote = {
     title: string;
     text: string;
@@ -52,7 +47,6 @@ export type SupportHelpNote = {
 export type SupportIndexProps = {
     tickets: SupportTicketListItem[];
     categoryOptions: SupportCategoryOption[];
-    quickHelpItems: SupportQuickHelpItem[];
     helpNote: SupportHelpNote;
 };
 

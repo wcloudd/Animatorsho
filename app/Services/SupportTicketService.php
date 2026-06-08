@@ -37,7 +37,6 @@ class SupportTicketService
      *         createdAt: ?string
      *     }>,
      *     categoryOptions: list<array{value: string, label: string}>,
-     *     quickHelpItems: list<array{id: string, label: string}>,
      *     helpNote: array{title: string, text: string, ctaLabel: string, ctaHref: string}
      * }
      */
@@ -52,7 +51,6 @@ class SupportTicketService
         return [
             'tickets' => $tickets,
             'categoryOptions' => SupportTicketStatusLabels::categoryOptions(),
-            'quickHelpItems' => $this->quickHelpItems(),
             'helpNote' => $this->helpNote(),
         ];
     }
@@ -281,19 +279,6 @@ class SupportTicketService
         if ($ticket->user_id !== $user->id) {
             throw new AuthorizationException;
         }
-    }
-
-    /**
-     * @return list<array{id: string, label: string}>
-     */
-    private function quickHelpItems(): array
-    {
-        return [
-            ['id' => 'license', 'label' => 'مشکل لایسنس'],
-            ['id' => 'payment', 'label' => 'وضعیت پرداخت'],
-            ['id' => 'course', 'label' => 'سوال درباره دوره'],
-            ['id' => 'installment', 'label' => 'خرید اقساطی'],
-        ];
     }
 
     /**

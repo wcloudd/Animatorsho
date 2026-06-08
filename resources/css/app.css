@@ -344,6 +344,58 @@
         animation: text-gradient-flow 5.5s ease-in-out infinite;
     }
 
+    .text-gradient-support-title {
+        /* Glow tuning — edit these in DevTools on the span element */
+        --support-glow-purple: 140, 108, 235;
+        --support-glow-blue: 110, 215, 255;
+        --support-glow-strength: 0.82;
+        --support-glow-blur: 22px;
+        --support-glow-opacity-min: 0.72;
+        --support-glow-opacity-max: 1;
+        --support-glow-spread-y: -8px;
+        --support-glow-spread-x: -14px;
+
+        display: inline-block;
+        position: relative;
+        isolation: isolate;
+        padding-inline: 1px;
+        background-image: linear-gradient(
+            90deg,
+            #8b5fd4 0%,
+            #9b7fe8 18%,
+            #5ec8f7 42%,
+            #b49af0 68%,
+            #f0c06a 86%,
+            #8b5fd4 100%
+        );
+        background-size: 220% auto;
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        animation: text-gradient-flow 8s ease-in-out infinite;
+    }
+
+    .text-gradient-support-title::before {
+        content: '';
+        position: absolute;
+        inset: var(--support-glow-spread-y) var(--support-glow-spread-x);
+        z-index: -1;
+        border-radius: 12px;
+        background-image: linear-gradient(
+            90deg,
+            rgb(var(--support-glow-purple) / var(--support-glow-strength)) 0%,
+            rgb(var(--support-glow-blue) / calc(var(--support-glow-strength) * 0.9)) 50%,
+            rgb(var(--support-glow-purple) / var(--support-glow-strength)) 100%
+        );
+        background-size: 220% auto;
+        filter: blur(var(--support-glow-blur));
+        opacity: var(--support-glow-opacity-min);
+        pointer-events: none;
+        animation:
+            text-gradient-flow 8s ease-in-out infinite,
+            support-glow-pulse 4.5s ease-in-out infinite;
+    }
+
     .final-cta-register {
         isolation: isolate;
     }
@@ -456,9 +508,16 @@
         }
 
         .text-gradient-animate,
-        .text-brand-hero-fill {
+        .text-brand-hero-fill,
+        .text-gradient-support-title,
+        .text-gradient-support-title::before {
             animation: none;
             background-size: 100% auto;
+        }
+
+        .text-gradient-support-title::before {
+            animation: none;
+            opacity: var(--support-glow-opacity-min);
         }
 
         .final-cta-register::before,
@@ -503,6 +562,17 @@
 
     50% {
         background-position: 100% center;
+    }
+}
+
+@keyframes support-glow-pulse {
+    0%,
+    100% {
+        opacity: var(--support-glow-opacity-min);
+    }
+
+    50% {
+        opacity: var(--support-glow-opacity-max);
     }
 }
 
