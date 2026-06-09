@@ -1,4 +1,4 @@
-import { Form, Head, usePage } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
 import {
     AuthFormCard,
     authFieldClassName,
@@ -7,52 +7,45 @@ import {
 } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthPageIntro } from '@/components/auth/auth-page-intro';
+import { AuthSecondaryActionCard } from '@/components/auth/auth-secondary-action-card';
 import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useAuthSupportFallback } from '@/hooks/use-auth-support-fallback';
-import { AUTH_LOGIN_EMAIL_COPY } from '@/lib/auth-form-data';
+import { AUTH_LOGIN_PASSWORD_COPY } from '@/lib/auth-form-data';
 import { localizeAuthStatus } from '@/lib/auth-validation-messages';
 import { cn } from '@/lib/utils';
-import { login, register } from '@/routes';
-import { store } from '@/routes/login/email';
+import { verify as mobileVerify } from '@/routes/auth/mobile';
+import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-
-function redirectQueryFromUrl(url: string): { redirect: string } | undefined {
-    const query = url.includes('?') ? url.split('?')[1] : '';
-    const redirect = new URLSearchParams(query).get('redirect');
-
-    return redirect ? { redirect } : undefined;
-}
+import { MessageSquare } from 'lucide-react';
 
 type Props = {
+    maskedMobile: string;
     status?: string;
     canResetPassword: boolean;
-    prefilledEmail?: string | null;
 };
 
-export default function LoginEmail({
+export default function LoginPassword({
+    maskedMobile,
     status,
     canResetPassword,
-    prefilledEmail = null,
 }: Props) {
-    const copy = AUTH_LOGIN_EMAIL_COPY;
+    const copy = AUTH_LOGIN_PASSWORD_COPY;
     const localizedStatus = localizeAuthStatus(status);
-    const { url } = usePage();
-    const redirectQuery = redirectQueryFromUrl(url);
+    const subtitle = copy.subtitle.replace('{mobile}', maskedMobile);
     const { showSupportFallback, onAuthError } = useAuthSupportFallback();
 
     return (
         <>
             <Head title={copy.headTitle} />
 
-            <AuthPageIntro title={copy.title} subtitle={copy.subtitle} />
+            <AuthPageIntro title={copy.title} subtitle={subtitle} />
 
             {localizedStatus ? (
                 <AuthStatusBanner message={localizedStatus} />
@@ -69,29 +62,6 @@ export default function LoginEmail({
                         <>
                             <div className="grid gap-4">
                                 <div className="grid gap-2">
-                                    <Label
-                                        htmlFor="email"
-                                        className={authLabelClassName}
-                                    >
-                                        {copy.emailLabel}
-                                    </Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        name="email"
-                                        required
-                                        autoFocus
-                                        tabIndex={1}
-                                        autoComplete="email"
-                                        defaultValue={prefilledEmail ?? ''}
-                                        placeholder={copy.emailPlaceholder}
-                                        dir="ltr"
-                                        className={authFieldClassName}
-                                    />
-                                    <AuthInputError message={errors.email} />
-                                </div>
-
-                                <div className="grid gap-2">
                                     <div className="flex items-center justify-between gap-2">
                                         <Label
                                             htmlFor="password"
@@ -103,7 +73,7 @@ export default function LoginEmail({
                                             <TextLink
                                                 href={request()}
                                                 className="text-xs font-bold text-purple"
-                                                tabIndex={5}
+                                                tabIndex={3}
                                             >
                                                 {copy.forgotPasswordLabel}
                                             </TextLink>
@@ -113,19 +83,21 @@ export default function LoginEmail({
                                         id="password"
                                         name="password"
                                         required
-                                        tabIndex={2}
+                                        autoFocus
+                                        tabIndex={1}
                                         autoComplete="current-password"
                                         placeholder={copy.passwordPlaceholder}
                                         className={authFieldClassName}
                                     />
                                     <AuthInputError message={errors.password} />
+                                    <AuthInputError message={errors.mobile} />
                                 </div>
 
                                 <div className="flex items-center gap-3">
                                     <Checkbox
                                         id="remember"
                                         name="remember"
-                                        tabIndex={3}
+                                        tabIndex={2}
                                     />
                                     <Label
                                         htmlFor="remember"
@@ -138,42 +110,23 @@ export default function LoginEmail({
                                 <Button
                                     type="submit"
                                     className={cn(authSubmitButtonClassName)}
-                                    tabIndex={4}
+                                    tabIndex={3}
                                     disabled={processing}
-                                    data-test="login-email-button"
+                                    data-test="login-password-button"
                                 >
                                     {processing ? <Spinner /> : null}
                                     {copy.submitLabel}
                                 </Button>
                             </div>
 
-                            <div className="flex flex-col items-center gap-2 text-center">
-                                <TextLink
-                                    href={login(
-                                        redirectQuery
-                                            ? { query: redirectQuery }
-                                            : undefined,
-                                    )}
-                                    className="text-sm font-bold text-purple"
-                                    tabIndex={5}
-                                >
-                                    {copy.primaryLoginLabel}
-                                </TextLink>
-
-                                <div className="flex flex-col items-center gap-1 pt-1">
-                                    <TextLink
-                                        href={register(
-                                            redirectQuery
-                                                ? { query: redirectQuery }
-                                                : undefined,
-                                        )}
-                                        className="text-sm font-bold text-purple"
-                                        tabIndex={6}
-                                    >
-                                        {copy.secondaryLinkLabel}
-                                    </TextLink>
-                                </div>
-                            </div>
+                            <AuthSecondaryActionCard
+                                href={mobileVerify()}
+                                label={copy.otpLoginLabel}
+                                icon={MessageSquare}
+                                alignEnd
+                                tabIndex={4}
+                                data-test="login-password-otp-link"
+                            />
                         </>
                     )}
                 </Form>

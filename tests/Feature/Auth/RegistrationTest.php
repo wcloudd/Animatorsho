@@ -9,7 +9,7 @@ use Laravel\Fortify\Features;
 use Tests\Support\OtpTestHelper;
 
 beforeEach(function () {
-    $this->withoutVite();
+    prepareAuthPageTests();
     $this->skipUnlessFortifyHas(Features::registration());
     $this->seed(SmsTemplateSeeder::class);
     config(['sms.driver' => 'fake']);
@@ -43,8 +43,16 @@ function completeRegistration(string $mobile = '09121234567'): TestResponse
     ]);
 }
 
-test('registration screen can be rendered', function () {
+test('registration screen redirects to login without pending mobile', function () {
     $this->get(route('register'))
+        ->assertRedirect(route('login'));
+});
+
+test('registration screen can be rendered with pending auth mobile', function () {
+    $this->withSession([
+        'auth.pending_mobile' => '09121234567',
+    ])
+        ->get(route('register'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('auth/register'));
 });

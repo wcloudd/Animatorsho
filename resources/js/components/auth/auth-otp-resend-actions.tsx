@@ -20,7 +20,7 @@ export function AuthOtpResendActions({
 }: AuthOtpResendActionsProps) {
     if (resendSeconds > 0) {
         return (
-            <p className="text-center text-sm font-medium text-muted">
+            <p className="text-center text-xs font-medium text-muted">
                 {resendWaitLabel.replace('{seconds}', String(resendSeconds))}
             </p>
         );
@@ -30,7 +30,7 @@ export function AuthOtpResendActions({
         <Button
             type="button"
             variant="ghost"
-            className="text-sm font-bold text-purple"
+            className="h-auto py-1 text-xs font-bold text-purple"
             disabled={resending}
             onClick={onResend}
             data-test={dataTest}

@@ -14,6 +14,17 @@ export const AUTH_SUPPORT_FALLBACK = {
 export const AUTH_REGISTER_TRUST_NOTE =
     'اطلاعات حساب برای مدیریت سفارش، لایسنس SpotPlayer و پشتیبانی دوره استفاده می‌شود.' as const;
 
+export const AUTH_LOGIN_IDENTIFIER_COPY = {
+    headTitle: 'ورود یا ثبت‌نام',
+    title: 'ورود یا ثبت‌نام در انیماتورشو',
+    identifierLabel: 'برای ورود یا ثبت‌نام، اطلاعات کاربری خود را وارد کنید:',
+    identifierPlaceholder: 'موبایل یا ایمیل خود را وارد کنید',
+    termsNoteBeforeLink: 'با ادامه دادن، ',
+    termsLinkLabel: 'قوانین',
+    termsNoteAfterLink: ' انیماتورشو را می‌پذیرید.',
+    submitLabel: 'ادامه',
+} as const;
+
 export const AUTH_LOGIN_COPY = {
     headTitle: 'ورود',
     title: 'ورود به انیماتورشو',
@@ -32,6 +43,18 @@ export const AUTH_LOGIN_COPY = {
     secondaryLinkLabel: 'ثبت‌نام',
 } as const;
 
+export const AUTH_LOGIN_PASSWORD_COPY = {
+    headTitle: 'ورود با رمز عبور',
+    title: 'ورود با رمز عبور',
+    subtitle: 'رمز عبور حساب {mobile} را وارد کن.',
+    passwordLabel: 'رمز عبور',
+    passwordPlaceholder: 'رمز عبور',
+    rememberLabel: 'مرا به خاطر بسپار',
+    forgotPasswordLabel: 'فراموشی رمز عبور',
+    submitLabel: 'ورود به حساب',
+    otpLoginLabel: 'ورود با کد یکبارمصرف',
+} as const;
+
 export const AUTH_LOGIN_EMAIL_COPY = {
     headTitle: 'ورود با ایمیل',
     title: 'ورود با ایمیل',
@@ -44,16 +67,16 @@ export const AUTH_LOGIN_EMAIL_COPY = {
     rememberLabel: 'مرا به خاطر بسپار',
     forgotPasswordLabel: 'فراموشی رمز عبور',
     submitLabel: 'ورود به حساب',
-    primaryLoginLabel: 'ورود با شماره موبایل و رمز عبور',
+    primaryLoginLabel: 'ورود یا ثبت‌نام با موبایل یا ایمیل',
     secondaryPrompt: 'هنوز ثبت‌نام نکردی؟',
     secondaryLinkLabel: 'ثبت‌نام',
 } as const;
 
 export const AUTH_REGISTER_COPY = {
     headTitle: 'ثبت‌نام',
-    title: 'ثبت‌نام در انیماتورشو',
+    title: 'تکمیل ثبت‌نام در انیماتورشو',
     subtitle:
-        'حساب کاربری بساز تا سفارش‌ها، لایسنس‌ها و مسیر یادگیری‌ات ذخیره شود.',
+        'اطلاعات حساب کاربری‌ات را وارد کن تا کد تأیید برایت ارسال شود.',
     nameLabel: 'نام نمایشی',
     namePlaceholder: 'نام نمایشی',
     usernameLabel: 'نام کاربری',

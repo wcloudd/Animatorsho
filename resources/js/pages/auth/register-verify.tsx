@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useOtpResendCountdown } from '@/hooks/use-otp-resend-countdown';
+import { useAuthSupportFallback } from '@/hooks/use-auth-support-fallback';
 import { AUTH_REGISTER_VERIFY_COPY } from '@/lib/auth-form-data';
 import { cn } from '@/lib/utils';
 import { changeMobile, resendCode } from '@/routes/register';
@@ -39,6 +40,7 @@ export default function RegisterVerify({
     const resendSeconds = useOtpResendCountdown(resendAvailableAt);
     const [resending, setResending] = useState(false);
     const [showChangeMobile, setShowChangeMobile] = useState(false);
+    const { showSupportFallback, onAuthError } = useAuthSupportFallback();
 
     const handleResend = () => {
         setResending(true);
@@ -63,7 +65,11 @@ export default function RegisterVerify({
             ) : null}
 
             <AuthFormCard>
-                <Form {...verifyStore.form()} className="flex flex-col gap-4">
+                <Form
+                    {...verifyStore.form()}
+                    onError={onAuthError}
+                    className="flex flex-col gap-4"
+                >
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-4">
@@ -151,7 +157,7 @@ export default function RegisterVerify({
                 ) : null}
             </AuthFormCard>
 
-            <AuthSupportFallbackCard />
+            <AuthSupportFallbackCard visible={showSupportFallback} />
         </>
     );
 }

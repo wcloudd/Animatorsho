@@ -17,6 +17,8 @@ class RegistrationCompletionService
 
     public const SESSION_PENDING_KEY = 'registration.pending';
 
+    public const SESSION_AUTH_PENDING_MOBILE_KEY = 'auth.pending_mobile';
+
     public function __construct(
         private readonly MobileOtpAuthService $mobileOtpAuth,
         private readonly CreateNewUser $createNewUser,
@@ -25,6 +27,28 @@ class RegistrationCompletionService
     /**
      * @param  array<string, mixed>  $input
      */
+    public function storePendingAuthMobile(string $mobile, Request $request): void
+    {
+        $normalizedMobile = IranianMobile::normalize($mobile);
+
+        if ($normalizedMobile === null) {
+            throw ValidationException::withMessages([
+                'identifier' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+            ]);
+        }
+
+        $this->clearPending($request);
+
+        $request->session()->put(self::SESSION_AUTH_PENDING_MOBILE_KEY, $normalizedMobile);
+    }
+
+    public function pendingAuthMobile(Request $request): ?string
+    {
+        $mobile = $request->session()->get(self::SESSION_AUTH_PENDING_MOBILE_KEY);
+
+        return is_string($mobile) && $mobile !== '' ? $mobile : null;
+    }
+
     public function storePendingAndSendCode(array $input, Request $request): void
     {
         if (isset($input['mobile']) && is_string($input['mobile'])) {
@@ -40,13 +64,16 @@ class RegistrationCompletionService
             $input['email'] = $email !== '' ? strtolower($email) : null;
         }
 
-        $mobile = $this->normalizedMobileFromInput($input);
+        $mobile = $this->normalizedMobileFromInput($input)
+            ?? $this->pendingAuthMobile($request);
 
         if ($mobile === null) {
             throw ValidationException::withMessages([
                 'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
             ]);
         }
+
+        $request->session()->forget(self::SESSION_AUTH_PENDING_MOBILE_KEY);
 
         $request->session()->put(self::SESSION_PENDING_KEY, [
             'name' => $input['name'],
@@ -133,6 +160,7 @@ class RegistrationCompletionService
     {
         $request->session()->forget([
             self::SESSION_PENDING_KEY,
+            self::SESSION_AUTH_PENDING_MOBILE_KEY,
             'registration_otp.mobile',
             'registration_otp.sent_at',
         ]);

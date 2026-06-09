@@ -7,7 +7,14 @@ use App\Actions\Fortify\NormalizeLoginMobile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\EmailLoginRequest;
 use App\Http\Requests\Auth\MobileLoginRequest;
+use App\Http\Requests\Auth\SubmitAuthIdentifierRequest;
+use App\Services\Auth\AuthIdentifierService;
+use App\Services\Auth\MobileOtpAuthService;
+use App\Services\Auth\RegistrationCompletionService;
+use App\Support\AuthIdentifier;
 use App\Support\AuthRedirect;
+use App\Support\IranianMobile;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Pipeline;
 use Inertia\Inertia;
@@ -31,19 +38,74 @@ class LoginController extends Controller
         ]);
     }
 
-    public function createEmail(Request $request): Response
+    public function createPassword(Request $request): Response|RedirectResponse
     {
         AuthRedirect::rememberIntendedFromQuery($request);
 
-        return Inertia::render('auth/login-email', [
+        $mobile = $request->session()->get('mobile_otp.mobile');
+
+        if (! is_string($mobile) || $mobile === '') {
+            return redirect()->route('login');
+        }
+
+        return Inertia::render('auth/login-password', [
+            'maskedMobile' => IranianMobile::mask($mobile),
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'status' => $request->session()->get('status'),
         ]);
     }
 
+    public function createEmail(Request $request): Response
+    {
+        AuthRedirect::rememberIntendedFromQuery($request);
+
+        $email = $request->query('email');
+
+        return Inertia::render('auth/login-email', [
+            'canResetPassword' => Features::enabled(Features::resetPasswords()),
+            'status' => $request->session()->get('status'),
+            'prefilledEmail' => is_string($email) && $email !== '' ? strtolower($email) : null,
+        ]);
+    }
+
+    public function resolveIdentifier(
+        SubmitAuthIdentifierRequest $request,
+        AuthIdentifierService $authIdentifier,
+        MobileOtpAuthService $mobileOtpAuth,
+        RegistrationCompletionService $registration,
+    ): RedirectResponse {
+        $parsed = AuthIdentifier::parse($request->validated('identifier'));
+
+        if ($parsed === null) {
+            return back();
+        }
+
+        $resolution = $authIdentifier->resolve($parsed);
+
+        if ($resolution['action'] === AuthIdentifierService::ACTION_MOBILE_OTP_LOGIN) {
+            $mobileOtpAuth->sendLoginCode($resolution['mobile'], $request);
+
+            return redirect()
+                ->route('auth.mobile.verify')
+                ->with('status', 'otp-sent');
+        }
+
+        if ($resolution['action'] === AuthIdentifierService::ACTION_REGISTRATION) {
+            $registration->storePendingAuthMobile($resolution['mobile'], $request);
+
+            return redirect()->route('register');
+        }
+
+        return redirect()->route('login.email', [
+            'email' => $resolution['email'],
+        ]);
+    }
+
     public function store(MobileLoginRequest $request): mixed
     {
-        return $this->loginPipeline($request)->then(function () {
+        return $this->loginPipeline($request)->then(function () use ($request) {
+            $request->session()->forget(['mobile_otp.mobile', 'mobile_otp.sent_at']);
+
             return app(LoginResponse::class);
         });
     }

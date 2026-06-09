@@ -4,6 +4,8 @@ namespace App\Support;
 
 class IranianMobile
 {
+    public const INVALID_FORMAT_MESSAGE = 'شماره موبایل باید ۱۱ رقم باشد و با 09 شروع شود.';
+
     /**
      * Normalize an Iranian mobile number to canonical 09XXXXXXXXX format.
      */
@@ -37,6 +39,30 @@ class IranianMobile
     public static function isValid(?string $value): bool
     {
         return self::normalize($value) !== null;
+    }
+
+    public static function looksLikeMobileAttempt(?string $value): bool
+    {
+        if ($value === null || trim($value) === '') {
+            return false;
+        }
+
+        $digits = preg_replace('/\D+/', '', $value);
+
+        if ($digits === null || $digits === '') {
+            return false;
+        }
+
+        return (bool) preg_match('/^(?:98)?9|^09/', $digits);
+    }
+
+    public static function validationMessage(?string $value): string
+    {
+        if (self::looksLikeMobileAttempt($value) && ! self::isValid($value)) {
+            return self::INVALID_FORMAT_MESSAGE;
+        }
+
+        return 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).';
     }
 
     public static function mask(?string $mobile): ?string

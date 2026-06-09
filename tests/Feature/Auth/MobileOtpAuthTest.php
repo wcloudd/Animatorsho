@@ -13,6 +13,7 @@ use Illuminate\Testing\TestResponse;
 use Tests\Support\OtpTestHelper;
 
 beforeEach(function () {
+    prepareAuthPageTests();
     $this->seed(SmsTemplateSeeder::class);
     config(['sms.driver' => 'fake']);
 });
@@ -237,7 +238,7 @@ test('new send invalidates previous active code', function () {
     sendOtp('09121234567');
     $firstCode = OtpTestHelper::extractCodeFromLastSms('09121234567');
 
-    $this->travel(61)->seconds();
+    $this->travel(121)->seconds();
 
     sendOtp('09121234567');
 
@@ -295,6 +296,17 @@ test('sms skipped safely when globally disabled', function () {
 
     expect($message)->not->toBeNull()
         ->and($message->status)->toBe(SmsMessageStatus::Skipped);
+});
+
+test('otp resend is blocked before cooldown ends', function () {
+    enableSmsForOtpTests();
+
+    createExistingUserForOtp('09121234567');
+
+    sendOtp('09121234567');
+
+    $this->post(route('auth.mobile.resend-code'))
+        ->assertSessionHasErrors('mobile');
 });
 
 test('send-code route is rate limited', function () {

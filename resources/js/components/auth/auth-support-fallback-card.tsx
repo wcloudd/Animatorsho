@@ -4,8 +4,18 @@ import { cn } from '@/lib/utils';
 const cardClassName =
     'flex w-full flex-col gap-3 rounded-[24px] bg-purple-soft/50 px-4 py-4 shadow-xs ring-1 ring-border/80';
 
-export function AuthSupportFallbackCard() {
+type AuthSupportFallbackCardProps = {
+    visible?: boolean;
+};
+
+export function AuthSupportFallbackCard({
+    visible = true,
+}: AuthSupportFallbackCardProps) {
     const fallback = AUTH_SUPPORT_FALLBACK;
+
+    if (!visible) {
+        return null;
+    }
 
     return (
         <article className={cardClassName}>

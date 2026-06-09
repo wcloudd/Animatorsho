@@ -13,6 +13,7 @@ import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useOtpResendCountdown } from '@/hooks/use-otp-resend-countdown';
+import { useAuthSupportFallback } from '@/hooks/use-auth-support-fallback';
 import { AUTH_FORGOT_PASSWORD_VERIFY_COPY } from '@/lib/auth-form-data';
 import { cn } from '@/lib/utils';
 import { request } from '@/routes/password';
@@ -35,6 +36,7 @@ export default function ForgotPasswordVerify({
     const showSentStatus = status === 'otp-sent';
     const resendSeconds = useOtpResendCountdown(resendAvailableAt);
     const [resending, setResending] = useState(false);
+    const { showSupportFallback, onAuthError } = useAuthSupportFallback();
 
     const handleResend = () => {
         setResending(true);
@@ -59,7 +61,11 @@ export default function ForgotPasswordVerify({
             ) : null}
 
             <AuthFormCard>
-                <Form {...verifyStore.form()} className="flex flex-col gap-4">
+                <Form
+                    {...verifyStore.form()}
+                    onError={onAuthError}
+                    className="flex flex-col gap-4"
+                >
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-4">
@@ -108,7 +114,7 @@ export default function ForgotPasswordVerify({
                 </Form>
             </AuthFormCard>
 
-            <AuthSupportFallbackCard />
+            <AuthSupportFallbackCard visible={showSupportFallback} />
         </>
     );
 }

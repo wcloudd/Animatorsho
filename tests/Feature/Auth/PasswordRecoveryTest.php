@@ -13,6 +13,7 @@ use Laravel\Fortify\Features;
 use Tests\Support\OtpTestHelper;
 
 beforeEach(function () {
+    prepareAuthPageTests();
     $this->skipUnlessFortifyHas(Features::resetPasswords());
     $this->seed(SmsTemplateSeeder::class);
     config(['sms.driver' => 'fake']);

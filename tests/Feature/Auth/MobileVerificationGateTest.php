@@ -12,7 +12,7 @@ use Laravel\Fortify\Features;
 use Tests\Support\OtpTestHelper;
 
 beforeEach(function () {
-    $this->withoutVite();
+    prepareAuthPageTests();
     $this->seed(SmsTemplateSeeder::class);
     config(['sms.driver' => 'fake']);
 

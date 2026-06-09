@@ -8,7 +8,7 @@ return [
 
     'max_attempts' => 5,
 
-    'resend_cooldown_seconds' => 60,
+    'resend_cooldown_seconds' => 120,
 
     'default_user_name' => 'کاربر انیماتورشو',
 

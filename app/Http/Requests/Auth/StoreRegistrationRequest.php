@@ -23,6 +23,16 @@ class StoreRegistrationRequest extends FormRequest
     {
         $merged = [];
 
+        $sessionMobile = $this->session()->get('auth.pending_mobile');
+
+        if (
+            (! $this->has('mobile') || ! is_string($this->input('mobile')) || trim($this->input('mobile')) === '')
+            && is_string($sessionMobile)
+            && $sessionMobile !== ''
+        ) {
+            $merged['mobile'] = $sessionMobile;
+        }
+
         if ($this->has('mobile') && is_string($this->input('mobile'))) {
             $normalized = IranianMobile::normalize($this->input('mobile'));
 

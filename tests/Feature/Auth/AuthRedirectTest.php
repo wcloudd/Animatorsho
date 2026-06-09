@@ -6,6 +6,10 @@ use App\Support\AuthRedirect;
 use Database\Seeders\SmsTemplateSeeder;
 use Tests\Support\OtpTestHelper;
 
+beforeEach(function () {
+    prepareAuthPageTests();
+});
+
 test('valid relative redirect paths are accepted', function () {
     expect(AuthRedirect::isValidRelativePath('/checkout/confirm?package=full'))
         ->toBeTrue();
@@ -52,7 +56,11 @@ test('registration redirects back to checkout confirm when redirect query is pro
         'payment' => 'installment',
     ], absolute: false);
 
-    $this->get(route('register', ['redirect' => $target]));
+    $this->get(route('login', ['redirect' => $target]));
+
+    $this->post(route('login.identifier'), [
+        'identifier' => '09121234567',
+    ])->assertRedirect(route('register'));
 
     $this->post(route('register.store'), [
         'name' => 'Test User',

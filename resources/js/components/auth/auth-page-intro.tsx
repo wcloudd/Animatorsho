@@ -4,12 +4,12 @@ import { AuthPageHeader } from '@/components/auth/auth-page-header';
 
 type AuthPageIntroProps = {
     title: string;
-    subtitle: string;
+    subtitle?: string;
 };
 
 export function AuthPageIntro({ title, subtitle }: AuthPageIntroProps) {
     return (
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-row flex-wrap items-center gap-4">
             <AuthIllustration />
             <AuthPageHeader title={title} subtitle={subtitle} />
             <AuthBackLink />

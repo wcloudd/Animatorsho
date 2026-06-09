@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { SeoHead } from '@/components/seo/seo-head';
+import { useAuthSupportFallback } from '@/hooks/use-auth-support-fallback';
 import { AUTH_FORGOT_PASSWORD_COPY } from '@/lib/auth-form-data';
 import { localizeAuthStatus } from '@/lib/auth-validation-messages';
 import { PUBLIC_PAGE_SEO, canonicalFromPath } from '@/lib/seo';
@@ -41,6 +42,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
     const [method, setMethod] = useState<RecoveryMethod>(
         smsAvailable ? 'mobile' : 'email',
     );
+    const { showSupportFallback, onAuthError } = useAuthSupportFallback();
 
     return (
         <>
@@ -87,6 +89,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
 
                         <Form
                             {...sendCode.form()}
+                            onError={onAuthError}
                             className="flex flex-col gap-4"
                         >
                             {({ processing, errors }) => (
@@ -131,7 +134,11 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                             {copy.emailSubtitle}
                         </p>
 
-                        <Form {...email.form()} className="flex flex-col gap-4">
+                        <Form
+                            {...email.form()}
+                            onError={onAuthError}
+                            className="flex flex-col gap-4"
+                        >
                             {({ processing, errors }) => (
                                 <>
                                     <div className="grid gap-2">
@@ -182,7 +189,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                 </div>
             </AuthFormCard>
 
-            <AuthSupportFallbackCard />
+            <AuthSupportFallbackCard visible={showSupportFallback} />
         </>
     );
 }

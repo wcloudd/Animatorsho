@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
+    prepareAuthPageTests();
     $this->skipUnlessFortifyHas(Features::resetPasswords());
 });
 

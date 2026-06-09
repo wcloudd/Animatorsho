@@ -26,6 +26,14 @@ class MobileLoginRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (! $this->filled('mobile')) {
+            $sessionMobile = $this->session()->get('mobile_otp.mobile');
+
+            if (is_string($sessionMobile) && $sessionMobile !== '') {
+                $this->merge(['mobile' => $sessionMobile]);
+            }
+        }
+
         $normalized = IranianMobile::normalize($this->input('mobile'));
 
         if ($normalized !== null) {

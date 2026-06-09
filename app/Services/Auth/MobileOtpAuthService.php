@@ -399,7 +399,7 @@ class MobileOtpAuthService
         }
 
         $sent = Carbon::parse($sentAt);
-        $availableAt = $sent->copy()->addSeconds((int) config('otp.resend_cooldown_seconds', 60));
+        $availableAt = $sent->copy()->addSeconds((int) config('otp.resend_cooldown_seconds', 120));
 
         if ($availableAt->isPast()) {
             return null;
@@ -436,7 +436,7 @@ class MobileOtpAuthService
             return;
         }
 
-        $cooldownSeconds = (int) config('otp.resend_cooldown_seconds', 60);
+        $cooldownSeconds = (int) config('otp.resend_cooldown_seconds', 120);
         $availableAt = $latest->created_at->copy()->addSeconds($cooldownSeconds);
 
         if ($availableAt->isFuture()) {

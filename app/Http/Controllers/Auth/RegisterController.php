@@ -24,11 +24,18 @@ class RegisterController extends Controller
         private readonly MobileOtpAuthService $mobileOtpAuth,
     ) {}
 
-    public function create(Request $request): Response
+    public function create(Request $request): Response|RedirectResponse
     {
         AuthRedirect::rememberIntendedFromQuery($request);
 
         $pending = $this->registration->pendingRegistration($request);
+        $authPendingMobile = $this->registration->pendingAuthMobile($request);
+
+        if ($pending === null && $authPendingMobile === null) {
+            return redirect()->route('login');
+        }
+
+        $mobile = $pending !== null ? $pending['mobile'] : $authPendingMobile;
 
         return Inertia::render('auth/register', [
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
@@ -38,6 +45,8 @@ class RegisterController extends Controller
                 'mobile' => $pending['mobile'],
                 'email' => $pending['email'],
             ] : null,
+            'pendingMobile' => $mobile,
+            'mobileLocked' => $authPendingMobile !== null,
         ]);
     }
 

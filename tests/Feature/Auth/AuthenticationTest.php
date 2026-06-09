@@ -3,13 +3,17 @@
 use App\Models\User;
 use Laravel\Fortify\Features;
 
+beforeEach(function () {
+    prepareAuthPageTests();
+});
+
 test('login screen can be rendered', function () {
     $response = $this->get(route('login'));
 
     $response->assertOk();
 });
 
-test('main login page uses mobile primary auth component', function () {
+test('main login page uses unified identifier entry component', function () {
     $this->get(route('login'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('auth/login'));
@@ -19,6 +23,34 @@ test('legacy email login page can be rendered', function () {
     $this->get(route('login.email'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('auth/login-email'));
+});
+
+test('password login page renders when mobile otp session exists', function () {
+    $this->withSession(['mobile_otp.mobile' => '09121234567'])
+        ->get(route('login.password'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('auth/login-password')
+            ->where('maskedMobile', '0912***4567')
+        );
+});
+
+test('password login page redirects to identifier entry without mobile session', function () {
+    $this->get(route('login.password'))
+        ->assertRedirect(route('login'));
+});
+
+test('users can authenticate with password using mobile from otp session', function () {
+    $user = User::factory()->withMobile('09121234567')->create();
+
+    $response = $this->withSession(['mobile_otp.mobile' => '09121234567'])
+        ->post(route('login.store'), [
+            'password' => 'password',
+        ]);
+
+    $this->assertAuthenticatedAs($user);
+    $response->assertRedirect(route('home', absolute: false));
+    expect(session('mobile_otp.mobile'))->toBeNull();
 });
 
 test('users can authenticate using mobile and password', function () {

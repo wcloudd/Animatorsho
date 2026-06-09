@@ -7,6 +7,7 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Fortify\LoginRateLimiter;
 use App\Models\User;
 use App\Services\Sms\SmsSettingsService;
+use App\Support\AuthIdentifier;
 use App\Support\IranianMobile;
 use App\Support\LoginIdentifier;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Fortify;
@@ -106,6 +108,14 @@ class FortifyServiceProvider extends ServiceProvider
 
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(5)->by(LoginIdentifier::throttleKey($request));
+        });
+
+        RateLimiter::for('auth-identifier', function (Request $request) {
+            $raw = trim((string) $request->input('identifier', 'unknown'));
+            $parsed = AuthIdentifier::parse($raw);
+            $key = $parsed !== null ? $parsed->value : Str::lower($raw);
+
+            return Limit::perMinute(5)->by($key.'|'.$request->ip());
         });
 
         RateLimiter::for('mobile-otp-send', function (Request $request) {

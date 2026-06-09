@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Support\IranianMobile;
+use App\Support\AuthIdentifier;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class SendMobileOtpRequest extends FormRequest
+class SubmitAuthIdentifierRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,16 +15,10 @@ class SendMobileOtpRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $mobile = $this->input('mobile');
-
-        if (! is_string($mobile)) {
-            return;
-        }
-
-        $normalized = IranianMobile::normalize($mobile);
-
-        if ($normalized !== null) {
-            $this->merge(['mobile' => $normalized]);
+        if ($this->has('identifier') && is_string($this->input('identifier'))) {
+            $this->merge([
+                'identifier' => trim($this->input('identifier')),
+            ]);
         }
     }
 
@@ -34,12 +28,13 @@ class SendMobileOtpRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mobile' => [
+            'identifier' => [
                 'required',
                 'string',
+                'max:255',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (! IranianMobile::isValid(is_string($value) ? $value : null)) {
-                        $fail(IranianMobile::validationMessage(is_string($value) ? $value : null));
+                    if (! is_string($value) || AuthIdentifier::parse($value) === null) {
+                        $fail(AuthIdentifier::validationMessage(is_string($value) ? $value : null));
                     }
                 },
             ],

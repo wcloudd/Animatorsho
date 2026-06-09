@@ -14,10 +14,11 @@ import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useAuthSupportFallback } from '@/hooks/use-auth-support-fallback';
 import { useOtpResendCountdown } from '@/hooks/use-otp-resend-countdown';
 import { AUTH_MOBILE_VERIFY_COPY } from '@/lib/auth-form-data';
 import { cn } from '@/lib/utils';
-import { login, register } from '@/routes';
+import { password as loginPassword } from '@/routes/login';
 import { create, resendCode } from '@/routes/auth/mobile';
 import { store as verifyStore } from '@/routes/auth/mobile/verify';
 
@@ -37,6 +38,7 @@ export default function MobileVerifyAuth({
     const showSentStatus = status === 'otp-sent';
     const resendSeconds = useOtpResendCountdown(resendAvailableAt);
     const [resending, setResending] = useState(false);
+    const { showSupportFallback, onAuthError } = useAuthSupportFallback();
 
     const handleResend = () => {
         setResending(true);
@@ -61,7 +63,11 @@ export default function MobileVerifyAuth({
             ) : null}
 
             <AuthFormCard>
-                <Form {...verifyStore.form()} className="flex flex-col gap-4">
+                <Form
+                    {...verifyStore.form()}
+                    onError={onAuthError}
+                    className="flex flex-col gap-4"
+                >
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-4">
@@ -71,10 +77,19 @@ export default function MobileVerifyAuth({
                                     error={errors.code}
                                 />
 
+                                <TextLink
+                                    href={create()}
+                                    className="self-start text-xs font-bold text-muted transition-colors hover:text-purple"
+                                    tabIndex={2}
+                                    data-test="mobile-otp-change-mobile"
+                                >
+                                    {copy.changeMobileLabel}
+                                </TextLink>
+
                                 <Button
                                     type="submit"
                                     className={cn(authSubmitButtonClassName)}
-                                    tabIndex={2}
+                                    tabIndex={3}
                                     disabled={processing}
                                     data-test="mobile-otp-verify-button"
                                 >
@@ -93,40 +108,19 @@ export default function MobileVerifyAuth({
                             />
 
                             <AuthSecondaryActionCard
-                                href={login()}
+                                href={loginPassword()}
                                 label={copy.passwordLoginLabel}
                                 icon={Lock}
-                                tabIndex={3}
+                                alignEnd
+                                tabIndex={4}
+                                data-test="mobile-otp-password-login"
                             />
-
-                            <div className="flex flex-col items-center gap-2 text-center">
-                                <TextLink
-                                    href={create()}
-                                    className="text-sm font-bold text-purple"
-                                    tabIndex={4}
-                                >
-                                    {copy.changeMobileLabel}
-                                </TextLink>
-
-                                <div className="flex flex-col items-center gap-1">
-                                    <p className="text-sm font-medium text-muted">
-                                        {copy.registerPrompt}
-                                    </p>
-                                    <TextLink
-                                        href={register()}
-                                        className="text-sm font-bold text-purple"
-                                        tabIndex={5}
-                                    >
-                                        {copy.registerLinkLabel}
-                                    </TextLink>
-                                </div>
-                            </div>
                         </>
                     )}
                 </Form>
             </AuthFormCard>
 
-            <AuthSupportFallbackCard />
+            <AuthSupportFallbackCard visible={showSupportFallback} />
         </>
     );
 }

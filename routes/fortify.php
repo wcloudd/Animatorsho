@@ -13,6 +13,13 @@ Route::middleware(config('fortify.middleware', ['web']))->group(function () {
         Route::get('/login', [LoginController::class, 'create'])
             ->name('login');
 
+        Route::get('/login/password', [LoginController::class, 'createPassword'])
+            ->name('login.password');
+
+        Route::post('/login/identifier', [LoginController::class, 'resolveIdentifier'])
+            ->middleware('throttle:auth-identifier')
+            ->name('login.identifier');
+
         Route::post('/login', [LoginController::class, 'store'])
             ->middleware(array_filter([
                 'throttle:'.config('fortify.limiters.login', 'login'),

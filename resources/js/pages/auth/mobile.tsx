@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useAuthSupportFallback } from '@/hooks/use-auth-support-fallback';
 import { AUTH_MOBILE_COPY } from '@/lib/auth-form-data';
 import { cn } from '@/lib/utils';
 import { login, register } from '@/routes';
@@ -37,6 +38,7 @@ export default function MobileAuth({ status }: Props) {
     const showSentStatus = status === 'otp-sent';
     const { url } = usePage();
     const redirectQuery = redirectQueryFromUrl(url);
+    const { showSupportFallback, onAuthError } = useAuthSupportFallback();
 
     return (
         <>
@@ -49,7 +51,11 @@ export default function MobileAuth({ status }: Props) {
             ) : null}
 
             <AuthFormCard>
-                <Form {...sendCode.form()} className="flex flex-col gap-4">
+                <Form
+                    {...sendCode.form()}
+                    onError={onAuthError}
+                    className="flex flex-col gap-4"
+                >
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-4">
@@ -100,9 +106,6 @@ export default function MobileAuth({ status }: Props) {
                             />
 
                             <div className="flex flex-col items-center gap-1 text-center">
-                                <p className="text-sm font-medium text-muted">
-                                    {copy.registerPrompt}
-                                </p>
                                 <TextLink
                                     href={register(
                                         redirectQuery
@@ -120,7 +123,7 @@ export default function MobileAuth({ status }: Props) {
                 </Form>
             </AuthFormCard>
 
-            <AuthSupportFallbackCard />
+            <AuthSupportFallbackCard visible={showSupportFallback} />
         </>
     );
 }

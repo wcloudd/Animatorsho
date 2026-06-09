@@ -7,6 +7,7 @@ type AuthSecondaryActionCardProps = {
     label: string;
     icon?: LucideIcon;
     className?: string;
+    alignEnd?: boolean;
     tabIndex?: number;
     'data-test'?: string;
 };
@@ -16,6 +17,7 @@ export function AuthSecondaryActionCard({
     label,
     icon: Icon,
     className,
+    alignEnd = false,
     tabIndex,
     'data-test': dataTest,
 }: AuthSecondaryActionCardProps) {
@@ -25,7 +27,8 @@ export function AuthSecondaryActionCard({
             tabIndex={tabIndex}
             data-test={dataTest}
             className={cn(
-                'flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-purple-soft/50 text-sm font-bold text-text shadow-xs ring-1 ring-border transition-colors hover:bg-purple-soft/80',
+                'flex h-12 w-full items-center gap-2 rounded-2xl bg-purple-soft/50 text-sm font-bold text-text shadow-xs ring-1 ring-border transition-colors hover:bg-purple-soft/80',
+                alignEnd ? 'justify-start px-4' : 'justify-center',
                 className,
             )}
         >

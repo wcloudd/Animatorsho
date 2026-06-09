@@ -64,3 +64,9 @@ function validCheckoutCustomerNameOnly(): array
         'customer_name' => 'علی رضایی',
     ];
 }
+
+function prepareAuthPageTests(): void
+{
+    config(['inertia.ssr.enabled' => false]);
+    test()->withoutVite();
+}
