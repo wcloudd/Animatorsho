@@ -34,6 +34,7 @@ class RegisterController extends Controller
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
             'pendingRegistration' => $pending !== null ? [
                 'name' => $pending['name'],
+                'username' => $pending['username'],
                 'mobile' => $pending['mobile'],
                 'email' => $pending['email'],
             ] : null,

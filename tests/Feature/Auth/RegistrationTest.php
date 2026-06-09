@@ -24,6 +24,7 @@ function startRegistration(array $overrides = []): TestResponse
 {
     return test()->post(route('register.store'), array_merge([
         'name' => 'Test User',
+        'username' => 'test_user',
         'email' => 'test@example.com',
         'mobile' => '09121234567',
         'password' => 'password',
@@ -61,6 +62,7 @@ test('post register stores pending registration and redirects to register verify
     startRegistration();
 
     expect(session('registration.pending'))->toBeArray()
+        ->and(session('registration.pending.username'))->toBe('test_user')
         ->and(session('registration_otp.mobile'))->toBe('09121234567')
         ->and(OtpCode::query()->where('mobile', '09121234567')->count())->toBe(1);
 
@@ -96,6 +98,7 @@ test('correct otp creates user with mobile verified at and logs them in', functi
 
     expect($user)->not->toBeNull()
         ->and($user->name)->toBe('Test User')
+        ->and($user->username)->toBe('test_user')
         ->and($user->mobile_verified_at)->not->toBeNull();
 });
 
@@ -160,6 +163,7 @@ test('user can change mobile before otp verification', function () {
 test('registration without mobile fails validation', function () {
     $this->post(route('register.store'), [
         'name' => 'Test User',
+        'username' => 'test_user',
         'email' => 'test@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
@@ -193,4 +197,72 @@ test('registration otp is not exposed in inertia props', function () {
 
             $page->missing('code')->missing('otpCode');
         });
+});
+
+test('username is required during registration', function () {
+    $this->post(route('register.store'), [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'mobile' => '09121234567',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ])->assertSessionHasErrors('username');
+
+    $this->assertGuest();
+});
+
+test('username is stored after verification', function () {
+    startRegistration([
+        'username' => 'animator_42',
+    ]);
+
+    completeRegistration();
+
+    expect(User::query()->where('username', 'animator_42')->exists())->toBeTrue();
+});
+
+test('username is lowercased during registration', function () {
+    startRegistration([
+        'username' => 'My_User_99',
+    ])->assertRedirect(route('register.verify'));
+
+    completeRegistration();
+
+    expect(User::query()->where('username', 'my_user_99')->exists())->toBeTrue();
+});
+
+test('duplicate username is rejected during registration', function () {
+    User::factory()->create([
+        'username' => 'taken_name',
+    ]);
+
+    startRegistration([
+        'username' => 'taken_name',
+    ])->assertSessionHasErrors('username');
+
+    $this->assertGuest();
+});
+
+test('username with leading underscore is rejected', function () {
+    startRegistration([
+        'username' => '_invalid',
+    ])->assertSessionHasErrors('username');
+});
+
+test('username with consecutive underscores is rejected', function () {
+    startRegistration([
+        'username' => 'bad__name',
+    ])->assertSessionHasErrors('username');
+});
+
+test('reserved username is rejected during registration', function () {
+    startRegistration([
+        'username' => 'admin',
+    ])->assertSessionHasErrors('username');
+});
+
+test('username shorter than three characters is rejected', function () {
+    startRegistration([
+        'username' => 'ab',
+    ])->assertSessionHasErrors('username');
 });

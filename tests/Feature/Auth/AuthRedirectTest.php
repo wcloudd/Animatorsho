@@ -56,6 +56,7 @@ test('registration redirects back to checkout confirm when redirect query is pro
 
     $this->post(route('register.store'), [
         'name' => 'Test User',
+        'username' => 'checkout_user',
         'email' => 'checkout-redirect@example.com',
         'mobile' => '09121234567',
         'password' => 'password',

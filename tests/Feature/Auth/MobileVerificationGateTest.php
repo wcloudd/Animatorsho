@@ -219,6 +219,7 @@ test('email registration without mobile fails validation', function () {
 
     $this->post(route('register.store'), [
         'name' => 'Test User',
+        'username' => 'gate_test_user',
         'email' => 'test@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
@@ -232,6 +233,7 @@ test('email registration with invalid mobile fails validation', function () {
 
     $this->post(route('register.store'), [
         'name' => 'Test User',
+        'username' => 'gate_test_user',
         'email' => 'test@example.com',
         'mobile' => '12345',
         'password' => 'password',
@@ -246,6 +248,7 @@ test('registration with valid mobile requires otp before account is created', fu
 
     $this->post(route('register.store'), [
         'name' => 'Test User',
+        'username' => 'gate_test_user',
         'email' => 'test@example.com',
         'mobile' => '+989121234567',
         'password' => 'password',

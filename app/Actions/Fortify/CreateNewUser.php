@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Concerns\UsernameValidationRules;
 use App\Models\User;
 use App\Support\IranianMobile;
 use Illuminate\Support\Facades\Validator;
@@ -11,7 +12,7 @@ use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
 {
-    use PasswordValidationRules, ProfileValidationRules;
+    use PasswordValidationRules, ProfileValidationRules, UsernameValidationRules;
 
     /**
      * Validate and create a newly registered user.
@@ -62,14 +63,20 @@ class CreateNewUser implements CreatesNewUsers
             $input['email'] = $email !== '' ? strtolower($email) : null;
         }
 
+        if (isset($input['username']) && is_string($input['username'])) {
+            $input['username'] = strtolower(trim($input['username']));
+        }
+
         Validator::make($input, [
             ...$this->profileRules(),
+            ...$this->registrationUsernameRules(),
             ...$this->registrationMobileRules(),
             'password' => $this->storedPasswordRules(),
         ])->validate();
 
         return User::create([
             'name' => $input['name'],
+            'username' => $input['username'],
             'email' => $input['email'] ?? null,
             'password' => $input['password'],
             'mobile' => $this->normalizedMobileFromInput($input),

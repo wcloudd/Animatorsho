@@ -50,6 +50,7 @@ class RegistrationCompletionService
 
         $request->session()->put(self::SESSION_PENDING_KEY, [
             'name' => $input['name'],
+            'username' => $input['username'],
             'mobile' => $mobile,
             'email' => $input['email'] ?? null,
             'password' => Crypt::encryptString($input['password']),
@@ -75,6 +76,7 @@ class RegistrationCompletionService
 
         $user = $this->createNewUser->createVerifiedUser([
             'name' => $pending['name'],
+            'username' => $pending['username'],
             'email' => $pending['email'],
             'mobile' => $mobile,
             'password' => $password,
@@ -144,7 +146,7 @@ class RegistrationCompletionService
     }
 
     /**
-     * @return array{name: string, mobile: string, email: ?string, password: string}|null
+     * @return array{name: string, username: string, mobile: string, email: ?string, password: string}|null
      */
     public function pendingRegistration(Request $request): ?array
     {
@@ -155,8 +157,9 @@ class RegistrationCompletionService
         }
 
         if (
-            ! isset($pending['name'], $pending['mobile'], $pending['password'])
+            ! isset($pending['name'], $pending['username'], $pending['mobile'], $pending['password'])
             || ! is_string($pending['name'])
+            || ! is_string($pending['username'])
             || ! is_string($pending['mobile'])
             || ! is_string($pending['password'])
         ) {
@@ -165,6 +168,7 @@ class RegistrationCompletionService
 
         return [
             'name' => $pending['name'],
+            'username' => $pending['username'],
             'mobile' => $pending['mobile'],
             'email' => isset($pending['email']) && is_string($pending['email']) && $pending['email'] !== ''
                 ? $pending['email']

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Auth;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Concerns\UsernameValidationRules;
 use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,7 +12,7 @@ use Illuminate\Validation\Rules\Password;
 
 class StoreRegistrationRequest extends FormRequest
 {
-    use PasswordValidationRules, ProfileValidationRules;
+    use PasswordValidationRules, ProfileValidationRules, UsernameValidationRules;
 
     public function authorize(): bool
     {
@@ -35,6 +36,10 @@ class StoreRegistrationRequest extends FormRequest
             $merged['email'] = $email !== '' ? strtolower($email) : null;
         }
 
+        if ($this->has('username') && is_string($this->input('username'))) {
+            $merged['username'] = strtolower(trim($this->input('username')));
+        }
+
         if ($merged !== []) {
             $this->merge($merged);
         }
@@ -47,6 +52,7 @@ class StoreRegistrationRequest extends FormRequest
     {
         return [
             ...$this->profileRules(),
+            ...$this->registrationUsernameRules(),
             ...$this->registrationMobileRules(),
             'password' => ['required', 'string', $this->passwordRule()],
             'password_confirmation' => ['required', 'same:password'],
