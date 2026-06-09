@@ -1,6 +1,6 @@
 export { ANIMATORSHO_LOGO_SRC, BRAND_LOGO_SRC } from '@/lib/brand-assets';
 
-export const AUTH_BACK_TO_HOME_LABEL = 'بازگشت به انیماتورشو' as const;
+export const AUTH_BACK_TO_HOME_LABEL = 'بازگشت به سایت' as const;
 
 export const AUTH_SUPPORT_EITAA_URL =
     'https://web.eitaa.com/#@nimvajabee_admin' as const;
@@ -26,7 +26,7 @@ export const AUTH_LOGIN_COPY = {
     rememberLabel: 'مرا به خاطر بسپار',
     forgotPasswordLabel: 'فراموشی رمز عبور',
     submitLabel: 'ورود به حساب',
-    otpLoginLabel: 'ورود با کد یکبار مصرف',
+    otpLoginLabel: 'دریافت کد ورود از طریق پیامک',
     legacyEmailLoginLabel: 'ورود با ایمیل برای حساب‌های قدیمی / ادمین',
     secondaryPrompt: 'هنوز ثبت‌نام نکردی؟',
     secondaryLinkLabel: 'ثبت‌نام',
@@ -76,13 +76,13 @@ export const AUTH_REGISTER_COPY = {
 
 export const AUTH_REGISTER_VERIFY_COPY = {
     headTitle: 'تأیید ثبت‌نام',
-    title: 'کد تأیید را وارد کن',
-    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کن تا ثبت‌نام کامل شود.',
+    title: 'کد فرستاده‌شده را وارد کنید',
+    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کنید.',
     codeLabel: 'کد تأیید',
     codePlaceholder: '123456',
     submitLabel: 'تکمیل ثبت‌نام',
-    resendLabel: 'ارسال مجدد کد',
-    resendWaitLabel: 'ارسال مجدد تا {seconds} ثانیه دیگر',
+    resendLabel: 'ارسال دوباره کد',
+    resendWaitLabel: 'ارسال دوباره تا {seconds} ثانیه دیگر',
     changeMobileLabel: 'تغییر شماره موبایل',
     changeMobileSubmitLabel: 'ارسال کد به شماره جدید',
     sentStatus: 'در صورت معتبر بودن شماره، کد ارسال شد.',
@@ -92,8 +92,8 @@ export const AUTH_FORGOT_PASSWORD_COPY = {
     headTitle: 'بازیابی رمز عبور',
     title: 'بازیابی رمز عبور',
     subtitle: 'روش بازیابی را انتخاب کن.',
-    mobileTabLabel: 'بازیابی با شماره موبایل',
-    emailTabLabel: 'بازیابی با ایمیل',
+    mobileTabLabel: 'شماره موبایل',
+    emailTabLabel: 'ایمیل',
     mobileSubtitle: 'شماره موبایل تأییدشده حسابت را وارد کن تا کد بازیابی ارسال شود.',
     emailSubtitle: 'ایمیل بازیابی حسابت را وارد کن تا لینک بازیابی ارسال شود.',
     mobileLabel: 'شماره موبایل',
@@ -113,13 +113,13 @@ export const AUTH_FORGOT_PASSWORD_COPY = {
 
 export const AUTH_FORGOT_PASSWORD_VERIFY_COPY = {
     headTitle: 'تأیید کد بازیابی',
-    title: 'کد بازیابی را وارد کن',
-    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کن.',
+    title: 'کد فرستاده‌شده را وارد کنید',
+    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کنید.',
     codeLabel: 'کد بازیابی',
     codePlaceholder: '123456',
     submitLabel: 'ادامه',
-    resendLabel: 'ارسال مجدد کد',
-    resendWaitLabel: 'ارسال مجدد تا {seconds} ثانیه دیگر',
+    resendLabel: 'ارسال دوباره کد',
+    resendWaitLabel: 'ارسال دوباره تا {seconds} ثانیه دیگر',
     changeMobileLabel: 'تغییر شماره موبایل',
     emailFallbackHint:
         'اگر پیامک در دسترس نبود، از بازیابی با ایمیل استفاده کنید.',
@@ -154,14 +154,15 @@ export const AUTH_MOBILE_COPY = {
 
 export const AUTH_MOBILE_VERIFY_COPY = {
     headTitle: 'ورود با کد یکبار مصرف',
-    title: 'کد ورود را وارد کن',
-    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کن.',
+    title: 'کد فرستاده‌شده را وارد کنید',
+    subtitle: 'کد ۶ رقمی ارسال‌شده به {mobile} را وارد کنید.',
     codeLabel: 'کد ورود',
     codePlaceholder: '123456',
     submitLabel: 'ورود به حساب',
-    resendLabel: 'ارسال مجدد کد',
-    resendWaitLabel: 'ارسال مجدد تا {seconds} ثانیه دیگر',
+    resendLabel: 'ارسال دوباره کد',
+    resendWaitLabel: 'ارسال دوباره تا {seconds} ثانیه دیگر',
     changeMobileLabel: 'تغییر شماره موبایل',
+    passwordLoginLabel: 'ورود با رمز عبور',
     secondaryLinkLabel: 'ورود با شماره موبایل و رمز عبور',
     registerPrompt: 'هنوز ثبت‌نام نکردی؟',
     registerLinkLabel: 'ثبت‌نام',

@@ -1,8 +1,15 @@
 import { Form, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
+import {
+    AuthFormCard,
+    authFieldClassName,
+    authLabelClassName,
+    authSubmitButtonClassName,
+} from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthRecoveryMethodCard } from '@/components/auth/auth-recovery-method-card';
+import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -46,54 +53,42 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
             <AuthPageHeader title={copy.title} subtitle={copy.subtitle} />
 
             {localizedStatus ? (
-                <p className="rounded-2xl bg-green-soft px-4 py-3 text-center text-sm font-medium leading-relaxed text-green">
-                    {localizedStatus}
-                </p>
+                <AuthStatusBanner message={localizedStatus} />
             ) : null}
 
-            <div className="flex gap-2 rounded-pill bg-purple-soft/60 p-1">
-                <button
-                    type="button"
-                    onClick={() => setMethod('mobile')}
-                    className={cn(
-                        'flex-1 rounded-pill px-3 py-2.5 text-xs font-bold transition-colors',
-                        method === 'mobile'
-                            ? 'bg-surface text-purple shadow-sm'
-                            : 'text-muted',
-                    )}
+            <div className="flex gap-2">
+                <AuthRecoveryMethodCard
+                    label={copy.mobileTabLabel}
+                    selected={method === 'mobile'}
+                    onSelect={() => setMethod('mobile')}
                     data-test="forgot-password-mobile-tab"
-                >
-                    {copy.mobileTabLabel}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setMethod('email')}
-                    className={cn(
-                        'flex-1 rounded-pill px-3 py-2.5 text-xs font-bold transition-colors',
-                        method === 'email'
-                            ? 'bg-surface text-purple shadow-sm'
-                            : 'text-muted',
-                    )}
+                />
+                <AuthRecoveryMethodCard
+                    label={copy.emailTabLabel}
+                    selected={method === 'email'}
+                    onSelect={() => setMethod('email')}
                     data-test="forgot-password-email-tab"
-                >
-                    {copy.emailTabLabel}
-                </button>
+                />
             </div>
 
             <AuthFormCard>
                 {method === 'mobile' ? (
                     <>
                         {!smsAvailable ? (
-                            <p className="rounded-2xl bg-gold-soft px-4 py-3 text-center text-sm font-medium leading-relaxed text-text">
-                                {copy.smsUnavailableMessage}
-                            </p>
+                            <AuthStatusBanner
+                                message={copy.smsUnavailableMessage}
+                                variant="warning"
+                            />
                         ) : (
                             <p className="text-center text-sm font-medium leading-relaxed text-muted">
                                 {copy.mobileSubtitle}
                             </p>
                         )}
 
-                        <Form {...sendCode.form()} className="flex flex-col gap-5">
+                        <Form
+                            {...sendCode.form()}
+                            className="flex flex-col gap-4"
+                        >
                             {({ processing, errors }) => (
                                 <>
                                     <div className="grid gap-2">
@@ -119,26 +114,13 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
 
                                     <Button
                                         type="submit"
-                                        className={cn(
-                                            'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
-                                        )}
+                                        className={cn(authSubmitButtonClassName)}
                                         disabled={processing || !smsAvailable}
                                         data-test="mobile-password-reset-send-button"
                                     >
                                         {processing ? <Spinner /> : null}
                                         {copy.mobileSubmitLabel}
                                     </Button>
-
-                                    <p className="text-center text-sm font-medium leading-relaxed text-muted">
-                                        {copy.emailFallbackHint}{' '}
-                                        <button
-                                            type="button"
-                                            onClick={() => setMethod('email')}
-                                            className="font-bold text-purple"
-                                        >
-                                            {copy.emailTabLabel}
-                                        </button>
-                                    </p>
                                 </>
                             )}
                         </Form>
@@ -149,7 +131,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                             {copy.emailSubtitle}
                         </p>
 
-                        <Form {...email.form()} className="flex flex-col gap-5">
+                        <Form {...email.form()} className="flex flex-col gap-4">
                             {({ processing, errors }) => (
                                 <>
                                     <div className="grid gap-2">
@@ -174,34 +156,20 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
 
                                     <Button
                                         type="submit"
-                                        className={cn(
-                                            'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
-                                        )}
+                                        className={cn(authSubmitButtonClassName)}
                                         disabled={processing}
                                         data-test="email-password-reset-link-button"
                                     >
                                         {processing ? <Spinner /> : null}
                                         {copy.emailSubmitLabel}
                                     </Button>
-
-                                    {smsAvailable ? (
-                                        <p className="text-center text-sm font-medium leading-relaxed text-muted">
-                                            <button
-                                                type="button"
-                                                onClick={() => setMethod('mobile')}
-                                                className="font-bold text-purple"
-                                            >
-                                                {copy.mobileTabLabel}
-                                            </button>
-                                        </p>
-                                    ) : null}
                                 </>
                             )}
                         </Form>
                     </>
                 )}
 
-                <div className="mt-5 flex flex-col items-center gap-1 text-center">
+                <div className="mt-4 flex flex-col items-center gap-1 border-t border-border/80 pt-4 text-center">
                     <p className="text-sm font-medium text-muted">
                         {copy.secondaryPrompt}
                     </p>

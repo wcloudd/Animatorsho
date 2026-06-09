@@ -1,14 +1,20 @@
 import { Form, Head, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
-import { AuthInputError } from '@/components/auth/auth-input-error';
+import { Lock } from 'lucide-react';
+import { useState } from 'react';
+import {
+    AuthFormCard,
+    authSubmitButtonClassName,
+} from '@/components/auth/auth-form-card';
+import { AuthOtpCodeField } from '@/components/auth/auth-otp-code-field';
+import { AuthOtpResendActions } from '@/components/auth/auth-otp-resend-actions';
 import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthSecondaryActionCard } from '@/components/auth/auth-secondary-action-card';
+import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useOtpResendCountdown } from '@/hooks/use-otp-resend-countdown';
 import { AUTH_MOBILE_VERIFY_COPY } from '@/lib/auth-form-data';
 import { cn } from '@/lib/utils';
 import { login, register } from '@/routes';
@@ -21,13 +27,6 @@ type Props = {
     status?: string;
 };
 
-function secondsUntil(isoDate: string): number {
-    const target = new Date(isoDate).getTime();
-    const diff = Math.ceil((target - Date.now()) / 1000);
-
-    return diff > 0 ? diff : 0;
-}
-
 export default function MobileVerifyAuth({
     maskedMobile,
     resendAvailableAt,
@@ -36,26 +35,8 @@ export default function MobileVerifyAuth({
     const copy = AUTH_MOBILE_VERIFY_COPY;
     const subtitle = copy.subtitle.replace('{mobile}', maskedMobile);
     const showSentStatus = status === 'otp-sent';
-    const [resendSeconds, setResendSeconds] = useState(() =>
-        resendAvailableAt ? secondsUntil(resendAvailableAt) : 0,
-    );
+    const resendSeconds = useOtpResendCountdown(resendAvailableAt);
     const [resending, setResending] = useState(false);
-
-    useEffect(() => {
-        if (!resendAvailableAt) {
-            setResendSeconds(0);
-
-            return;
-        }
-
-        setResendSeconds(secondsUntil(resendAvailableAt));
-
-        const interval = window.setInterval(() => {
-            setResendSeconds(secondsUntil(resendAvailableAt));
-        }, 1000);
-
-        return () => window.clearInterval(interval);
-    }, [resendAvailableAt]);
 
     const handleResend = () => {
         setResending(true);
@@ -76,43 +57,23 @@ export default function MobileVerifyAuth({
             <AuthPageHeader title={copy.title} subtitle={subtitle} />
 
             {showSentStatus ? (
-                <p className="rounded-2xl bg-green-soft px-4 py-3 text-center text-sm font-medium leading-relaxed text-green">
-                    {copy.sentStatus}
-                </p>
+                <AuthStatusBanner message={copy.sentStatus} />
             ) : null}
 
             <AuthFormCard>
-                <Form {...verifyStore.form()} className="flex flex-col gap-5">
+                <Form {...verifyStore.form()} className="flex flex-col gap-4">
                     {({ processing, errors }) => (
                         <>
-                            <div className="grid gap-5">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="code" className={authLabelClassName}>
-                                        {copy.codeLabel}
-                                    </Label>
-                                    <Input
-                                        id="code"
-                                        type="text"
-                                        name="code"
-                                        required
-                                        autoFocus
-                                        tabIndex={1}
-                                        autoComplete="one-time-code"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                        maxLength={6}
-                                        placeholder={copy.codePlaceholder}
-                                        dir="ltr"
-                                        className={cn(authFieldClassName, 'tracking-widest text-center')}
-                                    />
-                                    <AuthInputError message={errors.code} />
-                                </div>
+                            <div className="grid gap-4">
+                                <AuthOtpCodeField
+                                    label={copy.codeLabel}
+                                    placeholder={copy.codePlaceholder}
+                                    error={errors.code}
+                                />
 
                                 <Button
                                     type="submit"
-                                    className={cn(
-                                        'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
-                                    )}
+                                    className={cn(authSubmitButtonClassName)}
                                     tabIndex={2}
                                     disabled={processing}
                                     data-test="mobile-otp-verify-button"
@@ -122,42 +83,29 @@ export default function MobileVerifyAuth({
                                 </Button>
                             </div>
 
-                            <div className="flex flex-col items-center gap-3 text-center">
-                                {resendSeconds > 0 ? (
-                                    <p className="text-sm font-medium text-muted">
-                                        {copy.resendWaitLabel.replace(
-                                            '{seconds}',
-                                            String(resendSeconds),
-                                        )}
-                                    </p>
-                                ) : (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className="text-sm font-bold text-purple"
-                                        disabled={resending}
-                                        onClick={handleResend}
-                                        data-test="mobile-otp-resend-button"
-                                    >
-                                        {resending ? <Spinner /> : null}
-                                        {copy.resendLabel}
-                                    </Button>
-                                )}
+                            <AuthOtpResendActions
+                                resendSeconds={resendSeconds}
+                                resendLabel={copy.resendLabel}
+                                resendWaitLabel={copy.resendWaitLabel}
+                                resending={resending}
+                                onResend={handleResend}
+                                data-test="mobile-otp-resend-button"
+                            />
 
+                            <AuthSecondaryActionCard
+                                href={login()}
+                                label={copy.passwordLoginLabel}
+                                icon={Lock}
+                                tabIndex={3}
+                            />
+
+                            <div className="flex flex-col items-center gap-2 text-center">
                                 <TextLink
                                     href={create()}
                                     className="text-sm font-bold text-purple"
-                                    tabIndex={3}
-                                >
-                                    {copy.changeMobileLabel}
-                                </TextLink>
-
-                                <TextLink
-                                    href={login()}
-                                    className="text-sm font-bold text-purple"
                                     tabIndex={4}
                                 >
-                                    {copy.secondaryLinkLabel}
+                                    {copy.changeMobileLabel}
                                 </TextLink>
 
                                 <div className="flex flex-col items-center gap-1">

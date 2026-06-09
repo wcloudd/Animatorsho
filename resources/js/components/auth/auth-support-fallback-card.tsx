@@ -2,7 +2,7 @@ import { AUTH_SUPPORT_EITAA_URL, AUTH_SUPPORT_FALLBACK } from '@/lib/auth-form-d
 import { cn } from '@/lib/utils';
 
 const cardClassName =
-    'flex w-full flex-col gap-3 rounded-[24px] bg-purple-soft/70 px-4 py-4 shadow-soft ring-1 ring-border';
+    'flex w-full flex-col gap-3 rounded-[24px] bg-purple-soft/50 px-4 py-4 shadow-xs ring-1 ring-border/80';
 
 export function AuthSupportFallbackCard() {
     const fallback = AUTH_SUPPORT_FALLBACK;

@@ -1,7 +1,15 @@
 import { Form, Head, usePage } from '@inertiajs/react';
-import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
+import { Lock } from 'lucide-react';
+import {
+    AuthFormCard,
+    authFieldClassName,
+    authLabelClassName,
+    authSubmitButtonClassName,
+} from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthSecondaryActionCard } from '@/components/auth/auth-secondary-action-card';
+import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -37,18 +45,19 @@ export default function MobileAuth({ status }: Props) {
             <AuthPageHeader title={copy.title} subtitle={copy.subtitle} />
 
             {showSentStatus ? (
-                <p className="rounded-2xl bg-green-soft px-4 py-3 text-center text-sm font-medium leading-relaxed text-green">
-                    {copy.sentStatus}
-                </p>
+                <AuthStatusBanner message={copy.sentStatus} />
             ) : null}
 
             <AuthFormCard>
-                <Form {...sendCode.form()} className="flex flex-col gap-5">
+                <Form {...sendCode.form()} className="flex flex-col gap-4">
                     {({ processing, errors }) => (
                         <>
-                            <div className="grid gap-5">
+                            <div className="grid gap-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="mobile" className={authLabelClassName}>
+                                    <Label
+                                        htmlFor="mobile"
+                                        className={authLabelClassName}
+                                    >
                                         {copy.mobileLabel}
                                     </Label>
                                     <Input
@@ -69,9 +78,7 @@ export default function MobileAuth({ status }: Props) {
 
                                 <Button
                                     type="submit"
-                                    className={cn(
-                                        'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
-                                    )}
+                                    className={cn(authSubmitButtonClassName)}
                                     tabIndex={2}
                                     disabled={processing}
                                     data-test="mobile-otp-send-button"
@@ -81,36 +88,32 @@ export default function MobileAuth({ status }: Props) {
                                 </Button>
                             </div>
 
-                            <div className="flex flex-col items-center gap-3 text-center">
-                                <div className="flex flex-col items-center gap-1">
-                                    <p className="text-sm font-medium text-muted">
-                                        {copy.secondaryPrompt}
-                                    </p>
-                                    <TextLink
-                                        href={login(
-                                            redirectQuery ? { query: redirectQuery } : undefined,
-                                        )}
-                                        className="text-sm font-bold text-purple"
-                                        tabIndex={3}
-                                    >
-                                        {copy.secondaryLinkLabel}
-                                    </TextLink>
-                                </div>
+                            <AuthSecondaryActionCard
+                                href={login(
+                                    redirectQuery
+                                        ? { query: redirectQuery }
+                                        : undefined,
+                                )}
+                                label={copy.secondaryLinkLabel}
+                                icon={Lock}
+                                tabIndex={3}
+                            />
 
-                                <div className="flex flex-col items-center gap-1">
-                                    <p className="text-sm font-medium text-muted">
-                                        {copy.registerPrompt}
-                                    </p>
-                                    <TextLink
-                                        href={register(
-                                            redirectQuery ? { query: redirectQuery } : undefined,
-                                        )}
-                                        className="text-sm font-bold text-purple"
-                                        tabIndex={4}
-                                    >
-                                        {copy.registerLinkLabel}
-                                    </TextLink>
-                                </div>
+                            <div className="flex flex-col items-center gap-1 text-center">
+                                <p className="text-sm font-medium text-muted">
+                                    {copy.registerPrompt}
+                                </p>
+                                <TextLink
+                                    href={register(
+                                        redirectQuery
+                                            ? { query: redirectQuery }
+                                            : undefined,
+                                    )}
+                                    className="text-sm font-bold text-purple"
+                                    tabIndex={4}
+                                >
+                                    {copy.registerLinkLabel}
+                                </TextLink>
                             </div>
                         </>
                     )}

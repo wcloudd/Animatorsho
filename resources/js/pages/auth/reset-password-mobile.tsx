@@ -1,5 +1,10 @@
 import { Form, Head } from '@inertiajs/react';
-import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
+import {
+    AuthFormCard,
+    authFieldClassName,
+    authLabelClassName,
+    authSubmitButtonClassName,
+} from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthPageHeader } from '@/components/auth/auth-page-header';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
@@ -35,10 +40,10 @@ export default function ResetPasswordMobile({
                 <Form
                     {...resetStore.form()}
                     resetOnSuccess={['password', 'password_confirmation']}
-                    className="flex flex-col gap-5"
+                    className="flex flex-col gap-4"
                 >
                     {({ processing, errors }) => (
-                        <div className="grid gap-5">
+                        <div className="grid gap-4">
                             <div className="grid gap-2">
                                 <Label
                                     htmlFor="password"
@@ -80,9 +85,7 @@ export default function ResetPasswordMobile({
 
                             <Button
                                 type="submit"
-                                className={cn(
-                                    'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
-                                )}
+                                className={cn(authSubmitButtonClassName)}
                                 disabled={processing}
                                 data-test="reset-password-mobile-button"
                             >

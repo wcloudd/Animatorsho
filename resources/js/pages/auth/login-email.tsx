@@ -1,7 +1,13 @@
 import { Form, Head, usePage } from '@inertiajs/react';
-import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
+import {
+    AuthFormCard,
+    authFieldClassName,
+    authLabelClassName,
+    authSubmitButtonClassName,
+} from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -42,20 +48,18 @@ export default function LoginEmail({ status, canResetPassword }: Props) {
             <AuthPageHeader title={copy.title} subtitle={copy.subtitle} />
 
             {localizedStatus ? (
-                <p className="rounded-2xl bg-green-soft px-4 py-3 text-center text-sm font-medium leading-relaxed text-green">
-                    {localizedStatus}
-                </p>
+                <AuthStatusBanner message={localizedStatus} />
             ) : null}
 
             <AuthFormCard>
                 <Form
                     {...store.form()}
                     resetOnSuccess={['password']}
-                    className="flex flex-col gap-5"
+                    className="flex flex-col gap-4"
                 >
                     {({ processing, errors }) => (
                         <>
-                            <div className="grid gap-5">
+                            <div className="grid gap-4">
                                 <div className="grid gap-2">
                                     <Label
                                         htmlFor="email"
@@ -124,9 +128,7 @@ export default function LoginEmail({ status, canResetPassword }: Props) {
 
                                 <Button
                                     type="submit"
-                                    className={cn(
-                                        'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
-                                    )}
+                                    className={cn(authSubmitButtonClassName)}
                                     tabIndex={4}
                                     disabled={processing}
                                     data-test="login-email-button"
@@ -136,10 +138,12 @@ export default function LoginEmail({ status, canResetPassword }: Props) {
                                 </Button>
                             </div>
 
-                            <div className="flex flex-col items-center gap-3 text-center">
+                            <div className="flex flex-col items-center gap-2 text-center">
                                 <TextLink
                                     href={login(
-                                        redirectQuery ? { query: redirectQuery } : undefined,
+                                        redirectQuery
+                                            ? { query: redirectQuery }
+                                            : undefined,
                                     )}
                                     className="text-sm font-bold text-purple"
                                     tabIndex={5}
@@ -147,13 +151,15 @@ export default function LoginEmail({ status, canResetPassword }: Props) {
                                     {copy.primaryLoginLabel}
                                 </TextLink>
 
-                                <div className="flex flex-col items-center gap-1">
+                                <div className="flex flex-col items-center gap-1 pt-1">
                                     <p className="text-sm font-medium text-muted">
                                         {copy.secondaryPrompt}
                                     </p>
                                     <TextLink
                                         href={register(
-                                            redirectQuery ? { query: redirectQuery } : undefined,
+                                            redirectQuery
+                                                ? { query: redirectQuery }
+                                                : undefined,
                                         )}
                                         className="text-sm font-bold text-purple"
                                         tabIndex={6}
