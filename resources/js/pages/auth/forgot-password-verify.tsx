@@ -6,7 +6,7 @@ import {
 } from '@/components/auth/auth-form-card';
 import { AuthOtpCodeField } from '@/components/auth/auth-otp-code-field';
 import { AuthOtpResendActions } from '@/components/auth/auth-otp-resend-actions';
-import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import TextLink from '@/components/text-link';
@@ -52,7 +52,7 @@ export default function ForgotPasswordVerify({
         <>
             <Head title={copy.headTitle} />
 
-            <AuthPageHeader title={copy.title} subtitle={subtitle} />
+            <AuthPageIntro title={copy.title} subtitle={subtitle} />
 
             {showSentStatus ? (
                 <AuthStatusBanner message={copy.sentStatus} />

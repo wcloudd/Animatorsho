@@ -6,7 +6,7 @@ import {
     authSubmitButtonClassName,
 } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
-import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ export default function ResetPasswordMobile({
         <>
             <Head title={copy.headTitle} />
 
-            <AuthPageHeader title={copy.title} subtitle={subtitle} />
+            <AuthPageIntro title={copy.title} subtitle={subtitle} />
 
             <AuthFormCard>
                 <Form

@@ -7,7 +7,7 @@ import {
     authSubmitButtonClassName,
 } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
-import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthSecondaryActionCard } from '@/components/auth/auth-secondary-action-card';
 import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
@@ -56,7 +56,7 @@ export default function Login({ status, canResetPassword }: Props) {
                 canonical={canonicalFromPath(page.props.appUrl, '/login')}
             />
 
-            <AuthPageHeader title={copy.title} subtitle={copy.subtitle} />
+            <AuthPageIntro title={copy.title} subtitle={copy.subtitle} />
 
             {localizedStatus ? (
                 <AuthStatusBanner message={localizedStatus} />

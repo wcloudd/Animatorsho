@@ -7,7 +7,7 @@ import {
 } from '@/components/auth/auth-form-card';
 import { AuthOtpCodeField } from '@/components/auth/auth-otp-code-field';
 import { AuthOtpResendActions } from '@/components/auth/auth-otp-resend-actions';
-import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthSecondaryActionCard } from '@/components/auth/auth-secondary-action-card';
 import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
@@ -54,7 +54,7 @@ export default function MobileVerifyAuth({
         <>
             <Head title={copy.headTitle} />
 
-            <AuthPageHeader title={copy.title} subtitle={subtitle} />
+            <AuthPageIntro title={copy.title} subtitle={subtitle} />
 
             {showSentStatus ? (
                 <AuthStatusBanner message={copy.sentStatus} />

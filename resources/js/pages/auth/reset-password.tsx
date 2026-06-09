@@ -6,7 +6,7 @@ import {
     authSubmitButtonClassName,
 } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
-import { AuthPageHeader } from '@/components/auth/auth-page-header';
+import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
         <>
             <Head title={copy.headTitle} />
 
-            <AuthPageHeader title={copy.title} subtitle={copy.subtitle} />
+            <AuthPageIntro title={copy.title} subtitle={copy.subtitle} />
 
             <AuthFormCard>
                 <Form
