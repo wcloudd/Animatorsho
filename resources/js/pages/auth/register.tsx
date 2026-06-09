@@ -29,6 +29,7 @@ function redirectQueryFromUrl(url: string): { redirect: string } | undefined {
 
 type PendingRegistration = {
     name: string;
+    username: string;
     mobile: string;
     email: string | null;
 };
@@ -93,6 +94,40 @@ export default function Register({
 
                                 <div className="grid gap-2">
                                     <Label
+                                        htmlFor="username"
+                                        className={authLabelClassName}
+                                    >
+                                        {copy.usernameLabel}
+                                    </Label>
+                                    <Input
+                                        id="username"
+                                        type="text"
+                                        required
+                                        tabIndex={2}
+                                        autoComplete="username"
+                                        name="username"
+                                        defaultValue={
+                                            pendingRegistration?.username ?? ''
+                                        }
+                                        placeholder={copy.usernamePlaceholder}
+                                        dir="ltr"
+                                        pattern="[a-z0-9_]+"
+                                        onChange={(event) => {
+                                            event.target.value =
+                                                event.target.value.toLowerCase();
+                                        }}
+                                        className={authFieldClassName}
+                                    />
+                                    <p className="text-xs font-medium leading-relaxed text-muted">
+                                        {copy.usernameHint}
+                                    </p>
+                                    <AuthInputError
+                                        message={errors.username}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label
                                         htmlFor="mobile"
                                         className={authLabelClassName}
                                     >
@@ -102,7 +137,7 @@ export default function Register({
                                         id="mobile"
                                         type="tel"
                                         required
-                                        tabIndex={2}
+                                        tabIndex={3}
                                         autoComplete="tel"
                                         inputMode="numeric"
                                         name="mobile"
@@ -126,7 +161,7 @@ export default function Register({
                                     <PasswordInput
                                         id="password"
                                         required
-                                        tabIndex={3}
+                                        tabIndex={4}
                                         autoComplete="new-password"
                                         name="password"
                                         placeholder={copy.passwordPlaceholder}
@@ -146,7 +181,7 @@ export default function Register({
                                     <PasswordInput
                                         id="password_confirmation"
                                         required
-                                        tabIndex={4}
+                                        tabIndex={5}
                                         autoComplete="new-password"
                                         name="password_confirmation"
                                         placeholder={
@@ -170,7 +205,7 @@ export default function Register({
                                     <Input
                                         id="email"
                                         type="email"
-                                        tabIndex={5}
+                                        tabIndex={6}
                                         autoComplete="email"
                                         name="email"
                                         defaultValue={
@@ -191,7 +226,7 @@ export default function Register({
                                     className={cn(
                                         'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
                                     )}
-                                    tabIndex={6}
+                                    tabIndex={7}
                                     data-test="register-user-button"
                                 >
                                     {processing ? <Spinner /> : null}
@@ -210,7 +245,7 @@ export default function Register({
                                             : undefined,
                                     )}
                                     className="text-sm font-bold text-purple"
-                                    tabIndex={7}
+                                    tabIndex={8}
                                 >
                                     {copy.secondaryLinkLabel}
                                 </TextLink>

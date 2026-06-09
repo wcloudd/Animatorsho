@@ -54,8 +54,12 @@ export const AUTH_REGISTER_COPY = {
     title: 'ثبت‌نام در انیماتورشو',
     subtitle:
         'حساب کاربری بساز تا سفارش‌ها، لایسنس‌ها و مسیر یادگیری‌ات ذخیره شود.',
-    nameLabel: 'نام و نام خانوادگی',
-    namePlaceholder: 'نام کامل',
+    nameLabel: 'نام نمایشی',
+    namePlaceholder: 'نام نمایشی',
+    usernameLabel: 'نام کاربری',
+    usernamePlaceholder: 'nimvajabee',
+    usernameHint:
+        'نام کاربری فقط با حروف انگلیسی کوچک، عدد و خط زیر مجاز است.',
     emailLabel: 'ایمیل (اختیاری)',
     emailPlaceholder: 'example@email.com',
     emailHint: 'اختیاری؛ برای بازیابی رمز در صورت قطع بودن پیامک',
