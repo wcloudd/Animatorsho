@@ -29,6 +29,7 @@ Route::middleware(['auth', 'admin'])
         Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
         Route::get('manual-enrollments', [ManualEnrollmentController::class, 'index'])->name('manual-enrollments.index');
+        Route::get('manual-enrollments/lookup', [ManualEnrollmentController::class, 'lookup'])->name('manual-enrollments.lookup');
         Route::post('manual-enrollments', [ManualEnrollmentController::class, 'store'])->name('manual-enrollments.store');
 
         Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');

@@ -1,5 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
+import { useState } from 'react';
 import { AdminButton } from '@/components/admin/admin-button';
 import { AdminCallout } from '@/components/admin/admin-callout';
 import { AdminDetailRow } from '@/components/admin/admin-detail-row';
@@ -21,6 +22,97 @@ import {
 import { formatAdminDate } from '@/lib/format-admin-date';
 import { cn } from '@/lib/utils';
 import type { AdminStatusOption } from '@/types/admin';
+
+type LookupPreviewStatus =
+    | 'empty'
+    | 'found'
+    | 'not_found'
+    | 'needs_mobile'
+    | 'invalid';
+
+type LookupPreviewUser = {
+    id: number;
+    name: string;
+    username: string | null;
+    mobile: string | null;
+    hasMobile: boolean;
+};
+
+type LookupPreview = {
+    status: LookupPreviewStatus;
+    message: string | null;
+    user: LookupPreviewUser | null;
+};
+
+const lookupPreviewStyles: Record<
+    LookupPreviewStatus,
+    { box: string; title: string }
+> = {
+    empty: {
+        box: 'rounded-xl bg-purple-soft/50 px-3 py-2 ring-1 ring-purple/10',
+        title: 'text-xs font-medium text-muted',
+    },
+    found: {
+        box: 'rounded-xl bg-green-soft px-3 py-2 ring-1 ring-green/15',
+        title: 'text-xs font-medium text-green',
+    },
+    not_found: {
+        box: 'rounded-xl bg-gold-soft px-3 py-2 ring-1 ring-gold/15',
+        title: 'text-xs font-medium text-gold',
+    },
+    needs_mobile: {
+        box: 'rounded-xl bg-gold-soft px-3 py-2 ring-1 ring-gold/15',
+        title: 'text-xs font-medium text-gold',
+    },
+    invalid: {
+        box: 'rounded-xl bg-red/10 px-3 py-2 ring-1 ring-red/15',
+        title: 'text-xs font-medium text-red/80',
+    },
+};
+
+function LookupPreviewCard({
+    preview,
+    stale,
+}: {
+    preview: LookupPreview;
+    stale: boolean;
+}) {
+    if (preview.status === 'empty' && !stale) {
+        return null;
+    }
+
+    const styles = lookupPreviewStyles[preview.status];
+
+    return (
+        <div className={cn(styles.box, 'flex flex-col gap-2')}>
+            {stale ? (
+                <p className="text-xs font-medium text-muted">
+                    نتیجه بررسی قدیمی است؛ دوباره «بررسی کاربر» را بزنید.
+                </p>
+            ) : null}
+            {preview.message ? (
+                <p className={styles.title}>{preview.message}</p>
+            ) : null}
+            {preview.user ? (
+                <AdminInfoGrid>
+                    <AdminDetailRow
+                        label="نام"
+                        value={preview.user.name}
+                        truncateValue
+                    />
+                    <AdminDetailRow
+                        label="نام کاربری"
+                        value={preview.user.username ?? '—'}
+                    />
+                    <AdminDetailRow
+                        label="موبایل"
+                        value={preview.user.mobile ?? '—'}
+                    />
+                </AdminInfoGrid>
+            ) : null}
+        </div>
+    );
+}
 
 type PackageOption = {
     id: number;
@@ -69,6 +161,61 @@ export default function AdminManualEnrollmentsIndex({
         license_key: '',
     });
 
+    const [lookupPreview, setLookupPreview] = useState<LookupPreview | null>(
+        null,
+    );
+    const [lookupCheckedFor, setLookupCheckedFor] = useState('');
+    const [lookupChecking, setLookupChecking] = useState(false);
+    const [lookupError, setLookupError] = useState<string | null>(null);
+
+    const lookupIsStale =
+        lookupPreview !== null &&
+        lookupCheckedFor !== data.user_lookup.trim();
+
+    const checkUser = async () => {
+        const lookup = data.user_lookup.trim();
+
+        setLookupChecking(true);
+        setLookupError(null);
+
+        try {
+            const params = new URLSearchParams();
+
+            if (lookup !== '') {
+                params.set('user_lookup', lookup);
+            }
+
+            if (data.customer_mobile.trim() !== '') {
+                params.set('customer_mobile', data.customer_mobile.trim());
+            }
+
+            const response = await fetch(
+                `/admin/manual-enrollments/lookup?${params.toString()}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error('lookup_failed');
+            }
+
+            const preview = (await response.json()) as LookupPreview;
+
+            setLookupPreview(preview);
+            setLookupCheckedFor(lookup);
+        } catch {
+            setLookupError('بررسی کاربر انجام نشد. دوباره تلاش کنید.');
+            setLookupPreview(null);
+            setLookupCheckedFor('');
+        } finally {
+            setLookupChecking(false);
+        }
+    };
+
     const submit = (event: FormEvent) => {
         event.preventDefault();
         post('/admin/manual-enrollments', {
@@ -81,6 +228,9 @@ export default function AdminManualEnrollmentsIndex({
                     'admin_note',
                     'license_key',
                 );
+                setLookupPreview(null);
+                setLookupCheckedFor('');
+                setLookupError(null);
             },
         });
     };
@@ -139,19 +289,51 @@ export default function AdminManualEnrollmentsIndex({
                             <Label htmlFor="user_lookup">
                                 جستجوی کاربر موجود با موبایل یا نام کاربری
                             </Label>
-                            <Input
-                                id="user_lookup"
-                                value={data.user_lookup}
-                                onChange={(event) =>
-                                    setData('user_lookup', event.target.value)
-                                }
-                                dir="ltr"
-                                placeholder="09123456789 یا username"
-                            />
+                            <div className="flex flex-col gap-2 sm:flex-row">
+                                <Input
+                                    id="user_lookup"
+                                    value={data.user_lookup}
+                                    onChange={(event) => {
+                                        setData(
+                                            'user_lookup',
+                                            event.target.value,
+                                        );
+                                        setLookupPreview(null);
+                                        setLookupCheckedFor('');
+                                        setLookupError(null);
+                                    }}
+                                    dir="ltr"
+                                    placeholder="09123456789 یا username"
+                                    className="sm:flex-1"
+                                />
+                                <AdminButton
+                                    type="button"
+                                    adminVariant="outline"
+                                    disabled={
+                                        lookupChecking ||
+                                        data.user_lookup.trim() === ''
+                                    }
+                                    onClick={() => void checkUser()}
+                                    className="shrink-0"
+                                >
+                                    {lookupChecking
+                                        ? 'در حال بررسی...'
+                                        : 'بررسی کاربر'}
+                                </AdminButton>
+                            </div>
                             <p className="text-xs text-muted">
                                 اگر کاربر قبلاً در سایت ثبت‌نام کرده، شماره
                                 موبایل یا نام کاربری او را وارد کنید.
                             </p>
+                            {lookupError ? (
+                                <p className="text-xs text-red">{lookupError}</p>
+                            ) : null}
+                            {lookupPreview ? (
+                                <LookupPreviewCard
+                                    preview={lookupPreview}
+                                    stale={lookupIsStale}
+                                />
+                            ) : null}
                             <InputError message={errors.user_lookup} />
                         </div>
 

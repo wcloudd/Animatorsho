@@ -2,18 +2,56 @@
 
 namespace App\Services\Admin;
 
+use App\Concerns\UsernameValidationRules;
 use App\DataTransferObjects\Admin\AdminUserLookupResult;
+use App\Enums\AdminUserLookupPreviewStatus;
 use App\Models\User;
 use App\Support\IranianMobile;
 use Illuminate\Validation\ValidationException;
 
 class AdminUserLookupService
 {
+    use UsernameValidationRules;
+
     public const USERNAME_NOT_FOUND_MESSAGE = 'کاربری با این نام کاربری پیدا نشد.';
+
+    public const MOBILE_NOT_FOUND_MESSAGE = 'کاربری با این شماره پیدا نشد؛ در صورت ثبت، کاربر جدید ساخته می‌شود.';
 
     public const MOBILE_REQUIRED_MESSAGE = 'این کاربر شماره موبایل ثبت‌شده ندارد. برای ثبت دسترسی، شماره موبایل را وارد کنید.';
 
     public const MOBILE_ALREADY_USED_MESSAGE = 'این شماره موبایل قبلاً برای کاربر دیگری ثبت شده است.';
+
+    public const LOOKUP_EMPTY_MESSAGE = 'برای بررسی، شماره موبایل یا نام کاربری را وارد کنید.';
+
+    /**
+     * Read-only lookup preview for admin manual enrollment.
+     *
+     * @return array{
+     *     status: string,
+     *     message: ?string,
+     *     user: ?array{
+     *         id: int,
+     *         name: string,
+     *         username: ?string,
+     *         mobile: ?string,
+     *         hasMobile: bool
+     *     }
+     * }
+     */
+    public function preview(?string $userLookup, ?string $customerMobile = null): array
+    {
+        $lookup = $this->trimNullable($userLookup);
+
+        if ($lookup === null || $lookup === '') {
+            return $this->emptyPreview();
+        }
+
+        if ($this->isMobileIdentifier($lookup)) {
+            return $this->previewMobileLookup($lookup);
+        }
+
+        return $this->previewUsernameLookup($lookup);
+    }
 
     /**
      * Resolve an existing user by mobile/username lookup, or create a new user when a valid mobile is available.
@@ -30,13 +68,9 @@ class AdminUserLookupService
 
         if ($lookup !== null && $lookup !== '') {
             if ($this->isMobileIdentifier($lookup)) {
-                $normalizedLookupMobile = IranianMobile::normalize($lookup);
-
-                if ($normalizedLookupMobile !== null) {
-                    $user = User::query()->where('mobile', $normalizedLookupMobile)->first();
-                }
+                $user = $this->findByMobile($lookup);
             } else {
-                $user = User::query()->where('username', strtolower($lookup))->first();
+                $user = $this->findByUsername($lookup);
 
                 if ($user === null) {
                     throw ValidationException::withMessages([
@@ -78,6 +112,179 @@ class AdminUserLookupService
             created: $created,
             orderCustomerMobile: $orderCustomerMobile,
         );
+    }
+
+    /**
+     * @return array{
+     *     status: string,
+     *     message: ?string,
+     *     user: ?array{
+     *         id: int,
+     *         name: string,
+     *         username: ?string,
+     *         mobile: ?string,
+     *         hasMobile: bool
+     *     }
+     * }
+     */
+    private function previewMobileLookup(string $lookup): array
+    {
+        $normalizedMobile = IranianMobile::normalize($lookup);
+
+        if ($normalizedMobile === null) {
+            return $this->invalidPreview(IranianMobile::validationMessage($lookup));
+        }
+
+        $user = User::query()->where('mobile', $normalizedMobile)->first();
+
+        if (! $user instanceof User) {
+            return [
+                'status' => AdminUserLookupPreviewStatus::NotFound->value,
+                'message' => self::MOBILE_NOT_FOUND_MESSAGE,
+                'user' => null,
+            ];
+        }
+
+        return $this->previewForUser($user);
+    }
+
+    /**
+     * @return array{
+     *     status: string,
+     *     message: ?string,
+     *     user: ?array{
+     *         id: int,
+     *         name: string,
+     *         username: ?string,
+     *         mobile: ?string,
+     *         hasMobile: bool
+     *     }
+     * }
+     */
+    private function previewUsernameLookup(string $lookup): array
+    {
+        $normalizedUsername = strtolower($lookup);
+
+        $usernameValidator = validator(
+            ['user_lookup' => $normalizedUsername],
+            ['user_lookup' => $this->usernameFormatRules(required: true)],
+        );
+
+        if ($usernameValidator->fails()) {
+            return $this->invalidPreview($usernameValidator->errors()->first('user_lookup'));
+        }
+
+        $user = $this->findByUsername($normalizedUsername);
+
+        if (! $user instanceof User) {
+            return [
+                'status' => AdminUserLookupPreviewStatus::NotFound->value,
+                'message' => self::USERNAME_NOT_FOUND_MESSAGE,
+                'user' => null,
+            ];
+        }
+
+        return $this->previewForUser($user);
+    }
+
+    /**
+     * @return array{
+     *     status: string,
+     *     message: ?string,
+     *     user: ?array{
+     *         id: int,
+     *         name: string,
+     *         username: ?string,
+     *         mobile: ?string,
+     *         hasMobile: bool
+     *     }
+     * }
+     */
+    private function previewForUser(User $user): array
+    {
+        $summary = $this->summarizeUser($user);
+
+        if (! $summary['hasMobile']) {
+            return [
+                'status' => AdminUserLookupPreviewStatus::NeedsMobile->value,
+                'message' => self::MOBILE_REQUIRED_MESSAGE,
+                'user' => $summary,
+            ];
+        }
+
+        return [
+            'status' => AdminUserLookupPreviewStatus::Found->value,
+            'message' => 'کاربر پیدا شد',
+            'user' => $summary,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     status: string,
+     *     message: ?string,
+     *     user: null
+     * }
+     */
+    private function emptyPreview(): array
+    {
+        return [
+            'status' => AdminUserLookupPreviewStatus::Empty->value,
+            'message' => self::LOOKUP_EMPTY_MESSAGE,
+            'user' => null,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     status: string,
+     *     message: string,
+     *     user: null
+     * }
+     */
+    private function invalidPreview(string $message): array
+    {
+        return [
+            'status' => AdminUserLookupPreviewStatus::Invalid->value,
+            'message' => $message,
+            'user' => null,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     id: int,
+     *     name: string,
+     *     username: ?string,
+     *     mobile: ?string,
+     *     hasMobile: bool
+     * }
+     */
+    private function summarizeUser(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'username' => $user->username,
+            'mobile' => $user->mobile,
+            'hasMobile' => filled($user->mobile),
+        ];
+    }
+
+    private function findByMobile(string $lookup): ?User
+    {
+        $normalizedMobile = IranianMobile::normalize($lookup);
+
+        if ($normalizedMobile === null) {
+            return null;
+        }
+
+        return User::query()->where('mobile', $normalizedMobile)->first();
+    }
+
+    private function findByUsername(string $lookup): ?User
+    {
+        return User::query()->where('username', strtolower($lookup))->first();
     }
 
     private function resolveOrderCustomerMobile(User $user, ?string $normalizedCustomerMobile): string

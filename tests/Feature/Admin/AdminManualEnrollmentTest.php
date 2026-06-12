@@ -489,3 +489,166 @@ test('duplicate guard blocks enrollment when user is resolved by username', func
 
     expect(Order::query()->count())->toBe($orderCountBefore);
 });
+
+test('guest cannot use manual enrollment lookup endpoint', function () {
+    $this->getJson(route('admin.manual-enrollments.lookup', [
+        'user_lookup' => '09121112233',
+    ]))->assertRedirect(route('login'));
+});
+
+test('non-admin cannot use manual enrollment lookup endpoint', function () {
+    $user = User::factory()->create(['is_admin' => false]);
+
+    $this->actingAs($user)
+        ->getJson(route('admin.manual-enrollments.lookup', [
+            'user_lookup' => '09121112233',
+        ]))
+        ->assertForbidden();
+});
+
+test('lookup by existing mobile returns found user summary', function () {
+    $admin = User::factory()->admin()->create();
+    $existing = User::factory()->create([
+        'name' => 'کاربر موبایل',
+        'mobile' => '09121112233',
+        'username' => 'mobile_lookup_user',
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.lookup', [
+            'user_lookup' => '09121112233',
+        ]))
+        ->assertOk()
+        ->assertJson([
+            'status' => 'found',
+            'message' => 'کاربر پیدا شد',
+            'user' => [
+                'id' => $existing->id,
+                'name' => 'کاربر موبایل',
+                'username' => 'mobile_lookup_user',
+                'mobile' => '09121112233',
+                'hasMobile' => true,
+            ],
+        ]);
+});
+
+test('lookup by existing username returns found user summary', function () {
+    $admin = User::factory()->admin()->create();
+    $existing = User::factory()->create([
+        'name' => 'کاربر یوزرنیم',
+        'username' => 'lookup_username',
+        'mobile' => '09123334455',
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.lookup', [
+            'user_lookup' => 'lookup_username',
+        ]))
+        ->assertOk()
+        ->assertJson([
+            'status' => 'found',
+            'user' => [
+                'id' => $existing->id,
+                'name' => 'کاربر یوزرنیم',
+                'username' => 'lookup_username',
+                'mobile' => '09123334455',
+                'hasMobile' => true,
+            ],
+        ]);
+});
+
+test('lookup unknown username returns not found and creates nothing', function () {
+    $admin = User::factory()->admin()->create();
+    $userCountBefore = User::query()->count();
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.lookup', [
+            'user_lookup' => 'missing_lookup_user',
+        ]))
+        ->assertOk()
+        ->assertJson([
+            'status' => 'not_found',
+            'message' => AdminUserLookupService::USERNAME_NOT_FOUND_MESSAGE,
+            'user' => null,
+        ]);
+
+    expect(User::query()->count())->toBe($userCountBefore);
+});
+
+test('lookup unknown mobile returns not found with new user possible message', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.lookup', [
+            'user_lookup' => '09127778899',
+        ]))
+        ->assertOk()
+        ->assertJson([
+            'status' => 'not_found',
+            'message' => AdminUserLookupService::MOBILE_NOT_FOUND_MESSAGE,
+            'user' => null,
+        ]);
+});
+
+test('lookup username user without mobile returns needs mobile', function () {
+    $admin = User::factory()->admin()->create();
+    $existing = User::factory()->create([
+        'username' => 'needs_mobile_lookup',
+        'mobile' => null,
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.lookup', [
+            'user_lookup' => 'needs_mobile_lookup',
+        ]))
+        ->assertOk()
+        ->assertJson([
+            'status' => 'needs_mobile',
+            'message' => AdminUserLookupService::MOBILE_REQUIRED_MESSAGE,
+            'user' => [
+                'id' => $existing->id,
+                'username' => 'needs_mobile_lookup',
+                'hasMobile' => false,
+            ],
+        ]);
+});
+
+test('lookup endpoint does not expose sensitive user fields', function () {
+    $admin = User::factory()->admin()->create();
+    User::factory()->create([
+        'mobile' => '09124445566',
+        'username' => 'safe_lookup_user',
+        'password' => 'secret-password-value',
+        'remember_token' => 'remember-token-value',
+        'email' => 'safe@example.com',
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.lookup', [
+            'user_lookup' => '09124445566',
+        ]))
+        ->assertOk();
+
+    $json = $response->json();
+
+    expect($json)->toHaveKeys(['status', 'message', 'user'])
+        ->and(collect($json)->keys()->all())->toBe(['status', 'message', 'user'])
+        ->and(collect($json['user'])->keys()->sort()->values()->all())->toBe(
+            collect(['id', 'name', 'username', 'mobile', 'hasMobile'])->sort()->values()->all(),
+        )
+        ->and(json_encode($json))->not->toContain('secret-password-value')
+        ->and(json_encode($json))->not->toContain('remember-token-value')
+        ->and(json_encode($json))->not->toContain('safe@example.com');
+});
+
+test('lookup with empty user lookup returns empty status', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.lookup'))
+        ->assertOk()
+        ->assertJson([
+            'status' => 'empty',
+            'user' => null,
+        ]);
+});

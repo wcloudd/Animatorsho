@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ExternalEnrollmentSource;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ManualEnrollmentLookupRequest;
 use App\Http\Requests\Admin\StoreManualEnrollmentRequest;
 use App\Models\CoursePackage;
 use App\Services\Admin\AdminManualEnrollmentListService;
 use App\Services\Admin\AdminManualEnrollmentService;
+use App\Services\Admin\AdminUserLookupService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,11 +20,20 @@ class ManualEnrollmentController extends Controller
     public function __construct(
         private readonly AdminManualEnrollmentListService $list,
         private readonly AdminManualEnrollmentService $enrollment,
+        private readonly AdminUserLookupService $userLookup,
     ) {}
 
     public function index(): Response
     {
         return Inertia::render('admin/manual-enrollments/index', $this->list->formData());
+    }
+
+    public function lookup(ManualEnrollmentLookupRequest $request): JsonResponse
+    {
+        return response()->json($this->userLookup->preview(
+            $request->input('user_lookup'),
+            $request->input('customer_mobile'),
+        ));
     }
 
     public function store(StoreManualEnrollmentRequest $request): RedirectResponse
