@@ -263,3 +263,31 @@ test('middleware required message constant matches product copy', function () {
     expect(EnsureUserHasVerifiedMobile::REQUIRED_MESSAGE)
         ->toBe('برای ادامه، ابتدا شماره موبایل خود را ثبت و تأیید کنید.');
 });
+
+test('user cannot change mobile to a different number via profile mobile send code', function () {
+    enableSmsForMobileVerificationTests();
+
+    $user = User::factory()->withUnverifiedMobile('09125556677')->create();
+
+    $this->actingAs($user)
+        ->post(route('profile.mobile.send-code'), [
+            'mobile' => '09128889900',
+        ])
+        ->assertSessionHasErrors('mobile');
+
+    expect($user->fresh()->mobile)->toBe('09125556677');
+});
+
+test('verified user cannot change mobile via profile mobile send code', function () {
+    enableSmsForMobileVerificationTests();
+
+    $user = User::factory()->withMobile('09125556677')->create();
+
+    $this->actingAs($user)
+        ->post(route('profile.mobile.send-code'), [
+            'mobile' => '09128889900',
+        ])
+        ->assertSessionHasErrors('mobile');
+
+    expect($user->fresh()->mobile)->toBe('09125556677');
+});

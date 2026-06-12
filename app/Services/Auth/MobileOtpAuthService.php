@@ -298,6 +298,13 @@ class MobileOtpAuthService
         }
 
         $this->assertMobileAvailableForUser($user, $normalizedMobile);
+
+        if (filled($user->mobile) && $user->mobile !== $normalizedMobile) {
+            throw ValidationException::withMessages([
+                'mobile' => 'تغییر شماره موبایل از این بخش امکان‌پذیر نیست. با پشتیبانی تماس بگیرید.',
+            ]);
+        }
+
         $this->assertResendCooldown($normalizedMobile, OtpPurpose::Verification);
 
         $this->invalidateActiveCodes($normalizedMobile, OtpPurpose::Verification);
@@ -340,6 +347,12 @@ class MobileOtpAuthService
         }
 
         $this->assertMobileAvailableForUser($user, $normalizedMobile);
+
+        if (filled($user->mobile) && $user->mobile !== $normalizedMobile) {
+            throw ValidationException::withMessages([
+                'code' => 'کد نامعتبر یا منقضی است.',
+            ]);
+        }
 
         $otpCode = OtpCode::query()
             ->forMobile($normalizedMobile, OtpPurpose::Verification)

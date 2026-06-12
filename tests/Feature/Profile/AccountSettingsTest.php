@@ -248,3 +248,26 @@ test('invalid avatar preset falls back safely on profile page', function () {
             ->where('user.avatarPreset', null)
         );
 });
+
+test('crafted username in profile update is ignored', function () {
+    $user = User::factory()->create([
+        'username' => 'locked_username',
+    ]);
+
+    $originalMobile = $user->mobile;
+
+    $this->actingAs($user)
+        ->from(route('profile.settings'))
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'username' => 'hacked_username',
+            'mobile' => '09129998877',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('profile.settings'));
+
+    expect($user->fresh())
+        ->username->toBe('locked_username')
+        ->mobile->toBe($originalMobile);
+});

@@ -493,7 +493,7 @@ test('duplicate guard blocks enrollment when user is resolved by username', func
 test('guest cannot use manual enrollment lookup endpoint', function () {
     $this->getJson(route('admin.manual-enrollments.lookup', [
         'user_lookup' => '09121112233',
-    ]))->assertRedirect(route('login'));
+    ]))->assertUnauthorized();
 });
 
 test('non-admin cannot use manual enrollment lookup endpoint', function () {
@@ -634,7 +634,7 @@ test('lookup endpoint does not expose sensitive user fields', function () {
     expect($json)->toHaveKeys(['status', 'message', 'user'])
         ->and(collect($json)->keys()->all())->toBe(['status', 'message', 'user'])
         ->and(collect($json['user'])->keys()->sort()->values()->all())->toBe(
-            collect(['id', 'name', 'username', 'mobile', 'hasMobile'])->sort()->values()->all(),
+            collect(['id', 'name', 'username', 'mobile', 'hasMobile', 'mobileVerified'])->sort()->values()->all(),
         )
         ->and(json_encode($json))->not->toContain('secret-password-value')
         ->and(json_encode($json))->not->toContain('remember-token-value')
@@ -651,4 +651,171 @@ test('lookup with empty user lookup returns empty status', function () {
             'status' => 'empty',
             'user' => null,
         ]);
+});
+
+test('guest cannot use manual enrollment user suggestions endpoint', function () {
+    $this->getJson(route('admin.manual-enrollments.user-suggestions', [
+        'q' => 'student',
+    ]))->assertUnauthorized();
+});
+
+test('non-admin cannot use manual enrollment user suggestions endpoint', function () {
+    $user = User::factory()->create(['is_admin' => false]);
+
+    $this->actingAs($user)
+        ->getJson(route('admin.manual-enrollments.user-suggestions', [
+            'q' => 'student',
+        ]))
+        ->assertForbidden();
+});
+
+test('user suggestions returns partial username matches', function () {
+    $admin = User::factory()->admin()->create();
+    User::factory()->create([
+        'name' => 'کاربر پیشنهاد',
+        'username' => 'suggest_alpha',
+        'mobile' => '09121110001',
+    ]);
+    User::factory()->create([
+        'username' => 'suggest_alien',
+        'mobile' => '09121110002',
+    ]);
+    User::factory()->create([
+        'username' => 'other_user',
+        'mobile' => '09121110003',
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.user-suggestions', [
+            'q' => 'suggest',
+        ]))
+        ->assertOk();
+
+    $usernames = collect($response->json('suggestions'))->pluck('username')->all();
+
+    expect($usernames)->toContain('suggest_alpha', 'suggest_alien')
+        ->and($usernames)->not->toContain('other_user');
+});
+
+test('user suggestions returns partial mobile matches', function () {
+    $admin = User::factory()->admin()->create();
+    User::factory()->create([
+        'name' => 'کاربر موبایل',
+        'username' => 'mobile_suggest_user',
+        'mobile' => '09123456789',
+    ]);
+    User::factory()->create([
+        'mobile' => '09123450000',
+    ]);
+    User::factory()->create([
+        'mobile' => '09129998888',
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.user-suggestions', [
+            'q' => '912345',
+        ]))
+        ->assertOk();
+
+    $mobiles = collect($response->json('suggestions'))->pluck('mobile')->all();
+
+    expect($mobiles)->toContain('09123456789', '09123450000')
+        ->and($mobiles)->not->toContain('09129998888');
+});
+
+test('user suggestions puts exact username match first', function () {
+    $admin = User::factory()->admin()->create();
+    $exact = User::factory()->create([
+        'name' => 'کاربر دقیق',
+        'username' => 'exact_user',
+        'mobile' => '09124440001',
+    ]);
+    User::factory()->create([
+        'name' => 'کاربر دیگر',
+        'username' => 'exact_user_extra',
+        'mobile' => '09124440002',
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.user-suggestions', [
+            'q' => 'exact_user',
+        ]))
+        ->assertOk();
+
+    expect($response->json('suggestions.0.id'))->toBe($exact->id)
+        ->and($response->json('suggestions.0.username'))->toBe('exact_user');
+});
+
+test('user suggestions are limited to configured maximum', function () {
+    $admin = User::factory()->admin()->create();
+
+    foreach (range(1, 10) as $index) {
+        User::factory()->create([
+            'name' => 'کاربر '.$index,
+            'username' => 'limit_user_'.$index,
+            'mobile' => '0912555'.str_pad((string) $index, 4, '0', STR_PAD_LEFT),
+        ]);
+    }
+
+    $response = $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.user-suggestions', [
+            'q' => 'limit_user',
+        ]))
+        ->assertOk();
+
+    expect($response->json('suggestions'))->toHaveCount(AdminUserLookupService::SUGGESTION_LIMIT);
+});
+
+test('user suggestions response contains safe fields only', function () {
+    $admin = User::factory()->admin()->create();
+    User::factory()->create([
+        'name' => 'کاربر امن',
+        'username' => 'safe_suggest_user',
+        'mobile' => '09126667788',
+        'password' => 'secret-password-value',
+        'remember_token' => 'remember-token-value',
+        'email' => 'safe@example.com',
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.user-suggestions', [
+            'q' => 'safe_suggest',
+        ]))
+        ->assertOk();
+
+    $json = $response->json();
+
+    expect($json)->toHaveKeys(['suggestions'])
+        ->and(collect($json)->keys()->all())->toBe(['suggestions'])
+        ->and(collect($json['suggestions'][0])->keys()->sort()->values()->all())->toBe(
+            collect(['id', 'name', 'username', 'mobile', 'hasMobile', 'mobileVerified', 'label'])->sort()->values()->all(),
+        )
+        ->and(json_encode($json))->not->toContain('secret-password-value')
+        ->and(json_encode($json))->not->toContain('remember-token-value')
+        ->and(json_encode($json))->not->toContain('safe@example.com');
+});
+
+test('user suggestions endpoint creates no users orders payments or licenses', function () {
+    $admin = User::factory()->admin()->create();
+    User::factory()->create([
+        'username' => 'readonly_suggest_user',
+        'mobile' => '09127776655',
+    ]);
+
+    $userCountBefore = User::query()->count();
+    $orderCountBefore = Order::query()->count();
+    $paymentCountBefore = Payment::query()->count();
+    $licenseCountBefore = SpotPlayerLicense::query()->count();
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.manual-enrollments.user-suggestions', [
+            'q' => 'readonly',
+        ]))
+        ->assertOk()
+        ->assertJsonPath('suggestions.0.username', 'readonly_suggest_user');
+
+    expect(User::query()->count())->toBe($userCountBefore)
+        ->and(Order::query()->count())->toBe($orderCountBefore)
+        ->and(Payment::query()->count())->toBe($paymentCountBefore)
+        ->and(SpotPlayerLicense::query()->count())->toBe($licenseCountBefore);
 });

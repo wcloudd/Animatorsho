@@ -50,7 +50,7 @@ const navItems = [
     },
     {
         href: '/admin/manual-enrollments',
-        label: 'ثبت دستی دسترسی',
+        label: 'کاربران و دسترسی‌ها',
         match: '/admin/manual-enrollments',
         icon: UserPlus,
     },

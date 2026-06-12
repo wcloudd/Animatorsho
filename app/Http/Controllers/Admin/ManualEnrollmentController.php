@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\ExternalEnrollmentSource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ManualEnrollmentLookupRequest;
+use App\Http\Requests\Admin\ManualEnrollmentUserSuggestionsRequest;
 use App\Http\Requests\Admin\StoreManualEnrollmentRequest;
+use App\Http\Requests\Admin\UpdateAdminManagedUserRequest;
 use App\Models\CoursePackage;
+use App\Models\User;
 use App\Services\Admin\AdminManualEnrollmentListService;
 use App\Services\Admin\AdminManualEnrollmentService;
 use App\Services\Admin\AdminUserLookupService;
+use App\Services\Admin\AdminUserManagementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -21,6 +25,7 @@ class ManualEnrollmentController extends Controller
         private readonly AdminManualEnrollmentListService $list,
         private readonly AdminManualEnrollmentService $enrollment,
         private readonly AdminUserLookupService $userLookup,
+        private readonly AdminUserManagementService $userManagement,
     ) {}
 
     public function index(): Response
@@ -33,6 +38,13 @@ class ManualEnrollmentController extends Controller
         return response()->json($this->userLookup->preview(
             $request->input('user_lookup'),
             $request->input('customer_mobile'),
+        ));
+    }
+
+    public function userSuggestions(ManualEnrollmentUserSuggestionsRequest $request): JsonResponse
+    {
+        return response()->json($this->userLookup->suggestions(
+            $request->input('q'),
         ));
     }
 
@@ -78,5 +90,15 @@ class ManualEnrollmentController extends Controller
         ]);
 
         return redirect()->route('admin.manual-enrollments.index');
+    }
+
+    public function updateUser(UpdateAdminManagedUserRequest $request, User $user): JsonResponse
+    {
+        $summary = $this->userManagement->update($user, $request->validated());
+
+        return response()->json([
+            'message' => 'اطلاعات کاربر ذخیره شد.',
+            'user' => $summary,
+        ]);
     }
 }

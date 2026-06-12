@@ -7,6 +7,7 @@ use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class SendProfileMobileOtpRequest extends FormRequest
 {
@@ -50,5 +51,27 @@ class SendProfileMobileOtpRequest extends FormRequest
                 Rule::unique(User::class, 'mobile')->ignore($user->id),
             ],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            /** @var User $user */
+            $user = $this->user();
+            $mobile = $this->input('mobile');
+
+            if (! filled($user->mobile) || ! is_string($mobile)) {
+                return;
+            }
+
+            $normalizedMobile = IranianMobile::normalize($mobile);
+
+            if ($normalizedMobile !== null && $normalizedMobile !== $user->mobile) {
+                $validator->errors()->add(
+                    'mobile',
+                    'تغییر شماره موبایل از این بخش امکان‌پذیر نیست. با پشتیبانی تماس بگیرید.',
+                );
+            }
+        });
     }
 }

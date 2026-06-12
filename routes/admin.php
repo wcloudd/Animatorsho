@@ -30,7 +30,9 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('manual-enrollments', [ManualEnrollmentController::class, 'index'])->name('manual-enrollments.index');
         Route::get('manual-enrollments/lookup', [ManualEnrollmentController::class, 'lookup'])->name('manual-enrollments.lookup');
+        Route::get('manual-enrollments/user-suggestions', [ManualEnrollmentController::class, 'userSuggestions'])->name('manual-enrollments.user-suggestions');
         Route::post('manual-enrollments', [ManualEnrollmentController::class, 'store'])->name('manual-enrollments.store');
+        Route::patch('manual-enrollments/users/{user}', [ManualEnrollmentController::class, 'updateUser'])->name('manual-enrollments.users.update');
 
         Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');

@@ -13,6 +13,8 @@ class AdminUserLookupService
 {
     use UsernameValidationRules;
 
+    public const SUGGESTION_LIMIT = 8;
+
     public const USERNAME_NOT_FOUND_MESSAGE = 'کاربری با این نام کاربری پیدا نشد.';
 
     public const MOBILE_NOT_FOUND_MESSAGE = 'کاربری با این شماره پیدا نشد؛ در صورت ثبت، کاربر جدید ساخته می‌شود.';
@@ -38,6 +40,39 @@ class AdminUserLookupService
      *     }
      * }
      */
+    /**
+     * Read-only autocomplete suggestions for admin manual enrollment.
+     *
+     * @return array{
+     *     suggestions: list<array{
+     *         id: int,
+     *         name: string,
+     *         username: ?string,
+     *         mobile: ?string,
+     *         hasMobile: bool,
+     *         label: string
+     *     }>
+     * }
+     */
+    public function suggestions(?string $query): array
+    {
+        $lookup = $this->trimNullable($query);
+
+        if ($lookup === null || $lookup === '') {
+            return ['suggestions' => []];
+        }
+
+        if ($this->isMobileIdentifier($lookup)) {
+            return $this->suggestByMobile($lookup);
+        }
+
+        if (mb_strlen($lookup) < 2) {
+            return ['suggestions' => []];
+        }
+
+        return $this->suggestByUsernameOrName($lookup);
+    }
+
     public function preview(?string $userLookup, ?string $customerMobile = null): array
     {
         $lookup = $this->trimNullable($userLookup);
@@ -260,6 +295,158 @@ class AdminUserLookupService
      *     hasMobile: bool
      * }
      */
+    /**
+     * @return array{
+     *     suggestions: list<array{
+     *         id: int,
+     *         name: string,
+     *         username: ?string,
+     *         mobile: ?string,
+     *         hasMobile: bool,
+     *         label: string
+     *     }>
+     * }
+     */
+    private function suggestByMobile(string $lookup): array
+    {
+        $digits = preg_replace('/\D+/', '', $lookup);
+
+        if ($digits === null || strlen($digits) < 4) {
+            return ['suggestions' => []];
+        }
+
+        if (str_starts_with($digits, '98')) {
+            $digits = substr($digits, 2);
+        }
+
+        if (str_starts_with($digits, '9') && ! str_starts_with($digits, '09')) {
+            $searchDigits = '0'.$digits;
+        } else {
+            $searchDigits = $digits;
+        }
+
+        $users = User::query()
+            ->whereNotNull('mobile')
+            ->where('mobile', 'like', '%'.$searchDigits.'%')
+            ->orderBy('mobile')
+            ->limit(self::SUGGESTION_LIMIT)
+            ->get();
+
+        return [
+            'suggestions' => $users
+                ->map(fn (User $user): array => $this->suggestionItem($user))
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     suggestions: list<array{
+     *         id: int,
+     *         name: string,
+     *         username: ?string,
+     *         mobile: ?string,
+     *         hasMobile: bool,
+     *         label: string
+     *     }>
+     * }
+     */
+    private function suggestByUsernameOrName(string $lookup): array
+    {
+        $normalizedQuery = strtolower($lookup);
+        $foundIds = [];
+        $users = collect();
+
+        $exactMatches = User::query()
+            ->where('username', $normalizedQuery)
+            ->get();
+
+        foreach ($exactMatches as $user) {
+            $users->push($user);
+            $foundIds[] = $user->id;
+        }
+
+        if ($users->count() < self::SUGGESTION_LIMIT) {
+            $prefixMatches = User::query()
+                ->where('username', 'like', $normalizedQuery.'%')
+                ->whereNotIn('id', $foundIds)
+                ->orderBy('username')
+                ->limit(self::SUGGESTION_LIMIT - $users->count())
+                ->get();
+
+            foreach ($prefixMatches as $user) {
+                $users->push($user);
+                $foundIds[] = $user->id;
+            }
+        }
+
+        if ($users->count() < self::SUGGESTION_LIMIT) {
+            $nameMatches = User::query()
+                ->where('name', 'like', '%'.$lookup.'%')
+                ->whereNotIn('id', $foundIds)
+                ->orderBy('name')
+                ->limit(self::SUGGESTION_LIMIT - $users->count())
+                ->get();
+
+            foreach ($nameMatches as $user) {
+                $users->push($user);
+            }
+        }
+
+        return [
+            'suggestions' => $users
+                ->take(self::SUGGESTION_LIMIT)
+                ->map(fn (User $user): array => $this->suggestionItem($user))
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     id: int,
+     *     name: string,
+     *     username: ?string,
+     *     mobile: ?string,
+     *     hasMobile: bool,
+     *     label: string
+     * }
+     */
+    private function suggestionItem(User $user): array
+    {
+        $summary = $this->summarizeUser($user);
+
+        return [
+            ...$summary,
+            'label' => $this->suggestionLabel($user),
+        ];
+    }
+
+    private function suggestionLabel(User $user): string
+    {
+        $label = $user->name;
+
+        if (filled($user->username)) {
+            $label .= ' (@'.$user->username.')';
+        }
+
+        if (filled($user->mobile)) {
+            $label .= ' · '.$user->mobile;
+        }
+
+        return $label;
+    }
+
+    /**
+     * @return array{
+     *     id: int,
+     *     name: string,
+     *     username: ?string,
+     *     mobile: ?string,
+     *     hasMobile: bool
+     * }
+     */
     private function summarizeUser(User $user): array
     {
         return [
@@ -268,6 +455,7 @@ class AdminUserLookupService
             'username' => $user->username,
             'mobile' => $user->mobile,
             'hasMobile' => filled($user->mobile),
+            'mobileVerified' => $user->hasVerifiedMobile(),
         ];
     }
 

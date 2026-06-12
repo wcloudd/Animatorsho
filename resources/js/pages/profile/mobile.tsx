@@ -1,5 +1,4 @@
 import { Form, Head, router } from '@inertiajs/react';
-import { useState } from 'react';
 import { AuthFormCard, authFieldClassName, authLabelClassName } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthPageHeader } from '@/components/auth/auth-page-header';
@@ -29,10 +28,7 @@ export default function ProfileMobileVerification({
     const bannerMessage =
         status === 'mobile-verification-required' ? copy.requiredMessage : message;
     const hasExistingMobile = Boolean(existingMobile);
-    const [showChangeMobile, setShowChangeMobile] = useState(!hasExistingMobile);
-    const subtitle = hasExistingMobile && !showChangeMobile
-        ? copy.existingSubtitle
-        : copy.subtitle;
+    const subtitle = hasExistingMobile ? copy.existingSubtitle : copy.subtitle;
 
     const handleVerifyExisting = () => {
         router.post(sendExistingCode.url(), {}, { preserveScroll: true });
@@ -57,7 +53,7 @@ export default function ProfileMobileVerification({
             ) : null}
 
             <AuthFormCard>
-                {hasExistingMobile && !showChangeMobile ? (
+                {hasExistingMobile ? (
                     <div className="flex flex-col gap-5">
                         <div
                             className="rounded-2xl bg-purple-soft px-4 py-4 text-center"
@@ -85,74 +81,50 @@ export default function ProfileMobileVerification({
                             {copy.verifyExistingLabel}
                         </Button>
 
-                        <div className="text-center">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                className="text-sm font-bold text-purple"
-                                onClick={() => setShowChangeMobile(true)}
-                                data-test="profile-mobile-change-link"
-                            >
-                                {copy.changeMobileLabel}
-                            </Button>
-                        </div>
+                        <p className="text-center text-xs leading-relaxed text-muted">
+                            برای تغییر شماره موبایل با پشتیبانی تماس بگیرید.
+                        </p>
                     </div>
                 ) : (
                     <Form {...sendCode.form()} className="flex flex-col gap-5">
                         {({ processing, errors }) => (
-                            <>
-                                <div className="grid gap-5">
-                                    <div className="grid gap-2">
-                                        <Label
-                                            htmlFor="mobile"
-                                            className={authLabelClassName}
-                                        >
-                                            {copy.mobileLabel}
-                                        </Label>
-                                        <Input
-                                            id="mobile"
-                                            type="tel"
-                                            name="mobile"
-                                            required
-                                            autoFocus
-                                            tabIndex={1}
-                                            autoComplete="tel"
-                                            inputMode="numeric"
-                                            defaultValue={existingMobile ?? ''}
-                                            placeholder={copy.mobilePlaceholder}
-                                            dir="ltr"
-                                            className={authFieldClassName}
-                                        />
-                                        <AuthInputError message={errors.mobile} />
-                                    </div>
-
-                                    <Button
-                                        type="submit"
-                                        className={cn(
-                                            'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
-                                        )}
-                                        tabIndex={2}
-                                        disabled={processing}
-                                        data-test="profile-mobile-send-button"
+                            <div className="grid gap-5">
+                                <div className="grid gap-2">
+                                    <Label
+                                        htmlFor="mobile"
+                                        className={authLabelClassName}
                                     >
-                                        {processing ? <Spinner /> : null}
-                                        {copy.submitLabel}
-                                    </Button>
+                                        {copy.mobileLabel}
+                                    </Label>
+                                    <Input
+                                        id="mobile"
+                                        type="tel"
+                                        name="mobile"
+                                        required
+                                        autoFocus
+                                        tabIndex={1}
+                                        autoComplete="tel"
+                                        inputMode="numeric"
+                                        placeholder={copy.mobilePlaceholder}
+                                        dir="ltr"
+                                        className={authFieldClassName}
+                                    />
+                                    <AuthInputError message={errors.mobile} />
                                 </div>
 
-                                {hasExistingMobile ? (
-                                    <div className="text-center">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            className="text-sm font-bold text-purple"
-                                            onClick={() => setShowChangeMobile(false)}
-                                        >
-                                            {copy.useExistingMobileLabel}
-                                        </Button>
-                                    </div>
-                                ) : null}
-                            </>
+                                <Button
+                                    type="submit"
+                                    className={cn(
+                                        'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white',
+                                    )}
+                                    tabIndex={2}
+                                    disabled={processing}
+                                    data-test="profile-mobile-send-button"
+                                >
+                                    {processing ? <Spinner /> : null}
+                                    {copy.submitLabel}
+                                </Button>
+                            </div>
                         )}
                     </Form>
                 )}
