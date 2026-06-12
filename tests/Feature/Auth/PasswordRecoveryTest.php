@@ -299,6 +299,33 @@ test('mobile reset form page does not expose otp in inertia props', function () 
         );
 });
 
+test('mobile password reset submit is rate limited', function () {
+    enableSmsForPasswordRecoveryTests();
+
+    User::factory()->withMobile('09121234567')->create();
+
+    sendPasswordResetOtp('09121234567');
+
+    $code = OtpTestHelper::extractCodeFromLastSms('09121234567');
+    expect($code)->not->toBeNull();
+
+    $this->post(route('password.mobile.verify.store'), [
+        'code' => $code,
+    ])->assertRedirect(route('password.mobile.reset'));
+
+    foreach (range(1, 5) as $attempt) {
+        $this->post(route('password.mobile.reset.store'), [
+            'password' => 'short',
+            'password_confirmation' => 'short',
+        ])->assertSessionHasErrors('password');
+    }
+
+    $this->post(route('password.mobile.reset.store'), [
+        'password' => 'short',
+        'password_confirmation' => 'short',
+    ])->assertStatus(429);
+});
+
 test('user without email gets generic response on email reset request', function () {
     Notification::fake();
 

@@ -8,6 +8,7 @@ import {
     authSubmitButtonClassName,
 } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
+import { AuthThrottleError } from '@/components/auth/auth-throttle-error';
 import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthRecoveryMethodCard } from '@/components/auth/auth-recovery-method-card';
 import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
@@ -95,6 +96,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                         >
                             {({ processing, errors }) => (
                                 <>
+                                    <AuthThrottleError message={errors.throttle} />
                                     <div className="grid gap-2">
                                         <Label
                                             htmlFor="mobile"
@@ -142,6 +144,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                         >
                             {({ processing, errors }) => (
                                 <>
+                                    <AuthThrottleError message={errors.throttle} />
                                     <div className="grid gap-2">
                                         <Label
                                             htmlFor="email"

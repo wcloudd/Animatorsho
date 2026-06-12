@@ -23,8 +23,18 @@ class LoginIdentifier
             return Str::lower((string) $request->input('email', ''));
         }
 
-        return IranianMobile::normalize($request->input('mobile'))
-            ?? (string) $request->input('mobile', '');
+        $mobile = $request->input('mobile');
+
+        if (! is_string($mobile) || $mobile === '') {
+            $sessionMobile = $request->session()->get('mobile_otp.mobile');
+
+            if (is_string($sessionMobile) && $sessionMobile !== '') {
+                $mobile = $sessionMobile;
+            }
+        }
+
+        return IranianMobile::normalize($mobile)
+            ?? (string) ($mobile ?? '');
     }
 
     public static function throttleKey(Request $request): string

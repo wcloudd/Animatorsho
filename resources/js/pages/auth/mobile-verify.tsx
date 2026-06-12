@@ -7,6 +7,7 @@ import {
     authSubmitButtonClassName,
 } from '@/components/auth/auth-form-card';
 import { AuthOtpCodeField } from '@/components/auth/auth-otp-code-field';
+import { AuthThrottleError } from '@/components/auth/auth-throttle-error';
 import { AuthOtpResendActions } from '@/components/auth/auth-otp-resend-actions';
 import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthSecondaryActionCard } from '@/components/auth/auth-secondary-action-card';
@@ -71,6 +72,7 @@ export default function MobileVerifyAuth({
                 >
                     {({ processing, errors }) => (
                         <>
+                            <AuthThrottleError message={errors.throttle} />
                             <div className="grid gap-4">
                                 <AuthOtpCodeField
                                     label={copy.codeLabel}

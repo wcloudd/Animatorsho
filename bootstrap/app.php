@@ -6,11 +6,13 @@ use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetRobotsIndexingHeader;
+use App\Support\AuthThrottleMessage;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -48,4 +50,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->render(function (TooManyRequestsHttpException $exception, Request $request) {
+            if (! AuthThrottleMessage::appliesTo($request)) {
+                return null;
+            }
+
+            return redirect()
+                ->back()
+                ->withInput($request->except('password', 'password_confirmation'))
+                ->withErrors([
+                    'throttle' => AuthThrottleMessage::forException($exception),
+                ]);
+        });
     })->create();

@@ -27,6 +27,7 @@ Route::middleware(config('fortify.middleware', ['web']))->group(function () {
                     ->name('reset');
 
                 Route::post('/reset', [PasswordResetMobileController::class, 'reset'])
+                    ->middleware('throttle:password-reset-mobile-submit')
                     ->name('reset.store');
             });
         }

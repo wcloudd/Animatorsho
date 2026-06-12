@@ -46,6 +46,18 @@ return [
             'max_attempts' => 10,
             'decay_minutes' => 1,
         ],
+        'password-reset-email-send' => [
+            'max_attempts' => 3,
+            'decay_minutes' => 1,
+        ],
+        'password-reset-email-submit' => [
+            'max_attempts' => 5,
+            'decay_minutes' => 1,
+        ],
+        'password-reset-mobile-submit' => [
+            'max_attempts' => 5,
+            'decay_minutes' => 1,
+        ],
         'support-ticket' => [
             'max_attempts' => 5,
             'decay_minutes' => 1,

@@ -67,12 +67,14 @@ Route::middleware(config('fortify.middleware', ['web']))->group(function () {
                 ->name('password.request');
 
             Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+                ->middleware('throttle:password-reset-email-send')
                 ->name('password.email');
 
             Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
                 ->name('password.reset');
 
             Route::post('/reset-password', [NewPasswordController::class, 'store'])
+                ->middleware('throttle:password-reset-email-submit')
                 ->name('password.update');
         }
     });

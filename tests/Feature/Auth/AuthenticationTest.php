@@ -186,3 +186,55 @@ test('users are rate limited on mobile login', function () {
         'password' => 'wrong-password',
     ])->assertStatus(429);
 });
+
+test('password-only login shares throttle key with mobile login via session mobile', function () {
+    User::factory()->withMobile('09121234567')->create();
+
+    foreach (range(1, 5) as $attempt) {
+        $this->withSession(['mobile_otp.mobile' => '09121234567'])
+            ->post(route('login.store'), [
+                'password' => 'wrong-password',
+            ])->assertSessionHasErrors('mobile');
+    }
+
+    $this->withSession(['mobile_otp.mobile' => '09121234567'])
+        ->post(route('login.store'), [
+            'password' => 'wrong-password',
+        ])->assertStatus(429);
+});
+
+test('password-only login cannot bypass mobile login rate limit with correct password', function () {
+    User::factory()->withMobile('09121234567')->create();
+
+    foreach (range(1, 5) as $attempt) {
+        $this->post(route('login.store'), [
+            'mobile' => '09121234567',
+            'password' => 'wrong-password',
+        ])->assertSessionHasErrors('mobile');
+    }
+
+    $this->withSession(['mobile_otp.mobile' => '09121234567'])
+        ->post(route('login.store'), [
+            'password' => 'password',
+        ]);
+
+    $this->assertGuest();
+});
+
+test('correct password remains blocked while mobile login is rate limited', function () {
+    User::factory()->withMobile('09121234567')->create();
+
+    foreach (range(1, 5) as $attempt) {
+        $this->post(route('login.store'), [
+            'mobile' => '09121234567',
+            'password' => 'wrong-password',
+        ])->assertSessionHasErrors('mobile');
+    }
+
+    $this->post(route('login.store'), [
+        'mobile' => '09121234567',
+        'password' => 'password',
+    ]);
+
+    $this->assertGuest();
+});

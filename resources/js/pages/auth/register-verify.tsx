@@ -8,6 +8,7 @@ import {
     authSubmitButtonClassName,
 } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
+import { AuthThrottleError } from '@/components/auth/auth-throttle-error';
 import { AuthOtpCodeField } from '@/components/auth/auth-otp-code-field';
 import { AuthOtpResendActions } from '@/components/auth/auth-otp-resend-actions';
 import { AuthPageIntro } from '@/components/auth/auth-page-intro';
@@ -73,6 +74,7 @@ export default function RegisterVerify({
                 >
                     {({ processing, errors }) => (
                         <>
+                            <AuthThrottleError message={errors.throttle} />
                             <div className="grid gap-4">
                                 <AuthOtpCodeField
                                     label={copy.codeLabel}

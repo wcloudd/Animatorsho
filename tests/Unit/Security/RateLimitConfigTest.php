@@ -15,6 +15,9 @@ test('security rate limit config defines all named limiters with expected defaul
             'registration-otp-verify',
             'password-reset-otp-send',
             'password-reset-otp-verify',
+            'password-reset-email-send',
+            'password-reset-email-submit',
+            'password-reset-mobile-submit',
             'support-ticket',
             'consultation-submit',
         ])
@@ -26,6 +29,9 @@ test('security rate limit config defines all named limiters with expected defaul
         ->and($rateLimits['registration-otp-verify']['max_attempts'])->toBe(10)
         ->and($rateLimits['password-reset-otp-send']['max_attempts'])->toBe(3)
         ->and($rateLimits['password-reset-otp-verify']['max_attempts'])->toBe(10)
+        ->and($rateLimits['password-reset-email-send']['max_attempts'])->toBe(3)
+        ->and($rateLimits['password-reset-email-submit']['max_attempts'])->toBe(5)
+        ->and($rateLimits['password-reset-mobile-submit']['max_attempts'])->toBe(5)
         ->and($rateLimits['support-ticket']['max_attempts'])->toBe(5)
         ->and($rateLimits['consultation-submit']['max_attempts'])->toBe(3);
 

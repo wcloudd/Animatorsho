@@ -7,6 +7,7 @@ import {
     authSubmitButtonClassName,
 } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
+import { AuthThrottleError } from '@/components/auth/auth-throttle-error';
 import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
@@ -68,6 +69,7 @@ export default function LoginEmail({
                 >
                     {({ processing, errors }) => (
                         <>
+                            <AuthThrottleError message={errors.throttle} />
                             <div className="grid gap-4">
                                 <div className="grid gap-2">
                                     <Label

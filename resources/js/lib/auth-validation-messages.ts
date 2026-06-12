@@ -23,6 +23,8 @@ const EXACT_AUTH_ERROR_MESSAGES: Record<string, string> = {
         'این ایمیل قبلاً ثبت شده است.',
     'Too many login attempts. Please try again in :seconds seconds.':
         'تلاش‌های ورود زیاد بود. لطفاً چند لحظه بعد دوباره تلاش کن.',
+    'تعداد تلاش‌ها زیاد شد. لطفاً کمی بعد دوباره امتحان کنید.':
+        'تعداد تلاش‌ها زیاد شد. لطفاً کمی بعد دوباره امتحان کنید.',
     'We have emailed your password reset link!':
         'لینک بازیابی رمز عبور به ایمیلت ارسال شد.',
     'Your password has been reset.': 'رمز عبور با موفقیت تغییر کرد.',

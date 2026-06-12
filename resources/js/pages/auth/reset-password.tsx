@@ -7,6 +7,7 @@ import {
     authSubmitButtonClassName,
 } from '@/components/auth/auth-form-card';
 import { AuthInputError } from '@/components/auth/auth-input-error';
+import { AuthThrottleError } from '@/components/auth/auth-throttle-error';
 import { AuthPageIntro } from '@/components/auth/auth-page-intro';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import PasswordInput from '@/components/password-input';
@@ -42,6 +43,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                 >
                     {({ processing, errors }) => (
                         <div className="grid gap-4">
+                            <AuthThrottleError message={errors.throttle} />
                             <div className="grid gap-2">
                                 <Label
                                     htmlFor="email"

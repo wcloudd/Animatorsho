@@ -78,6 +78,24 @@ class SecurityServiceProvider extends ServiceProvider
             return $this->configuredLimit('password-reset-otp-verify')->by($mobile.'|'.$request->ip());
         });
 
+        RateLimiter::for('password-reset-email-send', function (Request $request) {
+            $email = Str::lower(trim((string) $request->input('email', 'unknown')));
+
+            return $this->configuredLimit('password-reset-email-send')->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-email-submit', function (Request $request) {
+            $email = Str::lower(trim((string) $request->input('email', 'unknown')));
+
+            return $this->configuredLimit('password-reset-email-submit')->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-mobile-submit', function (Request $request) {
+            $userId = $request->session()->get('password_reset.user_id', 'unknown');
+
+            return $this->configuredLimit('password-reset-mobile-submit')->by('password-reset-mobile|'.$userId.'|'.$request->ip());
+        });
+
         RateLimiter::for('support-ticket', function (Request $request) {
             $userId = $request->user()?->id ?? $request->ip();
 
