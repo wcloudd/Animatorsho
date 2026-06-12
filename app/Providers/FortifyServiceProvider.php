@@ -7,15 +7,11 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Fortify\LoginRateLimiter;
 use App\Models\User;
 use App\Services\Sms\SmsSettingsService;
-use App\Support\AuthIdentifier;
 use App\Support\IranianMobile;
 use App\Support\LoginIdentifier;
-use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Fortify;
@@ -40,7 +36,6 @@ class FortifyServiceProvider extends ServiceProvider
     {
         $this->configureActions();
         $this->configureViews();
-        $this->configureRateLimiting();
     }
 
     /**
@@ -98,76 +93,5 @@ class FortifyServiceProvider extends ServiceProvider
             'smsAvailable' => app(SmsSettingsService::class)->isOtpDeliveryAvailable(),
         ]));
 
-    }
-
-    /**
-     * Configure rate limiting.
-     */
-    private function configureRateLimiting(): void
-    {
-
-        RateLimiter::for('login', function (Request $request) {
-            return Limit::perMinute(5)->by(LoginIdentifier::throttleKey($request));
-        });
-
-        RateLimiter::for('auth-identifier', function (Request $request) {
-            $raw = trim((string) $request->input('identifier', 'unknown'));
-            $parsed = AuthIdentifier::parse($raw);
-            $key = $parsed !== null ? $parsed->value : Str::lower($raw);
-
-            return Limit::perMinute(5)->by($key.'|'.$request->ip());
-        });
-
-        RateLimiter::for('mobile-otp-send', function (Request $request) {
-            $mobile = IranianMobile::normalize($request->input('mobile')) ?? 'unknown';
-
-            return Limit::perMinute(3)->by($mobile.'|'.$request->ip());
-        });
-
-        RateLimiter::for('mobile-otp-verify', function (Request $request) {
-            $mobile = $request->session()->get('mobile_otp.mobile', 'unknown');
-
-            return Limit::perMinute(10)->by($mobile.'|'.$request->ip());
-        });
-
-        RateLimiter::for('registration-otp-send', function (Request $request) {
-            $mobile = $request->session()->get('registration_otp.mobile')
-                ?? IranianMobile::normalize($request->input('mobile'))
-                ?? 'unknown';
-
-            return Limit::perMinute(3)->by($mobile.'|'.$request->ip());
-        });
-
-        RateLimiter::for('registration-otp-verify', function (Request $request) {
-            $mobile = $request->session()->get('registration_otp.mobile', 'unknown');
-
-            return Limit::perMinute(10)->by($mobile.'|'.$request->ip());
-        });
-
-        RateLimiter::for('password-reset-otp-send', function (Request $request) {
-            $mobile = $request->session()->get('password_reset_otp.mobile')
-                ?? IranianMobile::normalize($request->input('mobile'))
-                ?? 'unknown';
-
-            return Limit::perMinute(3)->by($mobile.'|'.$request->ip());
-        });
-
-        RateLimiter::for('password-reset-otp-verify', function (Request $request) {
-            $mobile = $request->session()->get('password_reset_otp.mobile', 'unknown');
-
-            return Limit::perMinute(10)->by($mobile.'|'.$request->ip());
-        });
-
-        RateLimiter::for('support-ticket', function (Request $request) {
-            $userId = $request->user()?->id ?? $request->ip();
-
-            return Limit::perMinute(5)->by('support-ticket|'.$userId);
-        });
-
-        RateLimiter::for('consultation-submit', function (Request $request) {
-            $userId = $request->user()?->id ?? $request->ip();
-
-            return Limit::perMinute(3)->by('consultation-submit|'.$userId);
-        });
     }
 }
