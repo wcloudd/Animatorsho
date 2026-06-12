@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ConsultationRequestStatus;
 use App\Models\ConsultationRequest;
 use App\Models\User;
+use InvalidArgumentException;
 
 class ConsultationRequestService
 {
@@ -19,6 +20,12 @@ class ConsultationRequestService
      */
     public function create(User $user, array $data): ConsultationRequest
     {
+        if ($this->userHasOpenRequest($user)) {
+            throw new InvalidArgumentException(
+                'شما در حال حاضر یک درخواست مشاوره باز دارید. پس از پیگیری توسط پشتیبانی می‌توانید درخواست جدید ثبت کنید.',
+            );
+        }
+
         return ConsultationRequest::query()->create([
             'user_id' => $user->id,
             'name' => $data['name'],
@@ -29,5 +36,13 @@ class ConsultationRequestService
             'age' => $data['age'] ?? null,
             'status' => ConsultationRequestStatus::New,
         ]);
+    }
+
+    public function userHasOpenRequest(User $user): bool
+    {
+        return ConsultationRequest::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ConsultationRequestStatus::openCases())
+            ->exists();
     }
 }

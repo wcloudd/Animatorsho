@@ -60,6 +60,12 @@ class SupportTicketService
      */
     public function createForUser(User $user, array $data, ?UploadedFile $attachment = null): SupportTicket
     {
+        if ($this->openTicketCountForUser($user) >= (int) config('security.support.max_open_tickets', 3)) {
+            throw new InvalidArgumentException(
+                'حداکثر ۳ تیکت باز هم‌زمان می‌توانید ثبت کنید. لطفاً از طریق تیکت‌های قبلی پیگیری کنید.',
+            );
+        }
+
         $category = SupportTicketCategory::from($data['category']);
         $storedPath = null;
 
@@ -279,6 +285,13 @@ class SupportTicketService
         if ($ticket->user_id !== $user->id) {
             throw new AuthorizationException;
         }
+    }
+
+    public function openTicketCountForUser(User $user): int
+    {
+        return $user->supportTickets()
+            ->whereNot('status', SupportTicketStatus::Closed)
+            ->count();
     }
 
     /**

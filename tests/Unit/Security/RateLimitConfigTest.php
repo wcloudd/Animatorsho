@@ -18,7 +18,8 @@ test('security rate limit config defines all named limiters with expected defaul
             'password-reset-email-send',
             'password-reset-email-submit',
             'password-reset-mobile-submit',
-            'support-ticket',
+            'support-ticket-create',
+            'support-ticket-reply',
             'consultation-submit',
             'checkout-order',
             'payment-retry',
@@ -35,12 +36,14 @@ test('security rate limit config defines all named limiters with expected defaul
         ->and($rateLimits['password-reset-email-send']['max_attempts'])->toBe(3)
         ->and($rateLimits['password-reset-email-submit']['max_attempts'])->toBe(5)
         ->and($rateLimits['password-reset-mobile-submit']['max_attempts'])->toBe(5)
-        ->and($rateLimits['support-ticket']['max_attempts'])->toBe(5)
+        ->and($rateLimits['support-ticket-create']['max_attempts'])->toBe(3)
+        ->and($rateLimits['support-ticket-reply']['max_attempts'])->toBe(10)
         ->and($rateLimits['consultation-submit']['max_attempts'])->toBe(3)
         ->and($rateLimits['checkout-order']['max_attempts'])->toBe(5)
         ->and($rateLimits['payment-retry']['max_attempts'])->toBe(3)
         ->and($rateLimits['payment-cancel']['max_attempts'])->toBe(5)
-        ->and($config['online_payment']['max_retries_per_order'])->toBe(5);
+        ->and($config['online_payment']['max_retries_per_order'])->toBe(5)
+        ->and($config['support']['max_open_tickets'])->toBe(3);
 
     foreach ($rateLimits as $limiter) {
         expect($limiter['decay_minutes'])->toBe(1);

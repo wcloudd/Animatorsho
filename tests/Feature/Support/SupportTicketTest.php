@@ -161,17 +161,67 @@ test('sms failure does not break user reply', function () {
 test('support ticket creation is rate limited', function () {
     $user = User::factory()->withMobile()->create();
 
-    for ($i = 0; $i < 5; $i++) {
+    for ($i = 0; $i < 3; $i++) {
         $this->actingAs($user)->post(route('support.tickets.store'), [
             'subject' => "موضوع {$i}",
             'category' => SupportTicketCategory::Payment->value,
             'message' => 'پیام تست برای محدودیت ارسال.',
         ])->assertRedirect();
+
+        SupportTicket::query()
+            ->where('user_id', $user->id)
+            ->update([
+                'status' => SupportTicketStatus::Closed,
+                'closed_at' => now(),
+            ]);
     }
 
     $this->actingAs($user)->post(route('support.tickets.store'), [
-        'subject' => 'موضوع ششم',
+        'subject' => 'موضوع چهارم',
         'category' => SupportTicketCategory::Payment->value,
         'message' => 'پیام تست برای محدودیت ارسال.',
+    ])->assertStatus(429);
+});
+
+test('user cannot create more than three open support tickets', function () {
+    $user = User::factory()->withMobile()->create();
+
+    SupportTicket::factory()->forUser($user)->open()->count(3)->create();
+
+    $this->actingAs($user)->post(route('support.tickets.store'), [
+        'subject' => 'تیکت چهارم',
+        'category' => SupportTicketCategory::Payment->value,
+        'message' => 'این تیکت نباید ثبت شود.',
+    ])->assertRedirect();
+
+    expect(SupportTicket::query()->count())->toBe(3);
+});
+
+test('user can create ticket when only closed tickets exist', function () {
+    $user = User::factory()->withMobile()->create();
+
+    SupportTicket::factory()->forUser($user)->closed()->count(3)->create();
+
+    $this->actingAs($user)->post(route('support.tickets.store'), [
+        'subject' => 'تیکت جدید',
+        'category' => SupportTicketCategory::Payment->value,
+        'message' => 'این تیکت باید ثبت شود.',
+    ])->assertRedirect();
+
+    expect(SupportTicket::query()->count())->toBe(4);
+});
+
+test('support ticket reply is rate limited separately from creation', function () {
+    $user = User::factory()->withMobile()->create();
+    $ticket = SupportTicket::factory()->forUser($user)->open()->create();
+
+    for ($i = 0; $i < 10; $i++) {
+        $this->actingAs($user)->post(route('support.tickets.messages.store', $ticket), [
+            'body' => "پاسخ تست {$i}",
+        ])->assertRedirect();
+    }
+
+    $this->actingAs($user)->post(route('support.tickets.messages.store', $ticket), [
+        'body' => 'پاسخ یازدهم',
     ])->assertStatus(429);
 });

@@ -58,8 +58,12 @@ return [
             'max_attempts' => 5,
             'decay_minutes' => 1,
         ],
-        'support-ticket' => [
-            'max_attempts' => 5,
+        'support-ticket-create' => [
+            'max_attempts' => 3,
+            'decay_minutes' => 1,
+        ],
+        'support-ticket-reply' => [
+            'max_attempts' => 10,
             'decay_minutes' => 1,
         ],
         'consultation-submit' => [
@@ -88,6 +92,10 @@ return [
 
     'online_payment' => [
         'max_retries_per_order' => 5,
+    ],
+
+    'support' => [
+        'max_open_tickets' => 3,
     ],
 
 ];

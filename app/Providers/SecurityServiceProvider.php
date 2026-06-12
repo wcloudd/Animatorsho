@@ -96,10 +96,16 @@ class SecurityServiceProvider extends ServiceProvider
             return $this->configuredLimit('password-reset-mobile-submit')->by('password-reset-mobile|'.$userId.'|'.$request->ip());
         });
 
-        RateLimiter::for('support-ticket', function (Request $request) {
+        RateLimiter::for('support-ticket-create', function (Request $request) {
             $userId = $request->user()?->id ?? $request->ip();
 
-            return $this->configuredLimit('support-ticket')->by('support-ticket|'.$userId);
+            return $this->configuredLimit('support-ticket-create')->by('support-ticket-create|'.$userId);
+        });
+
+        RateLimiter::for('support-ticket-reply', function (Request $request) {
+            $userId = $request->user()?->id ?? $request->ip();
+
+            return $this->configuredLimit('support-ticket-reply')->by('support-ticket-reply|'.$userId);
         });
 
         RateLimiter::for('consultation-submit', function (Request $request) {

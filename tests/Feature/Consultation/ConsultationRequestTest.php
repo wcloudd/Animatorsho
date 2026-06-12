@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ConsultationRequestStatus;
 use App\Http\Middleware\EnsureUserHasVerifiedMobile;
 use App\Models\ConsultationRequest;
 use App\Models\User;
@@ -152,6 +153,10 @@ test('consultation submit is throttled per authenticated user', function () {
                 'full_name' => 'علی رضایی',
             ])
             ->assertRedirect();
+
+        ConsultationRequest::query()
+            ->where('user_id', $user->id)
+            ->update(['status' => ConsultationRequestStatus::Cancelled]);
     }
 
     $this->actingAs($user)
@@ -159,6 +164,48 @@ test('consultation submit is throttled per authenticated user', function () {
             'full_name' => 'علی رضایی',
         ])
         ->assertStatus(429);
+});
+
+test('user cannot submit consultation while an open request exists', function () {
+    $user = User::factory()->withMobile('09121112233')->create();
+
+    ConsultationRequest::factory()->forUser($user)->withStatus(ConsultationRequestStatus::New)->create();
+
+    $this->actingAs($user)
+        ->post(route('consultation.store'), [
+            'full_name' => 'کاربر تست',
+        ])
+        ->assertRedirect(route('consultation'));
+
+    expect(ConsultationRequest::query()->count())->toBe(1);
+});
+
+test('user can submit consultation after previous request is closed', function () {
+    $user = User::factory()->withMobile('09122223344')->create();
+
+    ConsultationRequest::factory()->forUser($user)->withStatus(ConsultationRequestStatus::Cancelled)->create();
+
+    $this->actingAs($user)
+        ->post(route('consultation.store'), [
+            'full_name' => 'کاربر تست',
+        ])
+        ->assertRedirect(route('consultation'));
+
+    expect(ConsultationRequest::query()->count())->toBe(2);
+});
+
+test('user cannot submit consultation while follow up request is open', function () {
+    $user = User::factory()->withMobile('09123334455')->create();
+
+    ConsultationRequest::factory()->forUser($user)->withStatus(ConsultationRequestStatus::FollowUp)->create();
+
+    $this->actingAs($user)
+        ->post(route('consultation.store'), [
+            'full_name' => 'کاربر تست',
+        ])
+        ->assertRedirect(route('consultation'));
+
+    expect(ConsultationRequest::query()->count())->toBe(1);
 });
 
 test('consultation submit requires a valid name', function () {

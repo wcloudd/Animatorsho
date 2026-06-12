@@ -8,6 +8,7 @@ use App\Services\ConsultationRequestService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 class ConsultationController extends Controller
 {
@@ -25,10 +26,16 @@ class ConsultationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $this->consultations->create(
-            $user,
-            $request->validated(),
-        );
+        try {
+            $this->consultations->create(
+                $user,
+                $request->validated(),
+            );
+        } catch (InvalidArgumentException $exception) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
+
+            return redirect()->route('consultation');
+        }
 
         Inertia::flash('toast', [
             'type' => 'success',

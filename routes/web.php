@@ -60,11 +60,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
     Route::post('support/tickets', [SupportTicketController::class, 'store'])
-        ->middleware(['throttle:support-ticket', 'verified.mobile'])
+        ->middleware(['throttle:support-ticket-create', 'verified.mobile'])
         ->name('support.tickets.store');
     Route::get('support/tickets/{ticket}', [SupportTicketController::class, 'show'])->name('support.tickets.show');
     Route::post('support/tickets/{ticket}/messages', [SupportTicketController::class, 'storeMessage'])
-        ->middleware(['throttle:support-ticket', 'verified.mobile'])
+        ->middleware(['throttle:support-ticket-reply', 'verified.mobile'])
         ->name('support.tickets.messages.store');
     Route::get('support/tickets/{ticket}/attachments/{attachment}', [SupportTicketController::class, 'downloadAttachment'])->name('support.tickets.attachments.download');
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');

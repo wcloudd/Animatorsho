@@ -30,11 +30,17 @@ class SupportTicketController extends Controller
 
     public function store(StoreSupportTicketRequest $request): RedirectResponse
     {
-        $ticket = $this->tickets->createForUser(
-            $request->user(),
-            $request->validated(),
-            $request->file('attachment'),
-        );
+        try {
+            $ticket = $this->tickets->createForUser(
+                $request->user(),
+                $request->validated(),
+                $request->file('attachment'),
+            );
+        } catch (InvalidArgumentException $exception) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
+
+            return redirect()->back();
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'پیام شما ثبت شد.']);
 
