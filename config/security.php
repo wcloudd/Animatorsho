@@ -114,4 +114,20 @@ return [
         'message' => 'در ارسال فرم مشکلی پیش آمد. لطفاً دوباره تلاش کنید.',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Security Event Logging
+    |--------------------------------------------------------------------------
+    |
+    | Structured warning logs for suspicious security events. Writes to the
+    | dedicated security log channel configured in config/logging.php.
+    |
+    */
+
+    'logging' => [
+        'enabled' => env('SECURITY_LOGGING_ENABLED', true),
+        'channel' => env('SECURITY_LOG_CHANNEL', 'security'),
+        'user_agent_max_length' => 200,
+    ],
+
 ];

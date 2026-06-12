@@ -9,6 +9,7 @@ use App\Models\SupportTicket;
 use App\Models\SupportTicketAttachment;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
+use App\Services\Security\SecurityEventLogger;
 use App\Services\Sms\SmsNotifier;
 use App\Support\SupportTicketStatusLabels;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -22,6 +23,7 @@ class SupportTicketService
     public function __construct(
         private readonly SmsNotifier $smsNotifier,
         private readonly SupportTicketAttachmentStorageService $attachments,
+        private readonly SecurityEventLogger $securityEvents,
     ) {}
 
     /**
@@ -60,7 +62,12 @@ class SupportTicketService
      */
     public function createForUser(User $user, array $data, ?UploadedFile $attachment = null): SupportTicket
     {
-        if ($this->openTicketCountForUser($user) >= (int) config('security.support.max_open_tickets', 3)) {
+        $openTicketCount = $this->openTicketCountForUser($user);
+        $maxOpenTickets = (int) config('security.support.max_open_tickets', 3);
+
+        if ($openTicketCount >= $maxOpenTickets) {
+            $this->securityEvents->supportOpenTicketCapReached($openTicketCount, $maxOpenTickets);
+
             throw new InvalidArgumentException(
                 'حداکثر ۳ تیکت باز هم‌زمان می‌توانید ثبت کنید. لطفاً از طریق تیکت‌های قبلی پیگیری کنید.',
             );

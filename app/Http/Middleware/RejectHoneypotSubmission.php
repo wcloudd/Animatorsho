@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Security\SecurityEventLogger;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -9,6 +10,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RejectHoneypotSubmission
 {
+    public function __construct(
+        private readonly SecurityEventLogger $securityEvents,
+    ) {}
+
     /**
      * @param  Closure(Request): Response  $next
      */
@@ -23,6 +28,8 @@ class RejectHoneypotSubmission
         if ($fieldName === '' || ! $request->filled($fieldName)) {
             return $next($request);
         }
+
+        $this->securityEvents->honeypotTriggered($request);
 
         if ($request->header('X-Inertia')) {
             Inertia::flash('toast', [

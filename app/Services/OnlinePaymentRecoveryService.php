@@ -9,6 +9,7 @@ use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Security\SecurityEventLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -19,6 +20,7 @@ class OnlinePaymentRecoveryService
 {
     public function __construct(
         private readonly ZarinpalService $zarinpal,
+        private readonly SecurityEventLogger $securityEvents,
     ) {}
 
     public function isRecoverableOnlineOrder(Order $order): bool
@@ -73,6 +75,13 @@ class OnlinePaymentRecoveryService
         }
 
         if ($this->hasReachedRetryCeiling($payment)) {
+            $this->securityEvents->paymentRetryCeilingReached(
+                $order->id,
+                $payment->id,
+                (int) ($payment->meta['retry_count'] ?? 0),
+                $this->maxRetriesPerOrder(),
+            );
+
             return redirect()
                 ->route('profile')
                 ->with('error', 'تعداد تلاش‌های پرداخت برای این سفارش به حد مجاز رسیده است. لطفاً از بخش پشتیبانی کمک بگیرید.');

@@ -7,6 +7,7 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RejectHoneypotSubmission;
 use App\Http\Middleware\SetRobotsIndexingHeader;
+use App\Services\Security\SecurityEventLogger;
 use App\Support\AuthThrottleMessage;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -57,6 +58,8 @@ return Application::configure(basePath: dirname(__DIR__))
             if (! AuthThrottleMessage::appliesTo($request)) {
                 return null;
             }
+
+            app(SecurityEventLogger::class)->authRateLimitExceeded($exception, $request);
 
             return redirect()
                 ->back()

@@ -59,3 +59,13 @@ test('security config defines honeypot defaults', function () {
         ->and($config['honeypot']['field_name'])->toBe('preferred_contact_window')
         ->and($config['honeypot']['message'])->toBe('در ارسال فرم مشکلی پیش آمد. لطفاً دوباره تلاش کنید.');
 });
+
+test('security config defines logging defaults', function () {
+    /** @var array{logging: array{enabled: bool, channel: string, user_agent_max_length: int}} $config */
+    $config = require dirname(__DIR__, 3).'/config/security.php';
+
+    expect($config['logging'])->toBeArray()
+        ->and($config['logging']['enabled'])->toBeTrue()
+        ->and($config['logging']['channel'])->toBe('security')
+        ->and($config['logging']['user_agent_max_length'])->toBe(200);
+});
