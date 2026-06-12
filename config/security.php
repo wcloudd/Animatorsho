@@ -128,6 +128,8 @@ return [
         'enabled' => env('SECURITY_LOGGING_ENABLED', true),
         'channel' => env('SECURITY_LOG_CHANNEL', 'security'),
         'user_agent_max_length' => 200,
+        'database_enabled' => env('SECURITY_LOGGING_DATABASE_ENABLED', true),
+        'database_retention_days' => (int) env('SECURITY_LOGGING_RETENTION_DAYS', 90),
     ],
 
 ];

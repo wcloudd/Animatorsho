@@ -10,6 +10,7 @@ import {
     MessageSquare,
     Package,
     Settings,
+    Shield,
     ShoppingBag,
     Smartphone,
 } from 'lucide-react';
@@ -81,6 +82,12 @@ const navItems = [
         label: 'پیامک',
         match: '/admin/sms',
         icon: Smartphone,
+    },
+    {
+        href: '/admin/security-events',
+        label: 'امنیت',
+        match: '/admin/security-events',
+        icon: Shield,
     },
     {
         href: '/admin/site-settings',

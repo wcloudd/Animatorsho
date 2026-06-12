@@ -261,6 +261,27 @@ export type AdminSmsLogItem = {
     createdAt: string | null;
 };
 
+export type AdminSecurityEventMetaItem = {
+    key: string;
+    label: string;
+    value: string;
+};
+
+export type AdminSecurityEventItem = {
+    id: number;
+    event: string;
+    eventValue: string;
+    eventTone: AdminStatusTone;
+    occurredAt: string | null;
+    userId: number | null;
+    userLabel: string;
+    route: string | null;
+    method: string | null;
+    ip: string | null;
+    userAgent: string | null;
+    metaItems: AdminSecurityEventMetaItem[];
+};
+
 export type AdminSupportTicketListItem = {
     id: number;
     subject: string;

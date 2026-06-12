@@ -2,9 +2,11 @@
 
 namespace App\Services\Security;
 
+use App\Models\SecurityEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Throwable;
 
 class SecurityEventLogger
 {
@@ -63,6 +65,8 @@ class SecurityEventLogger
 
         Log::channel((string) config('security.logging.channel', 'security'))
             ->warning($event, $payload);
+
+        $this->persistToDatabase($event, $payload);
     }
 
     public function honeypotTriggered(?Request $request = null): void
@@ -186,5 +190,45 @@ class SecurityEventLogger
         }
 
         return self::ROUTE_LIMITER_MAP[$routeName] ?? null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function persistToDatabase(string $event, array $payload): void
+    {
+        if (! config('security.logging.database_enabled', true)) {
+            return;
+        }
+
+        try {
+            $occurredAt = isset($payload['occurred_at'])
+                ? now()->parse((string) $payload['occurred_at'])
+                : now();
+
+            $meta = $payload;
+            unset(
+                $meta['event'],
+                $meta['occurred_at'],
+                $meta['route'],
+                $meta['method'],
+                $meta['user_id'],
+                $meta['ip'],
+                $meta['user_agent'],
+            );
+
+            SecurityEvent::query()->create([
+                'event' => $event,
+                'occurred_at' => $occurredAt,
+                'user_id' => $payload['user_id'] ?? null,
+                'route' => $payload['route'] ?? null,
+                'method' => $payload['method'] ?? null,
+                'ip' => $payload['ip'] ?? null,
+                'user_agent' => $payload['user_agent'] ?? null,
+                'meta' => $meta === [] ? null : $meta,
+            ]);
+        } catch (Throwable) {
+            // Database persistence must never interrupt request flows.
+        }
     }
 }

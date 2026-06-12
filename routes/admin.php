@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InstallmentController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\SecurityEventController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\SmsController;
 use App\Http\Controllers\Admin\SpotPlayerLicenseController;
@@ -42,6 +43,8 @@ Route::middleware(['auth', 'admin'])
         Route::get('sms/logs', [SmsController::class, 'logs'])->name('sms.logs.index');
         Route::patch('sms/settings', [SmsController::class, 'updateSettings'])->name('sms.settings.update');
         Route::patch('sms/templates/{template}', [SmsController::class, 'updateTemplate'])->name('sms.templates.update');
+
+        Route::get('security-events', [SecurityEventController::class, 'index'])->name('security-events.index');
 
         Route::get('site-settings', [SiteSettingsController::class, 'index'])->name('site-settings.index');
         Route::patch('site-settings', [SiteSettingsController::class, 'update'])->name('site-settings.update');

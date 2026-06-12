@@ -61,11 +61,13 @@ test('security config defines honeypot defaults', function () {
 });
 
 test('security config defines logging defaults', function () {
-    /** @var array{logging: array{enabled: bool, channel: string, user_agent_max_length: int}} $config */
+    /** @var array{logging: array{enabled: bool, channel: string, user_agent_max_length: int, database_enabled: bool, database_retention_days: int}} $config */
     $config = require dirname(__DIR__, 3).'/config/security.php';
 
     expect($config['logging'])->toBeArray()
         ->and($config['logging']['enabled'])->toBeTrue()
         ->and($config['logging']['channel'])->toBe('security')
-        ->and($config['logging']['user_agent_max_length'])->toBe(200);
+        ->and($config['logging']['user_agent_max_length'])->toBe(200)
+        ->and($config['logging']['database_enabled'])->toBeTrue()
+        ->and($config['logging']['database_retention_days'])->toBe(90);
 });

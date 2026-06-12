@@ -1,17 +1,22 @@
 <?php
 
+use App\Models\SecurityEvent;
 use App\Services\Security\SecurityEventLogger;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Event;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
+uses(RefreshDatabase::class);
+
 beforeEach(function () {
     config([
         'security.logging.enabled' => true,
         'security.logging.channel' => 'security',
         'security.logging.user_agent_max_length' => 200,
+        'security.logging.database_enabled' => true,
     ]);
 });
 
@@ -142,4 +147,66 @@ test('auth rate limit exceeded includes limiter and retry after seconds', functi
         ->and($captured->messages[0]->context['event'])->toBe('auth_rate_limit_exceeded')
         ->and($captured->messages[0]->context['limiter'])->toBe('login')
         ->and($captured->messages[0]->context['retry_after_seconds'])->toBe(60);
+});
+
+test('security event logger persists sanitized row when database logging is enabled', function () {
+    $request = Request::create('/consultation', 'POST', [], [], [], [
+        'REMOTE_ADDR' => '203.0.113.10',
+    ]);
+    $route = new Route('POST', '/consultation', fn () => null);
+    $route->name('consultation.store');
+    $request->setRouteResolver(fn () => $route);
+
+    app(SecurityEventLogger::class)->honeypotTriggered($request);
+
+    $event = SecurityEvent::query()->first();
+
+    expect($event)->not->toBeNull()
+        ->and($event->event)->toBe('honeypot_triggered')
+        ->and($event->route)->toBe('consultation.store')
+        ->and($event->ip)->toBe('203.0.113.10')
+        ->and($event->meta)->toBeNull();
+});
+
+test('security event logger skips database row when database logging is disabled', function () {
+    config(['security.logging.database_enabled' => false]);
+
+    app(SecurityEventLogger::class)->honeypotTriggered();
+
+    expect(SecurityEvent::query()->count())->toBe(0);
+});
+
+test('security event logger swallows database exceptions without breaking caller', function () {
+    SecurityEvent::creating(function (): void {
+        throw new RuntimeException('Database unavailable.');
+    });
+
+    try {
+        $captured = captureLoggedMessages();
+
+        expect(fn () => app(SecurityEventLogger::class)->honeypotTriggered())
+            ->not->toThrow(RuntimeException::class);
+
+        expect($captured->messages)->toHaveCount(1)
+            ->and(SecurityEvent::query()->count())->toBe(0);
+    } finally {
+        SecurityEvent::flushEventListeners();
+    }
+});
+
+test('security event logger stores event specific meta without envelope duplication', function () {
+    app(SecurityEventLogger::class)->paymentRetryCeilingReached(10, 20, 5, 5);
+
+    $event = SecurityEvent::query()->first();
+
+    expect($event)->not->toBeNull()
+        ->and($event->meta)->toBe([
+            'order_id' => 10,
+            'payment_id' => 20,
+            'retry_count' => 5,
+            'max_retries' => 5,
+        ])
+        ->and($event->meta)->not->toHaveKey('event')
+        ->and($event->meta)->not->toHaveKey('occurred_at')
+        ->and($event->meta)->not->toHaveKey('ip');
 });
