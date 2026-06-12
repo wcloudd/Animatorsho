@@ -4,6 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState, type TransitionEvent } from 'react';
 import { useScrollDirectionNavVisible } from '@/hooks/use-scroll-direction';
 import { home, profile } from '@/routes';
+import type { SharedPageProps } from '@/types';
 import support from '@/routes/support';
 import {
     BRAND_LOGO_ACTIVE_SRC,
@@ -69,14 +70,52 @@ function CenterNavLogo({ active }: CenterNavLogoProps) {
     );
 }
 
-function isActive(currentUrl: string, href: string): boolean {
-    const path = href.split('?')[0];
-
-    if (path === '/') {
-        return currentUrl === '/' || currentUrl === '';
+function normalizeNavPath(value: string | undefined | null): string {
+    if (typeof value !== 'string' || value.length === 0) {
+        return '';
     }
 
-    return currentUrl === path || currentUrl.startsWith(`${path}/`);
+    return value.split('?')[0] ?? '';
+}
+
+function isActive(
+    currentUrl: string | undefined,
+    href: string | undefined,
+): boolean {
+    const path = normalizeNavPath(href);
+
+    if (path === '') {
+        return false;
+    }
+
+    const normalizedCurrentUrl = normalizeNavPath(currentUrl);
+
+    return (
+        normalizedCurrentUrl === path ||
+        normalizedCurrentUrl.startsWith(`${path}/`)
+    );
+}
+
+function isAnimatorshoNavActive(currentUrl: string | undefined): boolean {
+    const normalizedCurrentUrl = normalizeNavPath(currentUrl);
+
+    return (
+        normalizedCurrentUrl === '/' ||
+        normalizedCurrentUrl === '/course' ||
+        normalizedCurrentUrl.startsWith('/course/')
+    );
+}
+
+function resolveAnimatorshoHref(
+    nav: SharedPageProps['nav'] | undefined,
+): string {
+    const href = nav?.animatorshoHref;
+
+    if (typeof href === 'string' && href.length > 0) {
+        return href;
+    }
+
+    return toUrl(home());
 }
 
 type SideNavItemProps = {
@@ -123,9 +162,10 @@ function SideNavItem({ label, href, icon: Icon, active }: SideNavItemProps) {
 
 type CenterNavItemProps = {
     active: boolean;
+    href: string;
 };
 
-function CenterNavItem({ active }: CenterNavItemProps) {
+function CenterNavItem({ active, href }: CenterNavItemProps) {
     return (
         <div
             className={cn(
@@ -134,7 +174,7 @@ function CenterNavItem({ active }: CenterNavItemProps) {
             )}
         >
             <Link
-                href={home()}
+                href={href}
                 className={cn(
                     centerNavLinkClassName,
                     active
@@ -172,14 +212,15 @@ export function BottomNav() {
         preloadNavLogos();
     }, []);
 
-    const { url } = usePage();
+    const page = usePage<SharedPageProps>();
+    const { url } = page;
     const navVisible = useScrollDirectionNavVisible();
     const [navInteractive, setNavInteractive] = useState(true);
-    const homeHref = toUrl(home());
+    const animatorshoHref = resolveAnimatorshoHref(page.props.nav);
     const supportHref = toUrl(support.index());
     const profileHref = toUrl(profile());
 
-    const homeActive = isActive(url, homeHref);
+    const animatorshoActive = isAnimatorshoNavActive(url);
     const supportActive = isActive(url, supportHref);
     const profileActive = isActive(url, profileHref);
 
@@ -239,7 +280,10 @@ export function BottomNav() {
                             icon={User}
                             active={profileActive}
                         />
-                        <CenterNavItem active={homeActive} />
+                        <CenterNavItem
+                            active={animatorshoActive}
+                            href={animatorshoHref}
+                        />
                     </div>
                 </div>
             </div>

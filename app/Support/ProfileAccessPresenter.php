@@ -148,6 +148,53 @@ class ProfileAccessPresenter
         return false;
     }
 
+    /**
+     * @param  Collection<int, Order>  $orders
+     * @param  Collection<int, SpotPlayerLicense>  $licenses
+     */
+    public function accessStateForPackage(
+        Collection $orders,
+        Collection $licenses,
+        int $packageId,
+    ): ?string {
+        $packageOrders = $orders->where('course_package_id', $packageId);
+        $packageLicenses = $licenses->where('course_package_id', $packageId);
+
+        $candidates = [];
+
+        foreach ($packageOrders as $order) {
+            $candidate = $this->candidateFromOrder($order);
+
+            if ($candidate !== null) {
+                $candidates[] = $candidate;
+            }
+        }
+
+        foreach ($packageLicenses as $license) {
+            if ($license->order_id !== null && $packageOrders->contains('id', $license->order_id)) {
+                continue;
+            }
+
+            $candidate = $this->candidateFromLicenseOnly($license);
+
+            if ($candidate !== null) {
+                $candidates[] = $candidate;
+            }
+        }
+
+        if ($candidates === []) {
+            return null;
+        }
+
+        usort(
+            $candidates,
+            fn (array $left, array $right): int => $left['priority'] <=> $right['priority']
+                ?: ($right['sortTimestamp'] <=> $left['sortTimestamp']),
+        );
+
+        return $candidates[0]['accessState'];
+    }
+
     private function isBlockingAccessState(string $accessState): bool
     {
         return in_array($accessState, [

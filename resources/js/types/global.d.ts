@@ -13,6 +13,9 @@ declare module '@inertiajs/core' {
             name: string;
             appUrl: string;
             auth: Auth;
+            nav?: {
+                animatorshoHref?: string;
+            };
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

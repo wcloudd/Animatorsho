@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Course\CourseAccessService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,13 +36,22 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $hasCourseAccess = $user !== null
+            && app(CourseAccessService::class)->userHasActiveAccess($user);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'appUrl' => rtrim((string) config('app.url'), '/'),
             'auth' => [
-                'user' => $request->user(),
-                'isAdmin' => $request->user()?->isAdmin() ?? false,
+                'user' => $user,
+                'isAdmin' => $user?->isAdmin() ?? false,
+            ],
+            'nav' => [
+                'animatorshoHref' => $hasCourseAccess
+                    ? route('course.home')
+                    : route('home'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

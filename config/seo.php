@@ -19,6 +19,7 @@ return [
     'disallow_paths' => [
         '/admin',
         '/profile',
+        '/course',
         '/support',
         '/settings',
         '/checkout/result',
@@ -34,6 +35,7 @@ return [
         'admin.*',
         'profile',
         'profile.*',
+        'course.home',
         'support.*',
         'checkout.result',
         'checkout.confirm',

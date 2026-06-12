@@ -54,6 +54,10 @@ test('profile redirects guests to login', function () {
     $this->get(route('profile'))->assertRedirect(route('login'));
 });
 
+test('course home redirects guests to login', function () {
+    $this->get(route('course.home'))->assertRedirect(route('login'));
+});
+
 test('authenticated user can access support', function () {
     $user = User::factory()->create();
 

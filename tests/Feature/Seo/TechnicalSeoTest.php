@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\CoursePackage;
+use App\Models\SpotPlayerLicense;
 use App\Models\User;
 use Database\Seeders\AnimatorshoCourseSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -17,6 +19,7 @@ test('robots.txt returns expected disallow rules and sitemap line', function () 
     expect($content)->toContain('User-agent: *')
         ->and($content)->toContain('Disallow: /admin')
         ->and($content)->toContain('Disallow: /profile')
+        ->and($content)->toContain('Disallow: /course')
         ->and($content)->toContain('Disallow: /support')
         ->and($content)->toContain('Sitemap: https://animatorsho.test/sitemap.xml')
         ->and($content)->not->toContain('localhost')
@@ -70,6 +73,26 @@ test('profile pages include noindex response header', function () {
 
     $this->actingAs($user)
         ->get(route('profile'))
+        ->assertOk()
+        ->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+});
+
+test('course home includes noindex response header', function () {
+    $this->withoutVite();
+    $this->seed(AnimatorshoCourseSeeder::class);
+
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    SpotPlayerLicense::factory()
+        ->active()
+        ->create([
+            'user_id' => $user->id,
+            'course_package_id' => $package->id,
+        ]);
+
+    $this->actingAs($user)
+        ->get(route('course.home'))
         ->assertOk()
         ->assertHeader('X-Robots-Tag', 'noindex, nofollow');
 });

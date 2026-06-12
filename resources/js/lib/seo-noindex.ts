@@ -1,6 +1,7 @@
 const NO_INDEX_PUBLIC_COMPONENT_PREFIXES = [
     'profile/',
     'support/',
+    'animatorsho/course-home',
     'checkout/result',
     'checkout/confirm',
 ] as const;
