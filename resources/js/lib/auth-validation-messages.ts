@@ -6,6 +6,11 @@ const EXACT_AUTH_ERROR_MESSAGES: Record<string, string> = {
     'The email field is required.': 'ایمیل را وارد کنید.',
     'The password field is required.': 'رمز عبور را وارد کنید.',
     'The name field is required.': 'نام و نام خانوادگی را وارد کنید.',
+    'The identifier field is required.':
+        'موبایل یا ایمیل خود را وارد کنید.',
+    'The mobile field is required.': 'شماره موبایل را وارد کنید.',
+    'The username field is required.': 'نام کاربری را وارد کنید.',
+    'The code field is required.': 'کد تأیید را وارد کنید.',
     'The password confirmation field is required.':
         'تکرار رمز عبور را وارد کنید.',
     'The password confirmation does not match.':
@@ -39,6 +44,22 @@ const FIELD_REQUIRED_PATTERNS: { pattern: RegExp; message: string }[] = [
     {
         pattern: /^The password confirmation field is required\.?$/i,
         message: 'تکرار رمز عبور را وارد کنید.',
+    },
+    {
+        pattern: /^The identifier field is required\.?$/i,
+        message: 'موبایل یا ایمیل خود را وارد کنید.',
+    },
+    {
+        pattern: /^The mobile field is required\.?$/i,
+        message: 'شماره موبایل را وارد کنید.',
+    },
+    {
+        pattern: /^The username field is required\.?$/i,
+        message: 'نام کاربری را وارد کنید.',
+    },
+    {
+        pattern: /^The code field is required\.?$/i,
+        message: 'کد تأیید را وارد کنید.',
     },
 ];
 

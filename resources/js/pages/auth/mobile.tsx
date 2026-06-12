@@ -1,4 +1,5 @@
-import { Form, Head, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import { Lock } from 'lucide-react';
 import {
     AuthFormCard,
@@ -51,7 +52,7 @@ export default function MobileAuth({ status }: Props) {
             ) : null}
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...sendCode.form()}
                     onError={onAuthError}
                     className="flex flex-col gap-4"
@@ -70,7 +71,6 @@ export default function MobileAuth({ status }: Props) {
                                         id="mobile"
                                         type="tel"
                                         name="mobile"
-                                        required
                                         autoFocus
                                         tabIndex={1}
                                         autoComplete="tel"
@@ -120,7 +120,7 @@ export default function MobileAuth({ status }: Props) {
                             </div>
                         </>
                     )}
-                </Form>
+                </AuthForm>
             </AuthFormCard>
 
             <AuthSupportFallbackCard visible={showSupportFallback} />

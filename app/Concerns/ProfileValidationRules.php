@@ -80,7 +80,7 @@ trait ProfileValidationRules
             'string',
             function (string $attribute, mixed $value, \Closure $fail): void {
                 if (! IranianMobile::isValid(is_string($value) ? $value : null)) {
-                    $fail('شماره موبایل معتبر وارد کنید (مثال: 09123456789).');
+                    $fail(IranianMobile::validationMessage(is_string($value) ? $value : null));
                 }
             },
             $userId === null

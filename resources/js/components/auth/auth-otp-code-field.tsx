@@ -128,7 +128,6 @@ export function AuthOtpCodeField({
                         type="text"
                         inputMode="numeric"
                         autoComplete={index === 0 ? 'one-time-code' : 'off'}
-                        pattern="[0-9]*"
                         maxLength={1}
                         value={digit}
                         tabIndex={tabIndex + index}

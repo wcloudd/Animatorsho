@@ -138,10 +138,38 @@ test('invalid identifier is rejected', function () {
         ->assertSessionHasErrors('identifier');
 });
 
-test('wrong length mobile identifier shows helpful validation message', function () {
-    submitIdentifier('091234567890')
+test('empty identifier shows persian validation message', function () {
+    submitIdentifier('')
         ->assertSessionHasErrors([
-            'identifier' => IranianMobile::INVALID_FORMAT_MESSAGE,
+            'identifier' => AuthIdentifier::validationMessage(''),
+        ]);
+});
+
+test('too many digit mobile identifier shows specific validation message', function () {
+    submitIdentifier('091234567891')
+        ->assertSessionHasErrors([
+            'identifier' => IranianMobile::TOO_MANY_DIGITS_MESSAGE,
+        ]);
+});
+
+test('too few digit mobile identifier shows specific validation message', function () {
+    submitIdentifier('0912345678')
+        ->assertSessionHasErrors([
+            'identifier' => IranianMobile::TOO_FEW_DIGITS_MESSAGE,
+        ]);
+});
+
+test('wrong prefix mobile identifier shows specific validation message', function () {
+    submitIdentifier('08123456789')
+        ->assertSessionHasErrors([
+            'identifier' => IranianMobile::WRONG_PREFIX_MESSAGE,
+        ]);
+});
+
+test('mobile identifier with letters shows invalid characters validation message', function () {
+    submitIdentifier('09abc456789')
+        ->assertSessionHasErrors([
+            'identifier' => IranianMobile::INVALID_CHARACTERS_MESSAGE,
         ]);
 });
 

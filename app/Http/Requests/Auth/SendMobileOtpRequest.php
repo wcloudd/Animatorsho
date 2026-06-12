@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Concerns\ProvidesAuthValidationMessages;
 use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SendMobileOtpRequest extends FormRequest
 {
+    use ProvidesAuthValidationMessages;
+
     public function authorize(): bool
     {
         return true;
@@ -44,5 +47,13 @@ class SendMobileOtpRequest extends FormRequest
                 },
             ],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->authMobileRequiredMessages();
     }
 }

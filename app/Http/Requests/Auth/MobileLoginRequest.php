@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Concerns\ProvidesAuthValidationMessages;
 use App\Support\IranianMobile;
 use Illuminate\Foundation\Http\FormRequest;
 
 class MobileLoginRequest extends FormRequest
 {
+    use ProvidesAuthValidationMessages;
+
     public function authorize(): bool
     {
         return true;
@@ -39,5 +42,16 @@ class MobileLoginRequest extends FormRequest
         if ($normalized !== null) {
             $this->merge(['mobile' => $normalized]);
         }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            ...$this->authMobileRequiredMessages(),
+            ...$this->authPasswordRequiredMessages(),
+        ];
     }
 }

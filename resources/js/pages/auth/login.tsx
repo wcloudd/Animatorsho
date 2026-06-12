@@ -1,4 +1,5 @@
-import { Form, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import {
     AuthFormCard,
     authFieldClassName,
@@ -59,7 +60,7 @@ export default function Login({ status }: Props) {
             ) : null}
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...identifier.form(
                         redirectQuery ? { query: redirectQuery } : undefined,
                     )}
@@ -80,7 +81,6 @@ export default function Login({ status }: Props) {
                                         id="identifier"
                                         type="text"
                                         name="identifier"
-                                        required
                                         autoFocus
                                         tabIndex={1}
                                         autoComplete="username"
@@ -121,7 +121,7 @@ export default function Login({ status }: Props) {
                             </div>
                         </>
                     )}
-                </Form>
+                </AuthForm>
             </AuthFormCard>
 
             <AuthSupportFallbackCard visible={showSupportFallback} />

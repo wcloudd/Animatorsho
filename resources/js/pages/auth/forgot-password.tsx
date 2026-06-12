@@ -1,4 +1,5 @@
-import { Form, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import { useState } from 'react';
 import {
     AuthFormCard,
@@ -87,7 +88,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                             </p>
                         )}
 
-                        <Form
+                        <AuthForm
                             {...sendCode.form()}
                             onError={onAuthError}
                             className="flex flex-col gap-4"
@@ -126,7 +127,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                                     </Button>
                                 </>
                             )}
-                        </Form>
+                        </AuthForm>
                     </>
                 ) : (
                     <>
@@ -134,7 +135,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                             {copy.emailSubtitle}
                         </p>
 
-                        <Form
+                        <AuthForm
                             {...email.form()}
                             onError={onAuthError}
                             className="flex flex-col gap-4"
@@ -150,7 +151,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                                         </Label>
                                         <Input
                                             id="email"
-                                            type="email"
+                                            type="text"
                                             name="email"
                                             autoComplete="email"
                                             autoFocus
@@ -172,7 +173,7 @@ export default function ForgotPassword({ status, smsAvailable }: Props) {
                                     </Button>
                                 </>
                             )}
-                        </Form>
+                        </AuthForm>
                     </>
                 )}
 

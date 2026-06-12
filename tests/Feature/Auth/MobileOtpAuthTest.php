@@ -7,6 +7,7 @@ use App\Models\SmsMessage;
 use App\Models\User;
 use App\Services\Auth\MobileOtpAuthService;
 use App\Services\Sms\SmsSettingsService;
+use App\Support\IranianMobile;
 use Database\Seeders\SmsTemplateSeeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
@@ -64,6 +65,15 @@ test('valid mobile sends otp and creates otp_codes row for existing user', funct
 test('invalid mobile is rejected', function () {
     sendOtp('12345')
         ->assertSessionHasErrors('mobile');
+
+    expect(OtpCode::query()->count())->toBe(0);
+});
+
+test('twelve digit mobile starting with 09 shows too many digits message', function () {
+    sendOtp('091234567891')
+        ->assertSessionHasErrors([
+            'mobile' => IranianMobile::TOO_MANY_DIGITS_MESSAGE,
+        ]);
 
     expect(OtpCode::query()->count())->toBe(0);
 });

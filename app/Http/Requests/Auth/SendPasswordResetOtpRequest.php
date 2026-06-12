@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Concerns\ProvidesAuthValidationMessages;
 use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SendPasswordResetOtpRequest extends FormRequest
 {
+    use ProvidesAuthValidationMessages;
+
     public function authorize(): bool
     {
         return true;
@@ -39,10 +42,18 @@ class SendPasswordResetOtpRequest extends FormRequest
                 'string',
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     if (! IranianMobile::isValid(is_string($value) ? $value : null)) {
-                        $fail('شماره موبایل معتبر وارد کنید (مثال: 09123456789).');
+                        $fail(IranianMobile::validationMessage(is_string($value) ? $value : null));
                     }
                 },
             ],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->authMobileRequiredMessages();
     }
 }

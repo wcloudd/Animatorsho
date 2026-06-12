@@ -1,4 +1,5 @@
-import { Form, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import {
     AuthFormCard,
     authFieldClassName,
@@ -70,7 +71,7 @@ export default function Register({
             <AuthPageIntro title={copy.title} subtitle={copy.subtitle} />
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...store.form()}
                     resetOnSuccess={['password', 'password_confirmation']}
                     disableWhileProcessing
@@ -90,7 +91,6 @@ export default function Register({
                                     <Input
                                         id="name"
                                         type="text"
-                                        required
                                         autoFocus
                                         tabIndex={1}
                                         autoComplete="name"
@@ -114,7 +114,6 @@ export default function Register({
                                     <Input
                                         id="username"
                                         type="text"
-                                        required
                                         tabIndex={2}
                                         autoComplete="username"
                                         name="username"
@@ -123,7 +122,6 @@ export default function Register({
                                         }
                                         placeholder={copy.usernamePlaceholder}
                                         dir="ltr"
-                                        pattern="[a-z0-9_]+"
                                         onChange={(event) => {
                                             event.target.value =
                                                 event.target.value.toLowerCase();
@@ -177,7 +175,6 @@ export default function Register({
                                         <Input
                                             id="mobile"
                                             type="tel"
-                                            required
                                             tabIndex={3}
                                             autoComplete="tel"
                                             inputMode="numeric"
@@ -204,7 +201,6 @@ export default function Register({
                                     </Label>
                                     <PasswordInput
                                         id="password"
-                                        required
                                         tabIndex={4}
                                         autoComplete="new-password"
                                         name="password"
@@ -224,7 +220,6 @@ export default function Register({
                                     </Label>
                                     <PasswordInput
                                         id="password_confirmation"
-                                        required
                                         tabIndex={5}
                                         autoComplete="new-password"
                                         name="password_confirmation"
@@ -248,7 +243,7 @@ export default function Register({
                                     </Label>
                                     <Input
                                         id="email"
-                                        type="email"
+                                        type="text"
                                         tabIndex={6}
                                         autoComplete="email"
                                         name="email"
@@ -294,7 +289,7 @@ export default function Register({
                             </div>
                         </>
                     )}
-                </Form>
+                </AuthForm>
             </AuthFormCard>
 
             <p className="text-center text-xs font-medium leading-relaxed text-muted">

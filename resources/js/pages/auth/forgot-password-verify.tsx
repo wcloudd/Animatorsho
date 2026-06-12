@@ -1,4 +1,5 @@
-import { Form, Head, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import { useState } from 'react';
 import {
     AuthFormCard,
@@ -61,7 +62,7 @@ export default function ForgotPasswordVerify({
             ) : null}
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...verifyStore.form()}
                     onError={onAuthError}
                     className="flex flex-col gap-4"
@@ -111,7 +112,7 @@ export default function ForgotPasswordVerify({
                             </div>
                         </>
                     )}
-                </Form>
+                </AuthForm>
             </AuthFormCard>
 
             <AuthSupportFallbackCard visible={showSupportFallback} />

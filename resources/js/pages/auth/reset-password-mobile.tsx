@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import {
     AuthFormCard,
     authFieldClassName,
@@ -37,7 +38,7 @@ export default function ResetPasswordMobile({
             <AuthPageIntro title={copy.title} subtitle={subtitle} />
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...resetStore.form()}
                     resetOnSuccess={['password', 'password_confirmation']}
                     className="flex flex-col gap-4"
@@ -94,7 +95,7 @@ export default function ResetPasswordMobile({
                             </Button>
                         </div>
                     )}
-                </Form>
+                </AuthForm>
             </AuthFormCard>
 
             <AuthSupportFallbackCard />

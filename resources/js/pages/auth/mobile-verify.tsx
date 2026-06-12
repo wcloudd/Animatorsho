@@ -1,4 +1,5 @@
-import { Form, Head, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import { Lock } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -63,7 +64,7 @@ export default function MobileVerifyAuth({
             ) : null}
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...verifyStore.form()}
                     onError={onAuthError}
                     className="flex flex-col gap-4"
@@ -117,7 +118,7 @@ export default function MobileVerifyAuth({
                             />
                         </>
                     )}
-                </Form>
+                </AuthForm>
             </AuthFormCard>
 
             <AuthSupportFallbackCard visible={showSupportFallback} />

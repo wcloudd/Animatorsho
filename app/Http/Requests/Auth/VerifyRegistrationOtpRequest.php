@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Concerns\ProvidesAuthValidationMessages;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class VerifyRegistrationOtpRequest extends FormRequest
 {
+    use ProvidesAuthValidationMessages;
+
     public function authorize(): bool
     {
         return true;
@@ -22,5 +25,13 @@ class VerifyRegistrationOtpRequest extends FormRequest
         return [
             'code' => ['required', 'string', 'digits:'.$codeLength],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->authOtpCodeRequiredMessages();
     }
 }

@@ -33,7 +33,7 @@ class RegistrationCompletionService
 
         if ($normalizedMobile === null) {
             throw ValidationException::withMessages([
-                'identifier' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+                'identifier' => IranianMobile::validationMessage($mobile),
             ]);
         }
 
@@ -68,8 +68,10 @@ class RegistrationCompletionService
             ?? $this->pendingAuthMobile($request);
 
         if ($mobile === null) {
+            $rawMobile = $input['mobile'] ?? null;
+
             throw ValidationException::withMessages([
-                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+                'mobile' => IranianMobile::validationMessage(is_string($rawMobile) ? $rawMobile : null),
             ]);
         }
 
@@ -141,7 +143,7 @@ class RegistrationCompletionService
 
         if ($normalizedMobile === null) {
             throw ValidationException::withMessages([
-                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+                'mobile' => IranianMobile::validationMessage($mobile),
             ]);
         }
 

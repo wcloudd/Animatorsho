@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Concerns\ProvidesAuthValidationMessages;
 use App\Support\AuthIdentifier;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SubmitAuthIdentifierRequest extends FormRequest
 {
+    use ProvidesAuthValidationMessages;
+
     public function authorize(): bool
     {
         return true;
@@ -39,5 +42,13 @@ class SubmitAuthIdentifierRequest extends FormRequest
                 },
             ],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->authIdentifierRequiredMessages();
     }
 }

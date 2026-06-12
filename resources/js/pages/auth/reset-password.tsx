@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import {
     AuthFormCard,
     authFieldClassName,
@@ -33,7 +34,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
             <AuthPageIntro title={copy.title} subtitle={copy.subtitle} />
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...update.form()}
                     transform={(data) => ({ ...data, token, email })}
                     resetOnSuccess={['password', 'password_confirmation']}
@@ -50,7 +51,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                                 </Label>
                                 <Input
                                     id="email"
-                                    type="email"
+                                    type="text"
                                     name="email"
                                     autoComplete="email"
                                     defaultValue={email}
@@ -114,7 +115,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                             </Button>
                         </div>
                     )}
-                </Form>
+                </AuthForm>
             </AuthFormCard>
 
             <AuthSupportFallbackCard />

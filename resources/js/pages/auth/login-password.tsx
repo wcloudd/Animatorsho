@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import {
     AuthFormCard,
     authFieldClassName,
@@ -52,7 +53,7 @@ export default function LoginPassword({
             ) : null}
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...store.form()}
                     resetOnSuccess={['password']}
                     onError={onAuthError}
@@ -82,7 +83,6 @@ export default function LoginPassword({
                                     <PasswordInput
                                         id="password"
                                         name="password"
-                                        required
                                         autoFocus
                                         tabIndex={1}
                                         autoComplete="current-password"
@@ -129,7 +129,7 @@ export default function LoginPassword({
                             />
                         </>
                     )}
-                </Form>
+                </AuthForm>
             </AuthFormCard>
 
             <AuthSupportFallbackCard visible={showSupportFallback} />

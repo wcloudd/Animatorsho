@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Concerns\ProvidesAuthValidationMessages;
 use Illuminate\Foundation\Http\FormRequest;
 
 class EmailLoginRequest extends FormRequest
 {
+    use ProvidesAuthValidationMessages;
+
     public function authorize(): bool
     {
         return true;
@@ -30,5 +33,16 @@ class EmailLoginRequest extends FormRequest
                 'email' => strtolower((string) $this->input('email')),
             ]);
         }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            ...$this->authEmailRequiredMessages(),
+            ...$this->authPasswordRequiredMessages(),
+        ];
     }
 }

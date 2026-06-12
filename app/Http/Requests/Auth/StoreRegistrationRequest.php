@@ -4,6 +4,7 @@ namespace App\Http\Requests\Auth;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Concerns\ProvidesAuthValidationMessages;
 use App\Concerns\UsernameValidationRules;
 use App\Support\IranianMobile;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -12,7 +13,7 @@ use Illuminate\Validation\Rules\Password;
 
 class StoreRegistrationRequest extends FormRequest
 {
-    use PasswordValidationRules, ProfileValidationRules, UsernameValidationRules;
+    use PasswordValidationRules, ProfileValidationRules, ProvidesAuthValidationMessages, UsernameValidationRules;
 
     public function authorize(): bool
     {
@@ -74,5 +75,13 @@ class StoreRegistrationRequest extends FormRequest
         $rule = Password::default();
 
         return $rule instanceof Password ? $rule : 'min:8';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->authRegistrationRequiredMessages();
     }
 }

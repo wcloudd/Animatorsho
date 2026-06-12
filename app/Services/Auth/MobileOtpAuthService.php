@@ -33,7 +33,7 @@ class MobileOtpAuthService
 
         if ($normalizedMobile === null) {
             throw ValidationException::withMessages([
-                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+                'mobile' => IranianMobile::validationMessage($mobile),
             ]);
         }
 
@@ -76,7 +76,7 @@ class MobileOtpAuthService
 
         if ($normalizedMobile === null) {
             throw ValidationException::withMessages([
-                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+                'mobile' => IranianMobile::validationMessage($mobile),
             ]);
         }
 
@@ -199,7 +199,7 @@ class MobileOtpAuthService
 
         if ($normalizedMobile === null) {
             throw ValidationException::withMessages([
-                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+                'mobile' => IranianMobile::validationMessage($mobile),
             ]);
         }
 
@@ -293,7 +293,7 @@ class MobileOtpAuthService
 
         if ($normalizedMobile === null) {
             throw ValidationException::withMessages([
-                'mobile' => 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).',
+                'mobile' => IranianMobile::validationMessage($mobile),
             ]);
         }
 

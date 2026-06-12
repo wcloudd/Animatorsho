@@ -1,4 +1,5 @@
-import { Form, Head, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { AuthForm } from '@/components/auth/auth-form';
 import { useState } from 'react';
 import {
     AuthFormCard,
@@ -65,7 +66,7 @@ export default function RegisterVerify({
             ) : null}
 
             <AuthFormCard>
-                <Form
+                <AuthForm
                     {...verifyStore.form()}
                     onError={onAuthError}
                     className="flex flex-col gap-4"
@@ -113,10 +114,10 @@ export default function RegisterVerify({
                             ) : null}
                         </>
                     )}
-                </Form>
+                </AuthForm>
 
                 {showChangeMobile ? (
-                    <Form
+                    <AuthForm
                         {...changeMobile.form()}
                         className="mt-4 flex flex-col gap-3 border-t border-border/80 pt-4"
                     >
@@ -133,7 +134,6 @@ export default function RegisterVerify({
                                         id="change-mobile"
                                         type="tel"
                                         name="mobile"
-                                        required
                                         inputMode="numeric"
                                         placeholder="09123456789"
                                         dir="ltr"
@@ -153,7 +153,7 @@ export default function RegisterVerify({
                                 </Button>
                             </>
                         )}
-                    </Form>
+                    </AuthForm>
                 ) : null}
             </AuthFormCard>
 
