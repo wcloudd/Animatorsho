@@ -8,4 +8,10 @@ export type SharedPageProps = {
         animatorshoHref?: string;
     };
     sidebarOpen: boolean;
+    security?: {
+        honeypot: {
+            enabled: boolean;
+            fieldName: string;
+        };
+    };
 };

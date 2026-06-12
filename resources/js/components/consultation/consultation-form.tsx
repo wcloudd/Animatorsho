@@ -21,6 +21,7 @@ import {
 } from '@/lib/consultation-form-data';
 import { userHasVerifiedMobile } from '@/lib/auth-user';
 import { cn } from '@/lib/utils';
+import { useHoneypotField } from '@/hooks/use-honeypot-field';
 import { login, register } from '@/routes';
 import consultation from '@/routes/consultation';
 
@@ -142,11 +143,13 @@ function ConsultationSubmitForm({ verifiedMobile }: ConsultationSubmitFormProps)
         interest: CONSULTATION_INTEREST_OPTIONS[0]?.value ?? '',
         note: '',
     });
+    const { field: honeypotField, withHoneypot } = useHoneypotField();
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         post(consultation.store.url(), {
             preserveScroll: true,
+            transform: (formData) => withHoneypot(formData),
             onSuccess: () => {
                 reset();
                 setLevel(CONSULTATION_LEVEL_OPTIONS[0]?.value ?? '');
@@ -158,9 +161,10 @@ function ConsultationSubmitForm({ verifiedMobile }: ConsultationSubmitFormProps)
     return (
         <form
             onSubmit={submit}
-            className={cardClassName}
+            className={cn(cardClassName, 'relative')}
             data-test="consultation-submit-form"
         >
+            {honeypotField}
             <p className="text-center text-sm font-medium leading-relaxed text-muted">
                 {CONSULTATION_VERIFIED_MOBILE_COPY.snapshotNote}
             </p>

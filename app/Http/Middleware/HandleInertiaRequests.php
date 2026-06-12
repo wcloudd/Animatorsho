@@ -54,6 +54,12 @@ class HandleInertiaRequests extends Middleware
                     : route('home'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'security' => [
+                'honeypot' => [
+                    'enabled' => (bool) config('security.honeypot.enabled', true),
+                    'fieldName' => (string) config('security.honeypot.field_name'),
+                ],
+            ],
         ];
     }
 }

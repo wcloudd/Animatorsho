@@ -33,7 +33,7 @@ Route::get('/checkout/zarinpal/callback', CheckoutZarinpalCallbackController::cl
 
 Route::get('/consultation', [ConsultationController::class, 'index'])->name('consultation');
 Route::post('/consultation', [ConsultationController::class, 'store'])
-    ->middleware(['auth', 'verified.mobile', 'throttle:consultation-submit'])
+    ->middleware(['auth', 'verified.mobile', 'honeypot', 'throttle:consultation-submit'])
     ->name('consultation.store');
 
 Route::middleware('auth')->group(function () {
@@ -60,11 +60,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
     Route::post('support/tickets', [SupportTicketController::class, 'store'])
-        ->middleware(['throttle:support-ticket-create', 'verified.mobile'])
+        ->middleware(['honeypot', 'throttle:support-ticket-create', 'verified.mobile'])
         ->name('support.tickets.store');
     Route::get('support/tickets/{ticket}', [SupportTicketController::class, 'show'])->name('support.tickets.show');
     Route::post('support/tickets/{ticket}/messages', [SupportTicketController::class, 'storeMessage'])
-        ->middleware(['throttle:support-ticket-reply', 'verified.mobile'])
+        ->middleware(['honeypot', 'throttle:support-ticket-reply', 'verified.mobile'])
         ->name('support.tickets.messages.store');
     Route::get('support/tickets/{ticket}/attachments/{attachment}', [SupportTicketController::class, 'downloadAttachment'])->name('support.tickets.attachments.download');
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');

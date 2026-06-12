@@ -21,6 +21,7 @@ import {
     userSubmitButtonClassName,
     userTextareaClassName,
 } from '@/lib/user-form-styles';
+import { useHoneypotField } from '@/hooks/use-honeypot-field';
 import support from '@/routes/support';
 
 type SupportNewTicketFormProps = {
@@ -36,12 +37,14 @@ export function SupportNewTicketForm({
         message: '',
         attachment: null as File | null,
     });
+    const { field: honeypotField, withHoneypot } = useHoneypotField();
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
         post(support.tickets.store.url(), {
             preserveScroll: true,
             forceFormData: true,
+            transform: (formData) => withHoneypot(formData),
             onSuccess: () => reset(),
         });
     };
@@ -56,7 +59,8 @@ export function SupportNewTicketForm({
                 title="ارسال پیام جدید"
                 description="موضوع، دسته‌بندی و متن پیام را وارد کن."
             >
-                <form onSubmit={submit} className="flex flex-col gap-4">
+                <form onSubmit={submit} className="relative flex flex-col gap-4">
+                    {honeypotField}
                     <div className="grid gap-2">
                         <Label
                             htmlFor="ticket-subject"

@@ -98,4 +98,20 @@ return [
         'max_open_tickets' => 3,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Honeypot
+    |--------------------------------------------------------------------------
+    |
+    | Offline bot trap for consultation and support POST forms. The hidden
+    | field must stay empty; any value triggers a generic rejection response.
+    |
+    */
+
+    'honeypot' => [
+        'enabled' => env('SECURITY_HONEYPOT_ENABLED', true),
+        'field_name' => 'preferred_contact_window',
+        'message' => 'در ارسال فرم مشکلی پیش آمد. لطفاً دوباره تلاش کنید.',
+    ],
+
 ];

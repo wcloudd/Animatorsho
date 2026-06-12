@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureUserHasVerifiedMobile;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RejectHoneypotSubmission;
 use App\Http\Middleware\SetRobotsIndexingHeader;
 use App\Support\AuthThrottleMessage;
 use Illuminate\Foundation\Application;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'honeypot' => RejectHoneypotSubmission::class,
             'verified.mobile' => EnsureUserHasVerifiedMobile::class,
         ]);
     })

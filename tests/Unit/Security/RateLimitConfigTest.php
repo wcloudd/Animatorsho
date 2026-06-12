@@ -49,3 +49,13 @@ test('security rate limit config defines all named limiters with expected defaul
         expect($limiter['decay_minutes'])->toBe(1);
     }
 });
+
+test('security config defines honeypot defaults', function () {
+    /** @var array{honeypot: array{enabled: bool, field_name: string, message: string}} $config */
+    $config = require dirname(__DIR__, 3).'/config/security.php';
+
+    expect($config['honeypot'])->toBeArray()
+        ->and($config['honeypot']['enabled'])->toBeTrue()
+        ->and($config['honeypot']['field_name'])->toBe('preferred_contact_window')
+        ->and($config['honeypot']['message'])->toBe('در ارسال فرم مشکلی پیش آمد. لطفاً دوباره تلاش کنید.');
+});

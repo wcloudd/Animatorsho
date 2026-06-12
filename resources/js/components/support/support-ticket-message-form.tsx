@@ -9,6 +9,7 @@ import {
     userSubmitButtonClassName,
     userTextareaClassName,
 } from '@/lib/user-form-styles';
+import { useHoneypotField } from '@/hooks/use-honeypot-field';
 import { cn } from '@/lib/utils';
 
 type SupportTicketMessageFormProps = {
@@ -29,12 +30,14 @@ export function SupportTicketMessageForm({
         waiting_for_user: false,
         attachment: null as File | null,
     });
+    const { field: honeypotField, withHoneypot } = useHoneypotField();
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
         post(action, {
             preserveScroll: true,
             forceFormData: true,
+            transform: (formData) => withHoneypot(formData),
             onSuccess: () => reset('body', 'waiting_for_user', 'attachment'),
         });
     };
@@ -43,11 +46,12 @@ export function SupportTicketMessageForm({
         <form
             onSubmit={submit}
             className={cn(
-                'flex flex-col gap-4',
+                'relative flex flex-col gap-4',
                 !unstyled &&
                     'rounded-[28px] bg-surface px-5 py-5 shadow-soft ring-1 ring-border',
             )}
         >
+            {honeypotField}
             <div className="grid gap-2">
                 <Label htmlFor="reply-body" className={userLabelClassName}>
                     متن پاسخ
