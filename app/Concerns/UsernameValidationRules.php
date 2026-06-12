@@ -21,7 +21,7 @@ trait UsernameValidationRules
     /**
      * @return array<int, ValidationRule|array<mixed>|string>
      */
-    protected function usernameRules(?int $userId = null, bool $required = false): array
+    protected function usernameFormatRules(bool $required = false): array
     {
         return [
             $required ? 'required' : 'nullable',
@@ -48,6 +48,16 @@ trait UsernameValidationRules
                     $fail('این نام کاربری قابل استفاده نیست.');
                 }
             },
+        ];
+    }
+
+    /**
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function usernameRules(?int $userId = null, bool $required = false): array
+    {
+        return [
+            ...$this->usernameFormatRules($required),
             $userId === null
                 ? Rule::unique(User::class, 'username')
                 : Rule::unique(User::class, 'username')->ignore($userId),

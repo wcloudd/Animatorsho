@@ -13,6 +13,7 @@ import {
     Shield,
     ShoppingBag,
     Smartphone,
+    UserPlus,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { AdminTextLink } from '@/components/admin/admin-text-link';
@@ -46,6 +47,12 @@ const navItems = [
         label: 'سفارش‌ها',
         match: '/admin/orders',
         icon: ShoppingBag,
+    },
+    {
+        href: '/admin/manual-enrollments',
+        label: 'ثبت دستی دسترسی',
+        match: '/admin/manual-enrollments',
+        icon: UserPlus,
     },
     {
         href: '/admin/payments',

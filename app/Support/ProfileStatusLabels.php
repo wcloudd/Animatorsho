@@ -47,6 +47,7 @@ class ProfileStatusLabels
             OrderPaymentType::Cash => 'پرداخت نقدی',
             OrderPaymentType::Installment => 'خرید اقساطی',
             OrderPaymentType::CardToCard => 'کارت‌به‌کارت',
+            OrderPaymentType::External => 'خرید خارج از سایت',
         };
     }
 
@@ -79,6 +80,7 @@ class ProfileStatusLabels
             PaymentMethod::Zarinpal => 'پرداخت آنلاین (زرین‌پال)',
             PaymentMethod::CardToCard => 'کارت‌به‌کارت',
             PaymentMethod::Installment => 'اقساطی',
+            PaymentMethod::External => 'ثبت دستی / خارج از سایت',
         };
     }
 

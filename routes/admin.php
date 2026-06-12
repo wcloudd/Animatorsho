@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ConsultationController;
 use App\Http\Controllers\Admin\CoursePackageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InstallmentController;
+use App\Http\Controllers\Admin\ManualEnrollmentController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\SecurityEventController;
@@ -26,6 +27,9 @@ Route::middleware(['auth', 'admin'])
         Route::patch('orders/{order}/customer', [OrderController::class, 'updateCustomer'])->name('orders.update-customer');
         Route::post('orders/{order}/mark-paid', [OrderController::class, 'markPaid'])->name('orders.mark-paid');
         Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
+        Route::get('manual-enrollments', [ManualEnrollmentController::class, 'index'])->name('manual-enrollments.index');
+        Route::post('manual-enrollments', [ManualEnrollmentController::class, 'store'])->name('manual-enrollments.store');
 
         Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');

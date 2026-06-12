@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\SpotPlayerLicense;
 use App\Support\Admin\AdminListSearch;
 use App\Support\AdminStatusLabels;
+use App\Support\ExternalEnrollmentSourceLabels;
 use App\Support\ProfileStatusLabels;
 use App\Support\TomanFormatter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -139,6 +140,11 @@ class AdminOrderListService
                 : null,
             'latestPaymentMethod' => $latestPayment instanceof Payment
                 ? ProfileStatusLabels::paymentMethod($latestPayment->method)
+                : null,
+            'externalSourceLabel' => $latestPayment instanceof Payment
+                ? ExternalEnrollmentSourceLabels::labelFromMeta(
+                    is_array($latestPayment->meta) ? $latestPayment->meta : null,
+                )
                 : null,
             'licenseStatus' => $license instanceof SpotPlayerLicense
                 ? ProfileStatusLabels::licenseStatus($license->status)

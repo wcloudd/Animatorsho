@@ -96,6 +96,7 @@ export type AdminOrderListItem = {
     latestPaymentStatus: string | null;
     latestPaymentStatusTone: AdminStatusTone | null;
     latestPaymentMethod: string | null;
+    externalSourceLabel: string | null;
     licenseStatus: string | null;
     licenseStatusTone: AdminStatusTone | null;
     createdAt: string | null;

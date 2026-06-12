@@ -99,6 +99,12 @@ export default function AdminOrdersIndex({
                                 label="روش پرداخت"
                                 value={order.latestPaymentMethod}
                             />
+                            {order.externalSourceLabel ? (
+                                <AdminDetailRow
+                                    label="منبع خارجی"
+                                    value={order.externalSourceLabel}
+                                />
+                            ) : null}
                             <AdminDetailBadgeRow
                                 label="وضعیت لایسنس"
                                 value={order.licenseStatus}
