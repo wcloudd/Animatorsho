@@ -405,6 +405,50 @@ test('retry gateway failure marks order and payment failed and redirects to prof
         ->and($payment->meta['gateway_error'])->toBe('Could not connect to Zarinpal.');
 });
 
+test('online payment retry is blocked when retry count reaches configured ceiling', function () {
+    $user = User::factory()->create();
+    $order = createRecoverablePendingZarinpalOrder($user);
+
+    $payment = $order->payments()->first();
+    $payment->update([
+        'meta' => array_merge($payment->meta ?? [], [
+            'retry_count' => 5,
+        ]),
+    ]);
+
+    $this->mock(ZarinpalService::class, function (MockInterface $mock): void {
+        $mock->shouldNotReceive('request');
+    });
+
+    $this->actingAs($user)
+        ->post(route('profile.orders.retry-online-payment', $order))
+        ->assertRedirect(route('profile'))
+        ->assertSessionHas('error');
+
+    expect($order->fresh()->status)->toBe(OrderStatus::Pending)
+        ->and($payment->fresh()->meta['retry_count'])->toBe(5);
+});
+
+test('online payment retry still works when retry count is below ceiling', function () {
+    $user = User::factory()->create();
+    $order = createRecoverablePendingZarinpalOrder($user);
+
+    $payment = $order->payments()->first();
+    $payment->update([
+        'meta' => array_merge($payment->meta ?? [], [
+            'retry_count' => 4,
+        ]),
+    ]);
+
+    mockRetryZarinpalSuccess();
+
+    $this->actingAs($user)
+        ->post(route('profile.orders.retry-online-payment', $order))
+        ->assertRedirect();
+
+    expect($payment->fresh()->meta['retry_count'])->toBe(5);
+});
+
 test('card to card reviewing order does not show retry or cancel actions in profile', function () {
     $user = User::factory()->create();
     $package = fullPackageForRecovery();

@@ -66,6 +66,28 @@ return [
             'max_attempts' => 3,
             'decay_minutes' => 1,
         ],
+        'checkout-order' => [
+            'max_attempts' => 5,
+            'decay_minutes' => 1,
+        ],
+        'payment-retry' => [
+            'max_attempts' => 3,
+            'decay_minutes' => 1,
+        ],
+        'payment-cancel' => [
+            'max_attempts' => 5,
+            'decay_minutes' => 1,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Online Payment Recovery
+    |--------------------------------------------------------------------------
+    */
+
+    'online_payment' => [
+        'max_retries_per_order' => 5,
     ],
 
 ];

@@ -72,6 +72,12 @@ class OnlinePaymentRecoveryService
             throw new InvalidArgumentException('Zarinpal payment not found for this order.');
         }
 
+        if ($this->hasReachedRetryCeiling($payment)) {
+            return redirect()
+                ->route('profile')
+                ->with('error', 'تعداد تلاش‌های پرداخت برای این سفارش به حد مجاز رسیده است. لطفاً از بخش پشتیبانی کمک بگیرید.');
+        }
+
         DB::transaction(function () use ($order, $payment): void {
             if ($order->status === OrderStatus::Failed) {
                 $order->update(['status' => OrderStatus::Pending]);
@@ -150,6 +156,18 @@ class OnlinePaymentRecoveryService
                 ]),
             ]);
         });
+    }
+
+    public function hasReachedRetryCeiling(Payment $payment): bool
+    {
+        $retryCount = (int) ($payment->meta['retry_count'] ?? 0);
+
+        return $retryCount >= $this->maxRetriesPerOrder();
+    }
+
+    private function maxRetriesPerOrder(): int
+    {
+        return (int) config('security.online_payment.max_retries_per_order', 5);
     }
 
     private function assertRecoverableForUser(Order $order, User $user): void

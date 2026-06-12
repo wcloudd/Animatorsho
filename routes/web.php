@@ -38,7 +38,7 @@ Route::post('/consultation', [ConsultationController::class, 'store'])
 
 Route::middleware('auth')->group(function () {
     Route::post('/checkout/orders', [CheckoutOrderController::class, 'store'])
-        ->middleware('verified.mobile')
+        ->middleware(['verified.mobile', 'throttle:checkout-order'])
         ->name('checkout.orders.store');
 
     Route::get('profile/mobile', [ProfileMobileVerificationController::class, 'create'])
@@ -70,8 +70,10 @@ Route::middleware('auth')->group(function () {
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::post('profile/orders/{order}/retry-online-payment', [ProfileOrderController::class, 'retryOnlinePayment'])
+        ->middleware('throttle:payment-retry')
         ->name('profile.orders.retry-online-payment');
     Route::post('profile/orders/{order}/cancel', [ProfileOrderController::class, 'cancel'])
+        ->middleware('throttle:payment-cancel')
         ->name('profile.orders.cancel');
 });
 
