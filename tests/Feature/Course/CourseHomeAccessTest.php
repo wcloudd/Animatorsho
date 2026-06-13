@@ -125,6 +125,13 @@ test('user with active full package license can access course home', function ()
             ->where('onboarding.imageAlt', 'مسیر شروع انیماتورشو')
             ->where('onboarding.videoGuideLabel', 'ویدئو راهنما')
             ->where('onboarding.pdfGuideLabel', 'دانلود راهنما')
+            ->where('onboarding.videoUrl', null)
+            ->where('onboarding.pdfUrl', null)
+            ->where('onboarding.videoTitle', 'ویدئو راهنمای پنل هنرجو')
+            ->where(
+                'onboarding.pdfDownloadName',
+                'rahnamaye-shoroo-animatorsho.pdf',
+            )
             ->missing('onboarding.cta')
             ->where('preview.notificationsUnread', 0)
             ->has('preview.updates', 2)

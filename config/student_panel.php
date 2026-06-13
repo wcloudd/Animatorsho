@@ -8,8 +8,15 @@ return [
         'description' => 'راهنمای استفاده از پنل، ارسال تمرین و ارتباط با استاد',
         'imageUrl' => null,
         'imageAlt' => 'مسیر شروع انیماتورشو',
+        // Future public media paths (site owner):
+        // videoUrl: /media/student-panel/start-guide.mp4
+        // videoPosterUrl: /media/student-panel/start-guide-poster.png
+        // pdfUrl: /media/student-panel/start-guide.pdf
         'videoUrl' => null,
+        'videoPosterUrl' => null,
+        'videoTitle' => 'ویدئو راهنمای پنل هنرجو',
         'pdfUrl' => null,
+        'pdfDownloadName' => 'rahnamaye-shoroo-animatorsho.pdf',
         'videoGuideLabel' => 'ویدئو راهنما',
         'pdfGuideLabel' => 'دانلود راهنما',
     ],

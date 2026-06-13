@@ -41,7 +41,10 @@ class CourseAccessService
      *         imageUrl: ?string,
      *         imageAlt: string,
      *         videoUrl: ?string,
+     *         videoPosterUrl: ?string,
+     *         videoTitle: string,
      *         pdfUrl: ?string,
+     *         pdfDownloadName: string,
      *         videoGuideLabel: string,
      *         pdfGuideLabel: string
      *     },

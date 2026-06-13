@@ -17,7 +17,10 @@ export type CourseHomeOnboarding = {
     imageUrl: string | null;
     imageAlt: string;
     videoUrl: string | null;
+    videoPosterUrl?: string | null;
+    videoTitle?: string;
     pdfUrl: string | null;
+    pdfDownloadName?: string;
     videoGuideLabel: string;
     pdfGuideLabel: string;
 };
