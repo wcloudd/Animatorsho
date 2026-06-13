@@ -17,22 +17,18 @@ Route::middleware(config('fortify.middleware', ['web']))->group(function () {
             ->name('login.password');
 
         Route::post('/login/identifier', [LoginController::class, 'resolveIdentifier'])
-            ->middleware('throttle:auth-identifier')
+            ->middleware(['login.ip', 'throttle:auth-identifier'])
             ->name('login.identifier');
 
         Route::post('/login', [LoginController::class, 'store'])
-            ->middleware(array_filter([
-                'throttle:'.config('fortify.limiters.login', 'login'),
-            ]))
+            ->middleware('login.ip')
             ->name('login.store');
 
         Route::get('/login/email', [LoginController::class, 'createEmail'])
             ->name('login.email');
 
         Route::post('/login/email', [LoginController::class, 'storeEmail'])
-            ->middleware(array_filter([
-                'throttle:'.config('fortify.limiters.login', 'login'),
-            ]))
+            ->middleware('login.ip')
             ->name('login.email.store');
 
         if (Features::enabled(Features::registration())) {

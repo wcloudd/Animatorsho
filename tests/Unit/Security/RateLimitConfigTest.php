@@ -1,7 +1,7 @@
 <?php
 
 test('security rate limit config defines all named limiters with expected defaults', function () {
-    /** @var array{rate_limits: array<string, array{max_attempts: int, decay_minutes: int}>, online_payment: array{max_retries_per_order: int}} $config */
+    /** @var array{rate_limits: array<string, array{max_attempts: int, decay_minutes: int}>, online_payment: array{max_retries_per_order: int}, login_ip_abuse: array{batch_window_minutes: int, batches_before_ip_lockout: int, ip_lockout_minutes: int}} $config */
     $config = require dirname(__DIR__, 3).'/config/security.php';
     $rateLimits = $config['rate_limits'];
 
@@ -26,9 +26,12 @@ test('security rate limit config defines all named limiters with expected defaul
             'payment-cancel',
         ])
         ->and($rateLimits['login']['max_attempts'])->toBe(5)
+        ->and($rateLimits['login']['decay_minutes'])->toBe(20)
         ->and($rateLimits['auth-identifier']['max_attempts'])->toBe(5)
+        ->and($rateLimits['auth-identifier']['decay_minutes'])->toBe(20)
         ->and($rateLimits['mobile-otp-send']['max_attempts'])->toBe(3)
-        ->and($rateLimits['mobile-otp-verify']['max_attempts'])->toBe(10)
+        ->and($rateLimits['mobile-otp-verify']['max_attempts'])->toBe(5)
+        ->and($rateLimits['mobile-otp-verify']['decay_minutes'])->toBe(20)
         ->and($rateLimits['registration-otp-send']['max_attempts'])->toBe(3)
         ->and($rateLimits['registration-otp-verify']['max_attempts'])->toBe(10)
         ->and($rateLimits['password-reset-otp-send']['max_attempts'])->toBe(3)
@@ -43,9 +46,18 @@ test('security rate limit config defines all named limiters with expected defaul
         ->and($rateLimits['payment-retry']['max_attempts'])->toBe(3)
         ->and($rateLimits['payment-cancel']['max_attempts'])->toBe(5)
         ->and($config['online_payment']['max_retries_per_order'])->toBe(5)
-        ->and($config['support']['max_open_tickets'])->toBe(3);
+        ->and($config['support']['max_open_tickets'])->toBe(3)
+        ->and($config['login_ip_abuse']['batch_window_minutes'])->toBe(60)
+        ->and($config['login_ip_abuse']['batches_before_ip_lockout'])->toBe(2)
+        ->and($config['login_ip_abuse']['ip_lockout_minutes'])->toBe(60);
 
-    foreach ($rateLimits as $limiter) {
+    foreach ($rateLimits as $name => $limiter) {
+        if (in_array($name, ['login', 'auth-identifier', 'mobile-otp-verify'], true)) {
+            expect($limiter['decay_minutes'])->toBe(20);
+
+            continue;
+        }
+
         expect($limiter['decay_minutes'])->toBe(1);
     }
 });

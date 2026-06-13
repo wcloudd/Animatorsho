@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\Course\CourseAccessService;
+use App\Support\Admin\AdminNavigationManifest;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -60,6 +61,9 @@ class HandleInertiaRequests extends Middleware
                     'fieldName' => (string) config('security.honeypot.field_name'),
                 ],
             ],
+            'adminNavGroups' => fn (): ?array => $user?->isAdmin()
+                ? AdminNavigationManifest::groups()
+                : null,
         ];
     }
 }

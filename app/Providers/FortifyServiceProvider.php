@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Fortify\LoginRateLimiter;
+use App\Http\Responses\AuthLockoutResponse;
 use App\Models\User;
 use App\Services\Sms\SmsSettingsService;
 use App\Support\IranianMobile;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\LockoutResponse;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\LoginRateLimiter as FortifyLoginRateLimiter;
 
@@ -27,6 +29,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::ignoreRoutes();
 
         $this->app->singleton(FortifyLoginRateLimiter::class, LoginRateLimiter::class);
+        $this->app->singleton(LockoutResponse::class, AuthLockoutResponse::class);
     }
 
     /**

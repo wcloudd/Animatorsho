@@ -123,7 +123,7 @@ class LoginController extends Controller
     protected function loginPipeline(Request $request)
     {
         return (new Pipeline(app()))->send($request)->through(array_filter([
-            config('fortify.limiters.login') ? null : EnsureLoginIsNotThrottled::class,
+            EnsureLoginIsNotThrottled::class,
             $request->routeIs('login.email.store') ? CanonicalizeUsername::class : NormalizeLoginMobile::class,
             Features::enabled(Features::twoFactorAuthentication()) ? RedirectsIfTwoFactorAuthenticatable::class : null,
             AttemptToAuthenticate::class,

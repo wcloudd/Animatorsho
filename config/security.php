@@ -16,19 +16,19 @@ return [
     'rate_limits' => [
         'login' => [
             'max_attempts' => 5,
-            'decay_minutes' => 1,
+            'decay_minutes' => 20,
         ],
         'auth-identifier' => [
             'max_attempts' => 5,
-            'decay_minutes' => 1,
+            'decay_minutes' => 20,
         ],
         'mobile-otp-send' => [
             'max_attempts' => 3,
             'decay_minutes' => 1,
         ],
         'mobile-otp-verify' => [
-            'max_attempts' => 10,
-            'decay_minutes' => 1,
+            'max_attempts' => 5,
+            'decay_minutes' => 20,
         ],
         'registration-otp-send' => [
             'max_attempts' => 3,
@@ -96,6 +96,22 @@ return [
 
     'support' => [
         'max_open_tickets' => 3,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Login IP Abuse Protection
+    |--------------------------------------------------------------------------
+    |
+    | Progressive temporary IP lockout when repeated login lockout batches occur
+    | from the same IP within the batch window. Uses cache rate limiting only.
+    |
+    */
+
+    'login_ip_abuse' => [
+        'batch_window_minutes' => 60,
+        'batches_before_ip_lockout' => 2,
+        'ip_lockout_minutes' => 60,
     ],
 
     /*

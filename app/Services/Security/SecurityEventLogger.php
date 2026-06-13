@@ -3,6 +3,10 @@
 namespace App\Services\Security;
 
 use App\Models\SecurityEvent;
+use App\Support\AuthIdentifier;
+use App\Support\IranianMobile;
+use App\Support\LoginIdentifier;
+use App\Support\ParsedAuthIdentifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -29,6 +33,15 @@ class SecurityEventLogger
         'authorization',
         'body',
         'request_body',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    private const THROTTLE_TYPE_MAP = [
+        'login' => 'login',
+        'auth-identifier' => 'auth_identifier',
+        'mobile-otp-verify' => 'mobile_otp_verify',
     ];
 
     /**
@@ -77,9 +90,53 @@ class SecurityEventLogger
     public function authRateLimitExceeded(TooManyRequestsHttpException $exception, ?Request $request = null): void
     {
         $request ??= request();
+        $limiter = $this->inferLimiterFromRoute($request);
 
         $context = [
-            'limiter' => $this->inferLimiterFromRoute($request),
+            'limiter' => $limiter,
+            'throttle_type' => $limiter !== null
+                ? (self::THROTTLE_TYPE_MAP[$limiter] ?? $limiter)
+                : null,
+        ];
+
+        if ($limiter !== null) {
+            $context['decay_minutes'] = (int) config("security.rate_limits.{$limiter}.decay_minutes", 20);
+        }
+
+        $maskedIdentifier = $this->safeMaskedIdentifier($request);
+
+        if ($maskedIdentifier !== null) {
+            $context['masked_identifier'] = $maskedIdentifier;
+        }
+
+        $retryAfter = $exception->getHeaders()['Retry-After'] ?? null;
+
+        if ($retryAfter !== null && is_numeric($retryAfter)) {
+            $context['retry_after_seconds'] = (int) $retryAfter;
+        }
+
+        $this->log('auth_rate_limit_exceeded', $context, $request);
+    }
+
+    public function loginIpAbuseTriggered(int $batchCount, ?Request $request = null): void
+    {
+        $request ??= request();
+
+        $this->log('login_ip_abuse_triggered', [
+            'throttle_type' => 'ip_abuse',
+            'batch_count' => $batchCount,
+            'batch_window_minutes' => (int) config('security.login_ip_abuse.batch_window_minutes', 60),
+            'decay_minutes' => (int) config('security.login_ip_abuse.ip_lockout_minutes', 60),
+        ], $request);
+    }
+
+    public function loginIpAbuseBlocked(TooManyRequestsHttpException $exception, ?Request $request = null): void
+    {
+        $request ??= request();
+
+        $context = [
+            'throttle_type' => 'ip_abuse',
+            'decay_minutes' => (int) config('security.login_ip_abuse.ip_lockout_minutes', 60),
         ];
 
         $retryAfter = $exception->getHeaders()['Retry-After'] ?? null;
@@ -89,6 +146,11 @@ class SecurityEventLogger
         }
 
         $this->log('auth_rate_limit_exceeded', $context, $request);
+    }
+
+    public function inferLimiterNameForRoute(Request $request): ?string
+    {
+        return $this->inferLimiterFromRoute($request);
     }
 
     public function paymentRetryCeilingReached(
@@ -190,6 +252,67 @@ class SecurityEventLogger
         }
 
         return self::ROUTE_LIMITER_MAP[$routeName] ?? null;
+    }
+
+    private function safeMaskedIdentifier(Request $request): ?string
+    {
+        $routeName = $request->route()?->getName();
+
+        if (in_array($routeName, ['login.store', 'login.email.store'], true)) {
+            $resolved = LoginIdentifier::resolve($request);
+
+            if ($resolved === '') {
+                return null;
+            }
+
+            if (str_contains($resolved, '@')) {
+                return $this->maskEmail($resolved);
+            }
+
+            return IranianMobile::mask($resolved);
+        }
+
+        if ($routeName === 'login.identifier') {
+            $parsed = AuthIdentifier::parse($request->input('identifier'));
+
+            if ($parsed === null) {
+                return null;
+            }
+
+            if ($parsed->type === ParsedAuthIdentifier::Mobile) {
+                return IranianMobile::mask($parsed->value);
+            }
+
+            return $this->maskEmail($parsed->value);
+        }
+
+        if (str_starts_with((string) $routeName, 'auth.mobile.')) {
+            if (! $request->hasSession()) {
+                return null;
+            }
+
+            $mobile = $request->session()->get('mobile_otp.mobile');
+
+            return is_string($mobile) && $mobile !== ''
+                ? IranianMobile::mask($mobile)
+                : null;
+        }
+
+        return null;
+    }
+
+    private function maskEmail(string $email): string
+    {
+        $parts = explode('@', $email, 2);
+
+        if (count($parts) !== 2) {
+            return '***';
+        }
+
+        [$local, $domain] = $parts;
+        $maskedLocal = strlen($local) <= 1 ? '*' : substr($local, 0, 1).'***';
+
+        return $maskedLocal.'@'.$domain;
     }
 
     /**

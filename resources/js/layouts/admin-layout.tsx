@@ -1,22 +1,6 @@
-import { Link, usePage } from '@inertiajs/react';
-import type { LucideIcon } from 'lucide-react';
-import {
-    CalendarClock,
-    CreditCard,
-    Headphones,
-    KeyRound,
-    LayoutDashboard,
-    Menu,
-    MessageSquare,
-    Package,
-    Settings,
-    Shield,
-    ShoppingBag,
-    Smartphone,
-    UserPlus,
-} from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { AdminTextLink } from '@/components/admin/admin-text-link';
+import { AdminNavMenu } from '@/components/admin/admin-nav-menu';
 import { NoIndexSeoHead } from '@/components/seo/seo-head';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,130 +10,9 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
-
-const navItems = [
-    {
-        href: '/admin',
-        label: 'داشبورد',
-        match: '/admin',
-        exact: true,
-        icon: LayoutDashboard,
-    },
-    {
-        href: '/admin/packages',
-        label: 'بسته‌ها',
-        match: '/admin/packages',
-        icon: Package,
-    },
-    {
-        href: '/admin/orders',
-        label: 'سفارش‌ها',
-        match: '/admin/orders',
-        icon: ShoppingBag,
-    },
-    {
-        href: '/admin/manual-enrollments',
-        label: 'کاربران و دسترسی‌ها',
-        match: '/admin/manual-enrollments',
-        icon: UserPlus,
-    },
-    {
-        href: '/admin/payments',
-        label: 'پرداخت‌ها',
-        match: '/admin/payments',
-        icon: CreditCard,
-    },
-    {
-        href: '/admin/installments',
-        label: 'پیگیری اقساط',
-        match: '/admin/installments',
-        icon: CalendarClock,
-    },
-    {
-        href: '/admin/licenses',
-        label: 'لایسنس‌ها',
-        match: '/admin/licenses',
-        icon: KeyRound,
-    },
-    {
-        href: '/admin/consultations',
-        label: 'مشاوره‌ها',
-        match: '/admin/consultations',
-        icon: MessageSquare,
-    },
-    {
-        href: '/admin/support',
-        label: 'پشتیبانی',
-        match: '/admin/support',
-        icon: Headphones,
-    },
-    {
-        href: '/admin/sms',
-        label: 'پیامک',
-        match: '/admin/sms',
-        icon: Smartphone,
-    },
-    {
-        href: '/admin/security-events',
-        label: 'امنیت',
-        match: '/admin/security-events',
-        icon: Shield,
-    },
-    {
-        href: '/admin/site-settings',
-        label: 'تنظیمات سایت',
-        match: '/admin/site-settings',
-        icon: Settings,
-    },
-] as const satisfies ReadonlyArray<{
-    href: string;
-    label: string;
-    match: string;
-    exact?: boolean;
-    icon: LucideIcon;
-}>;
-
-type AdminNavItem = (typeof navItems)[number];
-
-function isNavItemActive(url: string, item: AdminNavItem): boolean {
-    return item.exact
-        ? url === item.match || url === `${item.match}/`
-        : url.startsWith(item.match);
-}
-
-function AdminNavLink({
-    item,
-    url,
-    onNavigate,
-    className,
-}: {
-    item: AdminNavItem;
-    url: string;
-    onNavigate?: () => void;
-    className?: string;
-}) {
-    const isActive = isNavItemActive(url, item);
-    const Icon = item.icon;
-
-    return (
-        <Link
-            href={item.href}
-            onClick={onNavigate}
-            aria-current={isActive ? 'page' : undefined}
-            className={cn(
-                'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition',
-                isActive
-                    ? 'bg-purple text-white shadow-xs ring-1 ring-purple/20'
-                    : 'text-text hover:bg-purple-soft hover:text-purple',
-                className,
-            )}
-        >
-            <Icon className="size-4 shrink-0" aria-hidden />
-            <span>{item.label}</span>
-        </Link>
-    );
-}
+import { useState } from 'react';
+import { Menu } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const { url } = usePage();
@@ -183,18 +46,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                             منوی مدیریت
                                         </SheetTitle>
                                     </SheetHeader>
-                                    <nav className="flex flex-col gap-1 p-3">
-                                        {navItems.map((item) => (
-                                            <AdminNavLink
-                                                key={item.href}
-                                                item={item}
-                                                url={url}
-                                                onNavigate={() =>
-                                                    setMenuOpen(false)
-                                                }
-                                            />
-                                        ))}
-                                    </nav>
+                                    <AdminNavMenu
+                                        url={url}
+                                        onNavigate={() => setMenuOpen(false)}
+                                        variant="mobile"
+                                    />
                                 </SheetContent>
                             </Sheet>
                             <h1 className="min-w-0 truncate font-display text-lg text-purple">
@@ -205,18 +61,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             بازگشت به سایت
                         </AdminTextLink>
                     </div>
-                    <nav
-                        aria-label="منوی مدیریت"
-                        className="hidden lg:grid lg:grid-cols-5 lg:gap-1.5"
-                    >
-                        {navItems.map((item) => (
-                            <AdminNavLink
-                                key={item.href}
-                                item={item}
-                                url={url}
-                            />
-                        ))}
-                    </nav>
+                    <AdminNavMenu url={url} variant="desktop" />
                 </div>
             </header>
             <main className="mx-auto w-full max-w-[390px] px-4 py-6 sm:max-w-5xl">

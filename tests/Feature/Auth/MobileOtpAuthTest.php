@@ -341,7 +341,7 @@ test('verify route is rate limited', function () {
 
     $code = OtpTestHelper::extractCodeFromLastSms('09121234567');
 
-    for ($i = 0; $i < 10; $i++) {
+    for ($i = 0; $i < 5; $i++) {
         $this->post(route('auth.mobile.verify.store'), [
             'code' => '000000',
         ]);

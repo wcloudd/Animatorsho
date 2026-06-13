@@ -130,15 +130,15 @@ test('security event logger strips forbidden sensitive keys from context', funct
     }
 });
 
-test('auth rate limit exceeded includes limiter and retry after seconds', function () {
+test('auth rate limit exceeded includes limiter throttle type and retry after seconds', function () {
     $captured = captureLoggedMessages();
 
-    $request = Request::create('/login', 'POST');
+    $request = Request::create('/login', 'POST', ['mobile' => '09121234567']);
     $route = new Route('POST', '/login', fn () => null);
     $route->name('login.store');
     $request->setRouteResolver(fn () => $route);
 
-    $exception = new TooManyRequestsHttpException(60, 'Too Many Attempts.');
+    $exception = new TooManyRequestsHttpException(1200, 'Too Many Attempts.');
 
     app(SecurityEventLogger::class)->authRateLimitExceeded($exception, $request);
 
@@ -146,7 +146,9 @@ test('auth rate limit exceeded includes limiter and retry after seconds', functi
         ->and($captured->messages[0]->message)->toBe('auth_rate_limit_exceeded')
         ->and($captured->messages[0]->context['event'])->toBe('auth_rate_limit_exceeded')
         ->and($captured->messages[0]->context['limiter'])->toBe('login')
-        ->and($captured->messages[0]->context['retry_after_seconds'])->toBe(60);
+        ->and($captured->messages[0]->context['throttle_type'])->toBe('login')
+        ->and($captured->messages[0]->context['decay_minutes'])->toBe(20)
+        ->and($captured->messages[0]->context['retry_after_seconds'])->toBe(1200);
 });
 
 test('security event logger persists sanitized row when database logging is enabled', function () {

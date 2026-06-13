@@ -110,7 +110,10 @@ test('inertia auth rate limit logs auth rate limit exceeded event', function () 
         ->and($captured->messages[0]->context['event'])->toBe('auth_rate_limit_exceeded')
         ->and($captured->messages[0]->context['route'])->toBe('login.store')
         ->and($captured->messages[0]->context['limiter'])->toBe('login')
+        ->and($captured->messages[0]->context['throttle_type'])->toBe('login')
+        ->and($captured->messages[0]->context['decay_minutes'])->toBe(20)
         ->and($captured->messages[0]->context)->toHaveKey('retry_after_seconds')
+        ->and($captured->messages[0]->context)->toHaveKey('masked_identifier')
         ->and($captured->messages[0]->context)->not->toHaveKey('mobile')
         ->and($captured->messages[0]->context)->not->toHaveKey('password');
 });

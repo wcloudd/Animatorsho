@@ -26,9 +26,18 @@ export type AdminDashboardQueue = {
     items: AdminDashboardQueueItem[];
 };
 
+export type AdminDashboardSections = {
+    actionRequired: string;
+    finance: string;
+    learners: string;
+    communications: string;
+    security: string;
+};
+
 export type AdminDashboardPageProps = {
     activityMetrics: AdminDashboardSummaryCard[];
-    loginMetricsNote: string;
+    securityEventsLast24Hours: number;
+    dashboardSections: AdminDashboardSections;
     summary: AdminDashboardSummaryCard[];
     actionQueues: AdminDashboardQueue[];
     activityQueues: AdminDashboardQueue[];

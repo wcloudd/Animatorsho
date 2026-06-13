@@ -12,6 +12,7 @@ use App\Models\ConsultationRequest;
 use App\Models\CoursePackage;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\SecurityEvent;
 use App\Models\SmsMessage;
 use App\Models\SpotPlayerLicense;
 use App\Models\SupportTicket;
@@ -54,7 +55,13 @@ test('admin dashboard props include summary and queue sections', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->has('activityMetrics', 2)
-            ->where('loginMetricsNote', 'آمار ورود نیازمند ثبت رویداد ورود است.')
+            ->has('securityEventsLast24Hours')
+            ->has('dashboardSections', fn (Assert $sections) => $sections
+                ->where('actionRequired', 'نیازمند اقدام')
+                ->where('finance', 'مالی')
+                ->where('learners', 'هنرجوها و دوره')
+                ->where('communications', 'ارتباطات')
+                ->where('security', 'امنیت و سیستم'))
             ->has('summary', 9)
             ->has('actionQueues')
             ->has('activityQueues')
@@ -71,6 +78,80 @@ test('admin dashboard props include summary and queue sections', function () {
                 ->has('count')
                 ->has('href')
                 ->has('tone')));
+});
+
+test('admin dashboard exposes five grouped section headings', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('dashboardSections.actionRequired', 'نیازمند اقدام')
+            ->where('dashboardSections.finance', 'مالی')
+            ->where('dashboardSections.learners', 'هنرجوها و دوره')
+            ->where('dashboardSections.communications', 'ارتباطات')
+            ->where('dashboardSections.security', 'امنیت و سیستم'));
+});
+
+test('admin pages share grouped navigation for admin users', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('adminNavGroups', 7)
+            ->where('adminNavGroups.0.label', 'داشبورد')
+            ->where('adminNavGroups.1.label', 'مالی و فروش')
+            ->where('adminNavGroups.2.label', 'کاربران و دسترسی‌ها')
+            ->where('adminNavGroups.3.label', 'دوره و محتوا')
+            ->where('adminNavGroups.4.label', 'ارتباطات')
+            ->where('adminNavGroups.5.label', 'امنیت و سیستم')
+            ->where('adminNavGroups.6.label', 'تنظیمات'));
+});
+
+test('admin navigation keeps important existing links and coming soon placeholders', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(function (Assert $page): void {
+            $groups = $page->toArray()['props']['adminNavGroups'] ?? [];
+            $items = collect($groups)->flatMap(fn (array $group): array => $group['items'] ?? []);
+
+            expect($items->firstWhere('route', 'admin.orders.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.payments.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.manual-enrollments.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.security-events.index'))->not->toBeNull();
+            expect($items->firstWhere('label', 'آپدیت‌های دوره')['comingSoon'] ?? false)->toBeTrue();
+            expect($items->firstWhere('label', 'تمرین‌ها / پیام استاد')['comingSoon'] ?? false)->toBeTrue();
+            expect($items->firstWhere('label', 'گزارش مالی')['route'])->toBe('admin.dashboard');
+        });
+});
+
+test('guest does not receive admin navigation groups', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('adminNavGroups', null));
+});
+
+test('admin dashboard exposes security events count for last 24 hours', function () {
+    $admin = User::factory()->admin()->create();
+
+    SecurityEvent::factory()->create([
+        'occurred_at' => now()->subHours(2),
+    ]);
+    SecurityEvent::factory()->create([
+        'occurred_at' => now()->subDays(2),
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('securityEventsLast24Hours', 1));
 });
 
 test('admin dashboard hides empty action queues and shows happy empty state', function () {

@@ -11,6 +11,7 @@ use App\Enums\SupportTicketStatus;
 use App\Models\ConsultationRequest;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\SecurityEvent;
 use App\Models\SmsMessage;
 use App\Models\SpotPlayerLicense;
 use App\Models\SupportTicket;
@@ -41,7 +42,14 @@ class AdminDashboardService
      *         href: string|null,
      *         tone: 'warning'|'danger'|'neutral'
      *     }>,
-     *     loginMetricsNote: string,
+     *     securityEventsLast24Hours: int,
+     *     dashboardSections: array{
+     *         actionRequired: string,
+     *         finance: string,
+     *         learners: string,
+     *         communications: string,
+     *         security: string
+     *     },
      *     summary: list<array{
      *         key: string,
      *         label: string,
@@ -98,7 +106,16 @@ class AdminDashboardService
 
         return [
             'activityMetrics' => $this->activityMetrics(),
-            'loginMetricsNote' => 'آمار ورود نیازمند ثبت رویداد ورود است.',
+            'securityEventsLast24Hours' => SecurityEvent::query()
+                ->where('occurred_at', '>=', now()->subDay())
+                ->count(),
+            'dashboardSections' => [
+                'actionRequired' => 'نیازمند اقدام',
+                'finance' => 'مالی',
+                'learners' => 'هنرجوها و دوره',
+                'communications' => 'ارتباطات',
+                'security' => 'امنیت و سیستم',
+            ],
             'summary' => $this->summaryCards(),
             'actionQueues' => $actionQueues,
             'activityQueues' => $activityQueues,

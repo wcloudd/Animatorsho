@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureLoginIpNotLocked;
 use App\Http\Middleware\EnsureSiteNotInMaintenance;
 use App\Http\Middleware\EnsureUserHasVerifiedMobile;
 use App\Http\Middleware\EnsureUserIsAdmin;
@@ -7,6 +8,7 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RejectHoneypotSubmission;
 use App\Http\Middleware\SetRobotsIndexingHeader;
+use App\Services\Security\LoginIpAbuseTracker;
 use App\Services\Security\SecurityEventLogger;
 use App\Support\AuthThrottleMessage;
 use Illuminate\Foundation\Application;
@@ -46,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'honeypot' => RejectHoneypotSubmission::class,
+            'login.ip' => EnsureLoginIpNotLocked::class,
             'verified.mobile' => EnsureUserHasVerifiedMobile::class,
         ]);
     })
@@ -60,7 +63,20 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            app(SecurityEventLogger::class)->authRateLimitExceeded($exception, $request);
+            $loginIpAbuse = app(LoginIpAbuseTracker::class);
+            $securityEvents = app(SecurityEventLogger::class);
+
+            if ($loginIpAbuse->isLockedOut($request)) {
+                $securityEvents->loginIpAbuseBlocked($exception, $request);
+            } else {
+                $limiter = $securityEvents->inferLimiterNameForRoute($request);
+
+                if (in_array($limiter, ['auth-identifier', 'mobile-otp-verify'], true)) {
+                    $loginIpAbuse->recordBatchLockout($request);
+                }
+
+                $securityEvents->authRateLimitExceeded($exception, $request);
+            }
 
             return redirect()
                 ->back()
