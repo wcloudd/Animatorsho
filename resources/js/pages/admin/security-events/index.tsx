@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { AdminButton } from '@/components/admin/admin-button';
 import { AdminFilterBar } from '@/components/admin/admin-filter-bar';
+import { AdminJalaliDateRange } from '@/components/admin/admin-jalali-date-range';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminSearchBar } from '@/components/admin/admin-search-bar';
 import { SecurityEventsList } from '@/components/admin/security-events-list';
@@ -128,25 +129,15 @@ export default function AdminSecurityEventsIndex({
                             <span className="text-xs font-medium text-muted">
                                 بازه زمانی و کاربر
                             </span>
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                <input
-                                    type="date"
-                                    value={from}
-                                    onChange={(event) =>
-                                        setFrom(event.target.value)
-                                    }
-                                    className="h-10 rounded-xl border border-[#e8e0f0] bg-surface px-3 text-sm text-text shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-purple/30"
-                                    aria-label="از تاریخ"
-                                />
-                                <input
-                                    type="date"
-                                    value={to}
-                                    onChange={(event) =>
-                                        setTo(event.target.value)
-                                    }
-                                    className="h-10 rounded-xl border border-[#e8e0f0] bg-surface px-3 text-sm text-text shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-purple/30"
-                                    aria-label="تا تاریخ"
-                                />
+                            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
+                                <div className="min-w-0 sm:col-span-2">
+                                    <AdminJalaliDateRange
+                                        fromValue={from}
+                                        toValue={to}
+                                        onFromChange={setFrom}
+                                        onToChange={setTo}
+                                    />
+                                </div>
                                 <input
                                     type="text"
                                     inputMode="numeric"

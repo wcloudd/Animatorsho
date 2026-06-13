@@ -94,6 +94,53 @@ test('admin security events page filters by date range', function () {
             ->where('filters.to', '2026-06-12'));
 });
 
+test('admin security events page accepts iso date filters independently', function () {
+    $admin = User::factory()->admin()->create();
+
+    $older = SecurityEvent::factory()->honeypotTriggered()->create([
+        'occurred_at' => '2026-01-15 10:00:00',
+    ]);
+
+    $recent = SecurityEvent::factory()->authRateLimitExceeded()->create([
+        'occurred_at' => '2026-06-10 12:00:00',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.security-events.index', ['from' => '2026-06-01']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('events.data', 1)
+            ->where('events.data.0.id', $recent->id)
+            ->where('filters.from', '2026-06-01')
+            ->where('filters.to', null));
+
+    $this->actingAs($admin)
+        ->get(route('admin.security-events.index', ['to' => '2026-01-31']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('events.data', 1)
+            ->where('events.data.0.id', $older->id)
+            ->where('filters.from', null)
+            ->where('filters.to', '2026-01-31'));
+});
+
+test('admin security events page ignores invalid date filter params', function () {
+    $admin = User::factory()->admin()->create();
+
+    SecurityEvent::factory()->honeypotTriggered()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.security-events.index', [
+            'from' => 'not-a-date',
+            'to' => '2026-13-40',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('events.data', 1)
+            ->where('filters.from', null)
+            ->where('filters.to', null));
+});
+
 test('admin security events page filters by user id', function () {
     $admin = User::factory()->admin()->create();
     $user = User::factory()->create();

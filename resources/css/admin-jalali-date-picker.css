@@ -1,0 +1,49 @@
+.admin-jalali-date-picker .rmdp-wrapper {
+    direction: rtl;
+    font-family: var(--font-sans);
+}
+
+.admin-jalali-date-picker .rmdp-container {
+    width: 100%;
+    min-width: 0;
+}
+
+.admin-jalali-date-picker .rmdp-input {
+    width: 100%;
+    min-width: 0;
+}
+
+.admin-jalali-date-picker .rmdp-calendar {
+    direction: rtl;
+    border-radius: 0.75rem;
+    border: 1px solid #e8e0f0;
+    box-shadow: 0 8px 24px rgb(46 36 66 / 12%);
+}
+
+.admin-jalali-date-picker .rmdp-day.rmdp-selected span:not(.highlight) {
+    background-color: #6037a8;
+    box-shadow: 0 0 2px #6037a8;
+}
+
+.admin-jalali-date-picker .rmdp-day:not(.rmdp-disabled):not(.rmdp-day-hidden) span:hover {
+    background-color: #f6eefb;
+    color: #6037a8;
+}
+
+.admin-jalali-date-picker .rmdp-arrow-container:hover {
+    background-color: #f6eefb;
+    box-shadow: none;
+}
+
+.admin-jalali-date-picker .rmdp-arrow {
+    border-color: #6037a8;
+}
+
+.admin-jalali-date-picker .rmdp-week-day {
+    color: #7e728e;
+}
+
+.admin-jalali-date-picker .rmdp-header-values {
+    color: #2e2442;
+    font-weight: 600;
+}
