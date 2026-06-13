@@ -68,6 +68,39 @@ export function jalaliToGregorianIso(
     }
 }
 
+export function splitDateTimeLocal(value: string | null | undefined): {
+    date: string;
+    time: string;
+} {
+    if (!value) {
+        return { date: '', time: '' };
+    }
+
+    const match = value.match(/^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}))?/);
+
+    if (!match) {
+        return { date: '', time: '' };
+    }
+
+    return {
+        date: match[1],
+        time: match[2] ?? '00:00',
+    };
+}
+
+export function combineDateTimeLocal(
+    date: string,
+    time: string,
+): string | null {
+    if (!isGregorianIsoDate(date)) {
+        return null;
+    }
+
+    const normalizedTime = /^\d{2}:\d{2}$/.test(time) ? time : '00:00';
+
+    return `${date}T${normalizedTime}`;
+}
+
 export function dateObjectToGregorianIso(
     date: DateObject | DateObject[] | null | undefined,
 ): string | null {

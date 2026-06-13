@@ -118,12 +118,13 @@ test('admin navigation keeps important existing links visible in groups', functi
             expect($items->firstWhere('route', 'admin.manual-enrollments.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.licenses.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.packages.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.course-updates.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.support.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.consultations.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.security-events.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.sms.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.site-settings.index'))->not->toBeNull();
-            expect($items)->toHaveCount(12);
+            expect($items)->toHaveCount(13);
         });
 });
 

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+    combineDateTimeLocal,
     dateObjectToGregorianIso,
     gregorianIsoToDateObject,
     gregorianIsoToJalaliDisplay,
     isGregorianIsoDate,
     jalaliToGregorianIso,
+    splitDateTimeLocal,
 } from '@/lib/jalali-date';
 
 describe('jalali-date helpers', () => {
@@ -34,5 +36,18 @@ describe('jalali-date helpers', () => {
     it('returns null for empty date object values', () => {
         expect(dateObjectToGregorianIso(null)).toBeNull();
         expect(dateObjectToGregorianIso(undefined)).toBeNull();
+    });
+
+    it('splits and combines datetime-local values for admin forms', () => {
+        expect(splitDateTimeLocal('2026-06-01T14:30')).toEqual({
+            date: '2026-06-01',
+            time: '14:30',
+        });
+        expect(splitDateTimeLocal(null)).toEqual({ date: '', time: '' });
+        expect(combineDateTimeLocal('2026-06-01', '14:30')).toBe(
+            '2026-06-01T14:30',
+        );
+        expect(combineDateTimeLocal('2026-06-01', '')).toBe('2026-06-01T00:00');
+        expect(combineDateTimeLocal('', '14:30')).toBeNull();
     });
 });

@@ -75,6 +75,11 @@ class AdminNavigationManifest
                         'href' => route('admin.packages.index'),
                         'route' => 'admin.packages.index',
                     ],
+                    [
+                        'label' => 'آپدیت‌های دوره',
+                        'href' => route('admin.course-updates.index'),
+                        'route' => 'admin.course-updates.index',
+                    ],
                 ],
             ],
             [

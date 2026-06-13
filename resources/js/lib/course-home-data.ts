@@ -45,13 +45,27 @@ export type CourseHomePreviewImage = {
     imageAlt: string | null;
 };
 
+export type CourseHomeUpdateVisualTheme =
+    | 'default'
+    | 'purple'
+    | 'gold'
+    | 'yellow'
+    | 'blue'
+    | 'green'
+    | 'rainbow';
+
 export type CourseHomeUpdatePreview = CourseHomePreviewImage & {
     id: string;
     title: string;
     summary: string;
     type: string;
     typeLabel: string;
+    visualTheme: CourseHomeUpdateVisualTheme;
+    visualThemeLabel: string;
+    publishedAt: string | null;
     publishedAtLabel: string;
+    isPinned: boolean;
+    body: string | null;
 };
 
 export type CourseHomeResourcePreview = CourseHomePreviewImage & {

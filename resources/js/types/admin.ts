@@ -401,3 +401,43 @@ export type AdminSupportLicenseContext = {
     status: string;
     statusTone: AdminStatusTone;
 };
+
+export type AdminCourseUpdateFormOptions = {
+    typeOptions: AdminStatusOption[];
+    visualThemeOptions: AdminStatusOption[];
+    statusOptions: AdminStatusOption[];
+};
+
+export type AdminCourseUpdateListItem = {
+    id: number;
+    title: string;
+    summary: string | null;
+    type: string;
+    typeLabel: string;
+    typeTone: AdminStatusTone;
+    visualTheme: string;
+    visualThemeLabel: string;
+    visualThemeTone: AdminStatusTone;
+    status: string;
+    statusLabel: string;
+    statusTone: AdminStatusTone;
+    isPinned: boolean;
+    displayOrder: number;
+    publishedAt: string | null;
+    publishedAtLabel: string;
+    isScheduled: boolean;
+    editUrl: string;
+};
+
+export type AdminCourseUpdateFormItem = {
+    id?: number;
+    title: string;
+    summary: string;
+    body: string;
+    type: string;
+    visualTheme: string;
+    status: string;
+    isPinned: boolean;
+    displayOrder: number;
+    publishedAt: string | null;
+};
