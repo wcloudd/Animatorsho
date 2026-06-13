@@ -1,19 +1,10 @@
 import { Link } from '@inertiajs/react';
-import { ChevronDown } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import {
     adminNavGroups,
-    isAdminNavGroupActive,
     isAdminNavLinkActive,
-    isAdminNavLinkItem,
-    type AdminNavGroup,
     type AdminNavLinkItem,
+    type AdminNavGroup,
 } from '@/config/admin-nav';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 
 function AdminNavLink({
@@ -36,8 +27,8 @@ function AdminNavLink({
             onClick={onNavigate}
             aria-current={isActive ? 'page' : undefined}
             className={cn(
-                'flex items-center gap-2.5 rounded-xl text-sm font-medium transition',
-                compact ? 'px-2.5 py-2' : 'px-3 py-2.5',
+                'flex items-center gap-2 rounded-xl text-sm font-medium transition',
+                compact ? 'px-2 py-1.5' : 'px-3 py-2',
                 isActive
                     ? 'bg-purple text-white shadow-xs ring-1 ring-purple/20'
                     : 'text-text hover:bg-purple-soft hover:text-purple',
@@ -49,109 +40,87 @@ function AdminNavLink({
     );
 }
 
-function AdminNavDisabledItem({
+function AdminNavGroupHeading({
     label,
-    icon: Icon,
     compact = false,
 }: {
     label: string;
-    icon: AdminNavLinkItem['icon'];
     compact?: boolean;
 }) {
     return (
-        <div
-            aria-disabled="true"
-            className={cn(
-                'flex items-center justify-between gap-2 rounded-xl text-sm text-muted/70',
-                compact ? 'px-2.5 py-2' : 'px-3 py-2.5',
-            )}
-        >
-            <span className="flex min-w-0 items-center gap-2.5">
-                <Icon className="size-4 shrink-0 opacity-60" aria-hidden />
-                <span className="truncate">{label}</span>
-            </span>
-            <span className="shrink-0 rounded-md bg-purple-soft px-1.5 py-0.5 text-[10px] font-medium text-purple/70 ring-1 ring-purple/10">
-                به‌زودی
-            </span>
+        <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2.5">
+                <span
+                    className={cn(
+                        'shrink-0 font-display font-bold text-purple',
+                        compact ? 'text-[11px]' : 'text-xs',
+                    )}
+                >
+                    {label}
+                </span>
+                <span
+                    className="h-px flex-1 bg-purple/25"
+                    aria-hidden
+                />
+            </div>
         </div>
     );
 }
 
-function AdminNavGroupSection({
+function AdminNavGroupBlock({
     group,
     url,
     onNavigate,
-    defaultOpen,
     variant,
 }: {
     group: AdminNavGroup;
     url: string;
     onNavigate?: () => void;
-    defaultOpen: boolean;
     variant: 'mobile' | 'desktop';
 }) {
-    const [open, setOpen] = useState(defaultOpen);
-    const isGroupActive = isAdminNavGroupActive(url, group);
     const compact = variant === 'desktop';
+    const singleLink = group.items.length === 1 ? group.items[0] : null;
 
-    useEffect(() => {
-        if (defaultOpen) {
-            setOpen(true);
-        }
-    }, [defaultOpen]);
-
-    if (group.items.length === 1 && isAdminNavLinkItem(group.items[0])) {
+    if (singleLink !== null) {
         return (
-            <AdminNavLink
-                item={group.items[0]}
-                url={url}
-                onNavigate={onNavigate}
-                compact={compact}
-            />
+            <div className={cn(compact ? 'min-w-0' : undefined)}>
+                <AdminNavGroupHeading
+                    label={group.label}
+                    compact={compact}
+                />
+                <AdminNavLink
+                    item={singleLink}
+                    url={url}
+                    onNavigate={onNavigate}
+                    compact={compact}
+                />
+            </div>
         );
     }
 
     return (
-        <Collapsible open={open} onOpenChange={setOpen}>
-            <CollapsibleTrigger
+        <div className={cn(compact ? 'min-w-0' : undefined)}>
+            <AdminNavGroupHeading
+                label={group.label}
+                compact={compact}
+            />
+            <div
                 className={cn(
-                    'flex w-full items-center justify-between gap-2 rounded-xl text-sm font-semibold transition',
-                    compact ? 'px-2.5 py-2' : 'px-3 py-2.5',
-                    isGroupActive
-                        ? 'bg-purple-soft text-purple ring-1 ring-purple/15'
-                        : 'text-text hover:bg-purple-soft/60',
+                    'flex flex-col',
+                    compact ? 'gap-0.5' : 'gap-0.5',
                 )}
-                aria-expanded={open}
             >
-                <span>{group.label}</span>
-                <ChevronDown
-                    className={cn(
-                        'size-4 shrink-0 text-muted transition-transform',
-                        open && 'rotate-180',
-                    )}
-                />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="flex flex-col gap-0.5 pt-1 pr-1">
-                {group.items.map((item) =>
-                    isAdminNavLinkItem(item) ? (
-                        <AdminNavLink
-                            key={`${group.key}-${item.href}`}
-                            item={item}
-                            url={url}
-                            onNavigate={onNavigate}
-                            compact={compact}
-                        />
-                    ) : (
-                        <AdminNavDisabledItem
-                            key={`${group.key}-${item.label}`}
-                            label={item.label}
-                            icon={item.icon}
-                            compact={compact}
-                        />
-                    ),
-                )}
-            </CollapsibleContent>
-        </Collapsible>
+                {group.items.map((item) => (
+                    <AdminNavLink
+                        key={item.href}
+                        item={item}
+                        url={url}
+                        onNavigate={onNavigate}
+                        compact={compact}
+                    />
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -169,17 +138,16 @@ export function AdminNavMenu({
             aria-label="منوی مدیریت"
             className={cn(
                 variant === 'mobile'
-                    ? 'flex flex-col gap-1 p-3'
-                    : 'hidden lg:grid lg:grid-cols-2 lg:gap-x-4 lg:gap-y-2 xl:grid-cols-3',
+                    ? 'flex flex-col gap-3 p-3'
+                    : 'hidden lg:grid lg:grid-cols-4 lg:gap-x-4 lg:gap-y-2 xl:grid-cols-7',
             )}
         >
             {adminNavGroups.map((group) => (
-                <AdminNavGroupSection
+                <AdminNavGroupBlock
                     key={group.key}
                     group={group}
                     url={url}
                     onNavigate={onNavigate}
-                    defaultOpen={isAdminNavGroupActive(url, group)}
                     variant={variant}
                 />
             ))}

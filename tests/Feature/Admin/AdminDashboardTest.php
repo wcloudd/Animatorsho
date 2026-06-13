@@ -56,15 +56,10 @@ test('admin dashboard props include summary and queue sections', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->has('activityMetrics', 2)
             ->has('securityEventsLast24Hours')
-            ->has('dashboardSections', fn (Assert $sections) => $sections
-                ->where('actionRequired', 'نیازمند اقدام')
-                ->where('finance', 'مالی')
-                ->where('learners', 'هنرجوها و دوره')
-                ->where('communications', 'ارتباطات')
-                ->where('security', 'امنیت و سیستم'))
             ->has('summary', 9)
             ->has('actionQueues')
             ->has('activityQueues')
+            ->has('financeSummary')
             ->where('allActionQueuesEmpty', true)
             ->has('activityMetrics.0', fn (Assert $card) => $card
                 ->has('key')
@@ -78,20 +73,6 @@ test('admin dashboard props include summary and queue sections', function () {
                 ->has('count')
                 ->has('href')
                 ->has('tone')));
-});
-
-test('admin dashboard exposes five grouped section headings', function () {
-    $admin = User::factory()->admin()->create();
-
-    $this->actingAs($admin)
-        ->get(route('admin.dashboard'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('dashboardSections.actionRequired', 'نیازمند اقدام')
-            ->where('dashboardSections.finance', 'مالی')
-            ->where('dashboardSections.learners', 'هنرجوها و دوره')
-            ->where('dashboardSections.communications', 'ارتباطات')
-            ->where('dashboardSections.security', 'امنیت و سیستم'));
 });
 
 test('admin pages share grouped navigation for admin users', function () {
@@ -111,7 +92,7 @@ test('admin pages share grouped navigation for admin users', function () {
             ->where('adminNavGroups.6.label', 'تنظیمات'));
 });
 
-test('admin navigation keeps important existing links and coming soon placeholders', function () {
+test('admin navigation keeps important existing links visible in groups', function () {
     $admin = User::factory()->admin()->create();
 
     $this->actingAs($admin)
@@ -120,14 +101,29 @@ test('admin navigation keeps important existing links and coming soon placeholde
         ->assertInertia(function (Assert $page): void {
             $groups = $page->toArray()['props']['adminNavGroups'] ?? [];
             $items = collect($groups)->flatMap(fn (array $group): array => $group['items'] ?? []);
+            $labels = collect($groups)->pluck('label');
 
+            expect($labels->all())->toBe([
+                'داشبورد',
+                'مالی و فروش',
+                'کاربران و دسترسی‌ها',
+                'دوره و محتوا',
+                'ارتباطات',
+                'امنیت و سیستم',
+                'تنظیمات',
+            ]);
             expect($items->firstWhere('route', 'admin.orders.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.payments.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.installments.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.manual-enrollments.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.licenses.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.packages.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.support.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.consultations.index'))->not->toBeNull();
             expect($items->firstWhere('route', 'admin.security-events.index'))->not->toBeNull();
-            expect($items->firstWhere('label', 'آپدیت‌های دوره')['comingSoon'] ?? false)->toBeTrue();
-            expect($items->firstWhere('label', 'تمرین‌ها / پیام استاد')['comingSoon'] ?? false)->toBeTrue();
-            expect($items->firstWhere('label', 'گزارش مالی')['route'])->toBe('admin.dashboard');
+            expect($items->firstWhere('route', 'admin.sms.index'))->not->toBeNull();
+            expect($items->firstWhere('route', 'admin.site-settings.index'))->not->toBeNull();
+            expect($items)->toHaveCount(12);
         });
 });
 

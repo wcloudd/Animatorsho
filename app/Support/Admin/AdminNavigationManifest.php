@@ -10,9 +10,8 @@ class AdminNavigationManifest
      *     label: string,
      *     items: list<array{
      *         label: string,
-     *         href: string|null,
-     *         route: string|null,
-     *         comingSoon: bool
+     *         href: string,
+     *         route: string
      *     }>
      * }>
      */
@@ -27,7 +26,6 @@ class AdminNavigationManifest
                         'label' => 'داشبورد',
                         'href' => route('admin.dashboard'),
                         'route' => 'admin.dashboard',
-                        'comingSoon' => false,
                     ],
                 ],
             ],
@@ -39,25 +37,16 @@ class AdminNavigationManifest
                         'label' => 'سفارش‌ها',
                         'href' => route('admin.orders.index'),
                         'route' => 'admin.orders.index',
-                        'comingSoon' => false,
                     ],
                     [
                         'label' => 'پرداخت‌ها',
                         'href' => route('admin.payments.index'),
                         'route' => 'admin.payments.index',
-                        'comingSoon' => false,
                     ],
                     [
                         'label' => 'پیگیری اقساط',
                         'href' => route('admin.installments.index'),
                         'route' => 'admin.installments.index',
-                        'comingSoon' => false,
-                    ],
-                    [
-                        'label' => 'گزارش مالی',
-                        'href' => route('admin.dashboard').'#section-finance',
-                        'route' => 'admin.dashboard',
-                        'comingSoon' => false,
                     ],
                 ],
             ],
@@ -69,13 +58,11 @@ class AdminNavigationManifest
                         'label' => 'کاربران و دسترسی‌ها',
                         'href' => route('admin.manual-enrollments.index'),
                         'route' => 'admin.manual-enrollments.index',
-                        'comingSoon' => false,
                     ],
                     [
                         'label' => 'لایسنس‌ها',
                         'href' => route('admin.licenses.index'),
                         'route' => 'admin.licenses.index',
-                        'comingSoon' => false,
                     ],
                 ],
             ],
@@ -87,19 +74,6 @@ class AdminNavigationManifest
                         'label' => 'بسته‌ها',
                         'href' => route('admin.packages.index'),
                         'route' => 'admin.packages.index',
-                        'comingSoon' => false,
-                    ],
-                    [
-                        'label' => 'آپدیت‌های دوره',
-                        'href' => null,
-                        'route' => null,
-                        'comingSoon' => true,
-                    ],
-                    [
-                        'label' => 'کتابخانه / منابع',
-                        'href' => null,
-                        'route' => null,
-                        'comingSoon' => true,
                     ],
                 ],
             ],
@@ -111,19 +85,11 @@ class AdminNavigationManifest
                         'label' => 'پشتیبانی',
                         'href' => route('admin.support.index'),
                         'route' => 'admin.support.index',
-                        'comingSoon' => false,
                     ],
                     [
                         'label' => 'مشاوره‌ها',
                         'href' => route('admin.consultations.index'),
                         'route' => 'admin.consultations.index',
-                        'comingSoon' => false,
-                    ],
-                    [
-                        'label' => 'تمرین‌ها / پیام استاد',
-                        'href' => null,
-                        'route' => null,
-                        'comingSoon' => true,
                     ],
                 ],
             ],
@@ -132,16 +98,14 @@ class AdminNavigationManifest
                 'label' => 'امنیت و سیستم',
                 'items' => [
                     [
-                        'label' => 'رویدادهای امنیتی',
+                        'label' => 'امنیت',
                         'href' => route('admin.security-events.index'),
                         'route' => 'admin.security-events.index',
-                        'comingSoon' => false,
                     ],
                     [
                         'label' => 'پیامک',
                         'href' => route('admin.sms.index'),
                         'route' => 'admin.sms.index',
-                        'comingSoon' => false,
                     ],
                 ],
             ],
@@ -153,7 +117,6 @@ class AdminNavigationManifest
                         'label' => 'تنظیمات سایت',
                         'href' => route('admin.site-settings.index'),
                         'route' => 'admin.site-settings.index',
-                        'comingSoon' => false,
                     ],
                 ],
             ],

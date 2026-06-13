@@ -1,41 +1,56 @@
 import { Head, Link } from '@inertiajs/react';
-import { KeyRound, Package, Shield, UserPlus } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { AdminDashboardQueueSection } from '@/components/admin/admin-dashboard-queue';
+import { AdminFinanceSummaryPanel } from '@/components/admin/admin-finance-summary-panel';
 import { AdminDashboardSummaryCardLink } from '@/components/admin/admin-dashboard-summary-card';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminSectionTitle } from '@/components/admin/admin-section-title';
-import {
-    partitionAdminDashboardProps,
-} from '@/lib/admin-dashboard-sections';
-import type { AdminDashboardPageProps } from '@/types/admin';
+import type {
+    AdminDashboardPageProps,
+    AdminDashboardQueue,
+    AdminDashboardSummaryCard,
+} from '@/types/admin';
 import { cn } from '@/lib/utils';
 
-function AdminDashboardQuickLink({
-    href,
-    label,
-    icon: Icon,
-}: {
-    href: string;
-    label: string;
-    icon: typeof UserPlus;
-}) {
-    return (
-        <Link
-            href={href}
-            className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5 text-sm font-medium text-text ring-1 ring-purple/10 transition hover:bg-purple-soft hover:text-purple"
-        >
-            <Icon className="size-4 shrink-0 text-purple/80" aria-hidden />
-            <span>{label}</span>
-        </Link>
+const overviewSummaryOrder = [
+    'pending_card_to_card',
+    'pending_installment',
+    'open_support_tickets',
+    'pending_licenses',
+    'license_api_failures',
+    'sms_issues',
+    'new_consultations',
+    'follow_up_consultations',
+    'support_waiting_user',
+] as const;
+
+const registrationMetricKeys = [
+    'registrations_today',
+    'registrations_last_7_days',
+] as const;
+
+const financeQueueKeys = ['recent_orders', 'recent_payments'] as const;
+
+function orderSummaryCards(
+    cards: AdminDashboardSummaryCard[],
+    keys: readonly string[],
+): AdminDashboardSummaryCard[] {
+    return keys
+        .map((key) => cards.find((card) => card.key === key))
+        .filter((card): card is AdminDashboardSummaryCard => card !== undefined);
+}
+
+function pickQueues(
+    queues: AdminDashboardQueue[],
+    keys: readonly string[],
+): AdminDashboardQueue[] {
+    return queues.filter((queue) =>
+        (keys as readonly string[]).includes(queue.key),
     );
 }
 
-function AdminSecurityEventsCard({
-    count,
-}: {
-    count: number;
-}) {
+function AdminSecurityEventsCard({ count }: { count: number }) {
     return (
         <Link
             href="/admin/security-events"
@@ -53,7 +68,7 @@ function AdminSecurityEventsCard({
                         count > 0 ? 'text-gold' : 'text-muted',
                     )}
                 >
-                    رویدادهای امنیتی (۲۴ ساعت اخیر)
+                    رویدادهای امنیتی (۲۴ ساعت)
                 </span>
                 <Shield
                     className={cn(
@@ -82,46 +97,55 @@ export default function AdminDashboard({
     activityQueues,
     activityMetrics,
     securityEventsLast24Hours,
-    dashboardSections,
+    financeSummary,
+    allActionQueuesEmpty,
 }: AdminDashboardPageProps) {
-    const sections = partitionAdminDashboardProps({
-        summary,
-        actionQueues,
-        activityQueues,
-        activityMetrics,
-    });
+    const overviewCards = [
+        ...orderSummaryCards(summary, overviewSummaryOrder),
+        ...orderSummaryCards(activityMetrics, registrationMetricKeys),
+    ];
+    const financeQueues = pickQueues(activityQueues, financeQueueKeys);
+    const otherActivityQueues = activityQueues.filter(
+        (queue) => !(financeQueueKeys as readonly string[]).includes(queue.key),
+    );
 
     return (
         <>
             <Head title="داشبورد مدیریت" />
             <AdminPageHeader
                 title="داشبورد مدیریت"
-                description="کارهای امروز و موارد نیازمند بررسی"
+                description="خلاصه وضعیت و موارد نیازمند بررسی"
             />
 
-            <section
-                id="section-action-required"
-                className="mb-6 flex flex-col gap-3"
-            >
+            <section className="mb-6">
+                <AdminSectionTitle>خلاصه</AdminSectionTitle>
+                <div className="grid grid-cols-2 gap-2.5">
+                    {overviewCards.map((card) => (
+                        <AdminDashboardSummaryCardLink
+                            key={card.key}
+                            card={card}
+                        />
+                    ))}
+                    <AdminSecurityEventsCard
+                        count={securityEventsLast24Hours}
+                    />
+                </div>
+            </section>
+
+            <section className="mb-6">
+                <AdminSectionTitle>مالی</AdminSectionTitle>
+                <AdminFinanceSummaryPanel financeSummary={financeSummary} />
+            </section>
+
+            <section className="mb-6 flex flex-col gap-3">
                 <AdminSectionTitle className="mb-0">
-                    {dashboardSections.actionRequired}
+                    نیازمند اقدام
                 </AdminSectionTitle>
 
-                {sections.actionRequired.summary.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2.5">
-                        {sections.actionRequired.summary.map((card) => (
-                            <AdminDashboardSummaryCardLink
-                                key={card.key}
-                                card={card}
-                            />
-                        ))}
-                    </div>
-                ) : null}
-
-                {!sections.actionRequired.hasUrgentAction ? (
+                {allActionQueuesEmpty ? (
                     <AdminEmptyState message="همه چیز مرتب است — مورد فوری برای بررسی وجود ندارد." />
                 ) : (
-                    sections.actionRequired.queues.map((queue) => (
+                    actionQueues.map((queue) => (
                         <AdminDashboardQueueSection
                             key={queue.key}
                             queue={queue}
@@ -131,118 +155,36 @@ export default function AdminDashboard({
                 )}
             </section>
 
-            <section id="section-finance" className="mb-6 flex flex-col gap-3">
-                <AdminSectionTitle className="mb-0">
-                    {dashboardSections.finance}
-                </AdminSectionTitle>
+            {activityQueues.length > 0 ? (
+                <section className="flex flex-col gap-3">
+                    <AdminSectionTitle className="mb-0">
+                        فعالیت اخیر
+                    </AdminSectionTitle>
 
-                {sections.finance.queues.length > 0 ? (
-                    sections.finance.queues.map((queue) => (
+                    {financeQueues.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                            <p className="text-[11px] font-semibold text-muted">
+                                سفارش و پرداخت اخیر
+                            </p>
+                            {financeQueues.map((queue) => (
+                                <AdminDashboardQueueSection
+                                    key={queue.key}
+                                    queue={queue}
+                                    compact
+                                />
+                            ))}
+                        </div>
+                    ) : null}
+
+                    {otherActivityQueues.map((queue) => (
                         <AdminDashboardQueueSection
                             key={queue.key}
                             queue={queue}
                             compact
                         />
-                    ))
-                ) : (
-                    <AdminEmptyState message="فعالیت مالی اخیر ثبت نشده است." />
-                )}
-
-                <p className="rounded-xl bg-purple-soft/50 px-3.5 py-3 text-sm text-muted ring-1 ring-purple/10">
-                    گزارش مالی کامل در مرحله بعد اضافه می‌شود.
-                </p>
-            </section>
-
-            <section id="section-learners" className="mb-6">
-                <AdminSectionTitle>
-                    {dashboardSections.learners}
-                </AdminSectionTitle>
-                <div className="grid grid-cols-2 gap-2.5">
-                    {sections.learners.metrics.map((card) => (
-                        <AdminDashboardSummaryCardLink
-                            key={card.key}
-                            card={card}
-                        />
                     ))}
-                </div>
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <AdminDashboardQuickLink
-                        href="/admin/manual-enrollments"
-                        label="کاربران و دسترسی‌ها"
-                        icon={UserPlus}
-                    />
-                    <AdminDashboardQuickLink
-                        href="/admin/licenses"
-                        label="لایسنس‌ها"
-                        icon={KeyRound}
-                    />
-                    <AdminDashboardQuickLink
-                        href="/admin/packages"
-                        label="بسته‌ها"
-                        icon={Package}
-                    />
-                </div>
-            </section>
-
-            <section
-                id="section-communications"
-                className="mb-6 flex flex-col gap-3"
-            >
-                <AdminSectionTitle className="mb-0">
-                    {dashboardSections.communications}
-                </AdminSectionTitle>
-
-                {sections.communications.summary.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2.5">
-                        {sections.communications.summary.map((card) => (
-                            <AdminDashboardSummaryCardLink
-                                key={card.key}
-                                card={card}
-                            />
-                        ))}
-                    </div>
-                ) : null}
-
-                {sections.communications.queues.length > 0 ? (
-                    sections.communications.queues.map((queue) => (
-                        <AdminDashboardQueueSection
-                            key={queue.key}
-                            queue={queue}
-                            urgent
-                        />
-                    ))
-                ) : (
-                    <AdminEmptyState message="درخواست مشاوره یا تیکت جدیدی برای نمایش وجود ندارد." />
-                )}
-
-                <p className="rounded-xl bg-purple-soft/30 px-3.5 py-2.5 text-xs text-muted ring-1 ring-purple/10">
-                    تمرین‌ها و پیام استاد — به‌زودی
-                </p>
-            </section>
-
-            <section id="section-security" className="flex flex-col gap-3">
-                <AdminSectionTitle className="mb-0">
-                    {dashboardSections.security}
-                </AdminSectionTitle>
-
-                <div className="grid grid-cols-2 gap-2.5">
-                    <AdminSecurityEventsCard count={securityEventsLast24Hours} />
-                    {sections.security.summary.map((card) => (
-                        <AdminDashboardSummaryCardLink
-                            key={card.key}
-                            card={card}
-                        />
-                    ))}
-                </div>
-
-                {sections.security.queues.map((queue) => (
-                    <AdminDashboardQueueSection
-                        key={queue.key}
-                        queue={queue}
-                        compact
-                    />
-                ))}
-            </section>
+                </section>
+            ) : null}
         </>
     );
 }

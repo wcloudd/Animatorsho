@@ -31,6 +31,7 @@ class AdminDashboardService
 
     public function __construct(
         private readonly AdminSmsService $sms,
+        private readonly AdminFinanceSummaryService $financeSummary,
     ) {}
 
     /**
@@ -43,13 +44,6 @@ class AdminDashboardService
      *         tone: 'warning'|'danger'|'neutral'
      *     }>,
      *     securityEventsLast24Hours: int,
-     *     dashboardSections: array{
-     *         actionRequired: string,
-     *         finance: string,
-     *         learners: string,
-     *         communications: string,
-     *         security: string
-     *     },
      *     summary: list<array{
      *         key: string,
      *         label: string,
@@ -83,7 +77,42 @@ class AdminDashboardService
      *             badge: ?array{label: string, tone: string}
      *         }>
      *     }>,
-     *     allActionQueuesEmpty: bool
+     *     allActionQueuesEmpty: bool,
+     *     financeSummary: array{
+     *         confirmedRevenueTotal: int,
+     *         confirmedRevenueTotalFormatted: string,
+     *         confirmedRevenueToday: int,
+     *         confirmedRevenueTodayFormatted: string,
+     *         confirmedRevenueCurrentMonth: int,
+     *         confirmedRevenueCurrentMonthFormatted: string,
+     *         successfulPaymentsCount: int,
+     *         pendingPaymentsCount: int,
+     *         failedOrCancelledCount: int,
+     *         reviewingCardToCardCount: int,
+     *         reviewingCardToCardAmount: int,
+     *         reviewingCardToCardAmountFormatted: string,
+     *         reviewingInstallmentCount: int,
+     *         reviewingInstallmentAmount: int,
+     *         reviewingInstallmentAmountFormatted: string,
+     *         paidByMethod: list<array{
+     *             method: string,
+     *             label: string,
+     *             count: int,
+     *             amountToman: int,
+     *             amountFormatted: string
+     *         }>,
+     *         topPackages: list<array{
+     *             packageId: int,
+     *             title: string,
+     *             paidCount: int,
+     *             revenueToman: int,
+     *             revenueFormatted: string
+     *         }>,
+     *         externalGrantsCount: int,
+     *         externalGrantsAmount: int,
+     *         externalGrantsAmountFormatted: string,
+     *         activeLicensesCount: int
+     *     }
      * }
      */
     public function forDashboard(): array
@@ -109,17 +138,11 @@ class AdminDashboardService
             'securityEventsLast24Hours' => SecurityEvent::query()
                 ->where('occurred_at', '>=', now()->subDay())
                 ->count(),
-            'dashboardSections' => [
-                'actionRequired' => 'نیازمند اقدام',
-                'finance' => 'مالی',
-                'learners' => 'هنرجوها و دوره',
-                'communications' => 'ارتباطات',
-                'security' => 'امنیت و سیستم',
-            ],
             'summary' => $this->summaryCards(),
             'actionQueues' => $actionQueues,
             'activityQueues' => $activityQueues,
             'allActionQueuesEmpty' => $actionQueues === [],
+            'financeSummary' => $this->financeSummary->forDashboard(),
         ];
     }
 

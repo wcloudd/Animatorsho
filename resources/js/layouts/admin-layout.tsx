@@ -41,8 +41,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                     side="right"
                                     className="w-[min(100vw-2rem,20rem)] border-purple/10 bg-surface p-0 text-text"
                                 >
-                                    <SheetHeader className="border-b border-purple/10 px-4 py-4 text-right">
-                                        <SheetTitle className="font-display text-base text-purple">
+                                    <SheetHeader className="flex flex-row items-center border-b border-purple/10 px-4 py-4 pr-12">
+                                        <SheetTitle className="flex-1 text-right font-display text-base text-purple">
                                             منوی مدیریت
                                         </SheetTitle>
                                     </SheetHeader>

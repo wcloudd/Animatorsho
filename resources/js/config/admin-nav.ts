@@ -22,25 +22,11 @@ export type AdminNavLinkItem = {
     icon: LucideIcon;
 };
 
-export type AdminNavDisabledItem = {
-    label: string;
-    icon: LucideIcon;
-    comingSoon: true;
-};
-
-export type AdminNavItem = AdminNavLinkItem | AdminNavDisabledItem;
-
 export type AdminNavGroup = {
     key: string;
     label: string;
-    items: AdminNavItem[];
+    items: AdminNavLinkItem[];
 };
-
-export function isAdminNavLinkItem(
-    item: AdminNavItem,
-): item is AdminNavLinkItem {
-    return !('comingSoon' in item);
-}
 
 export const adminNavGroups: AdminNavGroup[] = [
     {
@@ -78,13 +64,6 @@ export const adminNavGroups: AdminNavGroup[] = [
                 match: '/admin/installments',
                 icon: CalendarClock,
             },
-            {
-                href: '/admin#section-finance',
-                label: 'گزارش مالی',
-                match: '/admin',
-                exact: true,
-                icon: CreditCard,
-            },
         ],
     },
     {
@@ -115,16 +94,6 @@ export const adminNavGroups: AdminNavGroup[] = [
                 match: '/admin/packages',
                 icon: Package,
             },
-            {
-                label: 'آپدیت‌های دوره',
-                icon: Package,
-                comingSoon: true,
-            },
-            {
-                label: 'کتابخانه / منابع',
-                icon: Package,
-                comingSoon: true,
-            },
         ],
     },
     {
@@ -143,11 +112,6 @@ export const adminNavGroups: AdminNavGroup[] = [
                 match: '/admin/consultations',
                 icon: MessageSquare,
             },
-            {
-                label: 'تمرین‌ها / پیام استاد',
-                icon: MessageSquare,
-                comingSoon: true,
-            },
         ],
     },
     {
@@ -156,7 +120,7 @@ export const adminNavGroups: AdminNavGroup[] = [
         items: [
             {
                 href: '/admin/security-events',
-                label: 'رویدادهای امنیتی',
+                label: 'امنیت',
                 match: '/admin/security-events',
                 icon: Shield,
             },
@@ -185,17 +149,13 @@ export const adminNavGroups: AdminNavGroup[] = [
 export const adminNavGroupLabels = adminNavGroups.map((group) => group.label);
 
 export const adminNavLinkHrefs = adminNavGroups.flatMap((group) =>
-    group.items.filter(isAdminNavLinkItem).map((item) => item.href),
+    group.items.map((item) => item.href),
 );
 
 export function isAdminNavLinkActive(
     url: string,
     item: AdminNavLinkItem,
 ): boolean {
-    if (item.href === '/admin#section-finance') {
-        return url === '/admin' || url === '/admin/';
-    }
-
     return item.exact
         ? url === item.match || url === `${item.match}/`
         : url.startsWith(item.match);
@@ -205,7 +165,5 @@ export function isAdminNavGroupActive(
     url: string,
     group: AdminNavGroup,
 ): boolean {
-    return group.items.some(
-        (item) => isAdminNavLinkItem(item) && isAdminNavLinkActive(url, item),
-    );
+    return group.items.some((item) => isAdminNavLinkActive(url, item));
 }

@@ -26,22 +26,54 @@ export type AdminDashboardQueue = {
     items: AdminDashboardQueueItem[];
 };
 
-export type AdminDashboardSections = {
-    actionRequired: string;
-    finance: string;
-    learners: string;
-    communications: string;
-    security: string;
-};
-
 export type AdminDashboardPageProps = {
     activityMetrics: AdminDashboardSummaryCard[];
     securityEventsLast24Hours: number;
-    dashboardSections: AdminDashboardSections;
     summary: AdminDashboardSummaryCard[];
     actionQueues: AdminDashboardQueue[];
     activityQueues: AdminDashboardQueue[];
     allActionQueuesEmpty: boolean;
+    financeSummary: AdminFinanceSummary;
+};
+
+export type AdminFinancePaidByMethod = {
+    method: string;
+    label: string;
+    count: number;
+    amountToman: number;
+    amountFormatted: string;
+};
+
+export type AdminFinanceTopPackage = {
+    packageId: number;
+    title: string;
+    paidCount: number;
+    revenueToman: number;
+    revenueFormatted: string;
+};
+
+export type AdminFinanceSummary = {
+    confirmedRevenueTotal: number;
+    confirmedRevenueTotalFormatted: string;
+    confirmedRevenueToday: number;
+    confirmedRevenueTodayFormatted: string;
+    confirmedRevenueCurrentMonth: number;
+    confirmedRevenueCurrentMonthFormatted: string;
+    successfulPaymentsCount: number;
+    pendingPaymentsCount: number;
+    failedOrCancelledCount: number;
+    reviewingCardToCardCount: number;
+    reviewingCardToCardAmount: number;
+    reviewingCardToCardAmountFormatted: string;
+    reviewingInstallmentCount: number;
+    reviewingInstallmentAmount: number;
+    reviewingInstallmentAmountFormatted: string;
+    paidByMethod: AdminFinancePaidByMethod[];
+    topPackages: AdminFinanceTopPackage[];
+    externalGrantsCount: number;
+    externalGrantsAmount: number;
+    externalGrantsAmountFormatted: string;
+    activeLicensesCount: number;
 };
 
 export type AdminStatusOption = {
