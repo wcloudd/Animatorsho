@@ -5,6 +5,7 @@ use App\Http\Controllers\CheckoutOrderController;
 use App\Http\Controllers\CheckoutZarinpalCallbackController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\CourseHomeController;
+use App\Http\Controllers\CourseResourcesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileMobileVerificationController;
@@ -21,6 +22,10 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/course', [CourseHomeController::class, 'index'])
     ->middleware('auth')
     ->name('course.home');
+
+Route::get('/course/resources', [CourseResourcesController::class, 'index'])
+    ->middleware('auth')
+    ->name('course.resources.index');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 

@@ -80,6 +80,11 @@ class AdminNavigationManifest
                         'href' => route('admin.course-updates.index'),
                         'route' => 'admin.course-updates.index',
                     ],
+                    [
+                        'label' => 'منابع تمرین',
+                        'href' => route('admin.course-resources.index'),
+                        'route' => 'admin.course-resources.index',
+                    ],
                 ],
             ],
             [

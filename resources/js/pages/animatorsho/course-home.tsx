@@ -37,6 +37,7 @@ export default function CourseHome({
                     />
                     <CourseHomeResourcesPreview
                         resources={preview.resources}
+                        resourcesIndexUrl={preview.resourcesIndexUrl}
                         visual={preview.sectionVisuals.resources}
                     />
                     <CourseHomeMedalsShowcase

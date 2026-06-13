@@ -74,6 +74,12 @@ export type CourseHomeResourcePreview = CourseHomePreviewImage & {
     description: string;
     type: string;
     typeLabel: string;
+    categoryLabel: string | null;
+    publishedAt: string | null;
+    publishedAtLabel: string;
+    actionUrl: string | null;
+    actionLabel: string;
+    isAvailable: boolean;
 };
 
 export type CourseHomeMedalItem = {
@@ -100,6 +106,7 @@ export type CourseHomeMentorSummary = {
 export type CourseHomePreview = {
     updates: CourseHomeUpdatePreview[];
     resources: CourseHomeResourcePreview[];
+    resourcesIndexUrl: string;
     notificationsUnread: number;
     exercisesSummary: CourseHomeExercisesSummary;
     mentorSummary: CourseHomeMentorSummary;

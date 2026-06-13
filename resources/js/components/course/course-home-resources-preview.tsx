@@ -1,8 +1,7 @@
-import { BookOpen, ExternalLink, File, FileText, Image } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import { showCoursePanelComingSoonToast } from '@/components/course/course-home-coming-soon-button';
+import { BookOpen } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 import { CourseHomeSectionCard } from '@/components/course/course-home-section-card';
-import { ProfileStatusBadge } from '@/components/profile/profile-status-badge';
+import { CourseResourceRow } from '@/components/course/course-resource-row';
 import type {
     CourseHomeResourcePreview,
     CourseHomeSectionVisual,
@@ -10,25 +9,13 @@ import type {
 
 type CourseHomeResourcesPreviewProps = {
     resources: CourseHomeResourcePreview[];
+    resourcesIndexUrl: string;
     visual: CourseHomeSectionVisual;
 };
 
-const resourceIconByType: Record<string, LucideIcon> = {
-    pdf: FileText,
-    file: File,
-    image: Image,
-    link: ExternalLink,
-    project_file: File,
-};
-
-function ResourceIcon({ type }: { type: string }) {
-    const Icon = resourceIconByType[type] ?? File;
-
-    return <Icon className="size-4" />;
-}
-
 export function CourseHomeResourcesPreview({
     resources,
+    resourcesIndexUrl,
     visual,
 }: CourseHomeResourcesPreviewProps) {
     return (
@@ -38,34 +25,28 @@ export function CourseHomeResourcesPreview({
             visual={visual}
             placeholderIcon={BookOpen}
         >
-            <ul className="flex flex-col gap-2.5">
-                {resources.map((resource) => (
-                    <li key={resource.id}>
-                        <button
-                            type="button"
-                            onClick={showCoursePanelComingSoonToast}
-                            className="flex w-full items-center gap-3 rounded-2xl bg-bg px-4 py-3 text-start ring-1 ring-border/70 transition-colors hover:bg-purple-soft/30"
-                        >
-                            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface text-purple ring-1 ring-purple/10">
-                                <ResourceIcon type={resource.type} />
-                            </span>
-                            <span className="flex min-w-0 flex-1 flex-col gap-1">
-                                <span className="flex flex-wrap items-center gap-2">
-                                    <span className="text-sm font-bold text-text">
-                                        {resource.title}
-                                    </span>
-                                    <ProfileStatusBadge tone="neutral">
-                                        {resource.typeLabel}
-                                    </ProfileStatusBadge>
-                                </span>
-                                <span className="text-xs font-medium leading-relaxed text-muted">
-                                    {resource.description}
-                                </span>
-                            </span>
-                        </button>
-                    </li>
-                ))}
-            </ul>
+            {resources.length === 0 ? (
+                <p className="rounded-2xl bg-bg px-4 py-3 text-sm font-medium leading-relaxed text-muted ring-1 ring-border/70">
+                    هنوز منبعی منتشر نشده است. فایل‌های تمرین و رفرنس‌ها به‌زودی
+                    اینجا قرار می‌گیرند.
+                </p>
+            ) : (
+                <div className="flex flex-col gap-3">
+                    <ul className="flex flex-col gap-2.5">
+                        {resources.map((resource) => (
+                            <li key={resource.id}>
+                                <CourseResourceRow resource={resource} />
+                            </li>
+                        ))}
+                    </ul>
+                    <Link
+                        href={resourcesIndexUrl}
+                        className="self-start rounded-pill px-4 py-2 text-xs font-bold text-purple ring-1 ring-purple/25 transition-colors hover:bg-purple-soft/40"
+                    >
+                        مشاهده همه منابع
+                    </Link>
+                </div>
+            )}
         </CourseHomeSectionCard>
     );
 }

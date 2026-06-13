@@ -16,6 +16,7 @@ class CourseAccessService
     public function __construct(
         private readonly AnimatorshoCatalogService $catalog,
         private readonly CourseUpdateQueryService $courseUpdates,
+        private readonly CourseResourceQueryService $courseResources,
     ) {}
 
     public function userHasActiveAccess(User $user): bool
@@ -72,9 +73,16 @@ class CourseAccessService
      *             description: string,
      *             type: string,
      *             typeLabel: string,
+     *             categoryLabel: ?string,
+     *             publishedAt: ?string,
+     *             publishedAtLabel: string,
+     *             actionUrl: ?string,
+     *             actionLabel: string,
+     *             isAvailable: bool,
      *             imageUrl: ?string,
      *             imageAlt: ?string
      *         }>,
+     *         resourcesIndexUrl: string,
      *         notificationsUnread: int,
      *         exercisesSummary: array{total: int, pending: int},
      *         mentorSummary: array{hasThread: bool, status: ?string},
@@ -134,7 +142,8 @@ class CourseAccessService
             'onboarding' => StudentPanelMedia::resolvedOnboarding(),
             'preview' => [
                 'updates' => $this->courseUpdates->latestPublishedForHome(),
-                'resources' => config('student_panel.preview.resources'),
+                'resources' => $this->courseResources->latestPublishedForHome(),
+                'resourcesIndexUrl' => route('course.resources.index'),
                 'notificationsUnread' => 0,
                 'exercisesSummary' => [
                     'total' => 0,

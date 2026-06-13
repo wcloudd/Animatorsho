@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+    BookOpen,
     CalendarClock,
     CreditCard,
     Headphones,
@@ -100,6 +101,12 @@ export const adminNavGroups: AdminNavGroup[] = [
                 label: 'آپدیت‌های دوره',
                 match: '/admin/course-updates',
                 icon: Megaphone,
+            },
+            {
+                href: '/admin/course-resources',
+                label: 'منابع تمرین',
+                match: '/admin/course-resources',
+                icon: BookOpen,
             },
         ],
     },

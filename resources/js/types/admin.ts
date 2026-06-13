@@ -441,3 +441,44 @@ export type AdminCourseUpdateFormItem = {
     displayOrder: number;
     publishedAt: string | null;
 };
+
+export type AdminCourseResourceFormOptions = {
+    typeOptions: AdminStatusOption[];
+    statusOptions: AdminStatusOption[];
+    accessScopeOptions: AdminStatusOption[];
+    categoryOptions: AdminStatusOption[];
+};
+
+export type AdminCourseResourceListItem = {
+    id: number;
+    title: string;
+    description: string | null;
+    type: string;
+    typeLabel: string;
+    typeTone: AdminStatusTone;
+    status: string;
+    statusLabel: string;
+    statusTone: AdminStatusTone;
+    categoryLabel: string;
+    accessScopeLabel: string;
+    displayOrder: number;
+    publishedAt: string | null;
+    publishedAtLabel: string;
+    isScheduled: boolean;
+    editUrl: string;
+};
+
+export type AdminCourseResourceFormItem = {
+    id?: number;
+    title: string;
+    description: string;
+    type: string;
+    filePath: string;
+    externalUrl: string;
+    status: string;
+    accessScope: string;
+    coursePackageId: number | null;
+    categoryId: number | null;
+    displayOrder: number;
+    publishedAt: string | null;
+};

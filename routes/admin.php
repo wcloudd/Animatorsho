@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ConsultationController;
 use App\Http\Controllers\Admin\CoursePackageController;
+use App\Http\Controllers\Admin\CourseResourceController;
 use App\Http\Controllers\Admin\CourseUpdateController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InstallmentController;
@@ -29,6 +30,12 @@ Route::middleware(['auth', 'admin'])
         Route::post('course-updates', [CourseUpdateController::class, 'store'])->name('course-updates.store');
         Route::get('course-updates/{courseUpdate}/edit', [CourseUpdateController::class, 'edit'])->name('course-updates.edit');
         Route::patch('course-updates/{courseUpdate}', [CourseUpdateController::class, 'update'])->name('course-updates.update');
+
+        Route::get('course-resources', [CourseResourceController::class, 'index'])->name('course-resources.index');
+        Route::get('course-resources/create', [CourseResourceController::class, 'create'])->name('course-resources.create');
+        Route::post('course-resources', [CourseResourceController::class, 'store'])->name('course-resources.store');
+        Route::get('course-resources/{courseResource}/edit', [CourseResourceController::class, 'edit'])->name('course-resources.edit');
+        Route::patch('course-resources/{courseResource}', [CourseResourceController::class, 'update'])->name('course-resources.update');
 
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
         Route::patch('orders/{order}/customer', [OrderController::class, 'updateCustomer'])->name('orders.update-customer');
