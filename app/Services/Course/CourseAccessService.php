@@ -2,14 +2,9 @@
 
 namespace App\Services\Course;
 
-use App\Enums\CoursePackageType;
 use App\Enums\SpotPlayerLicenseStatus;
-use App\Models\CoursePackage;
-use App\Models\Order;
-use App\Models\SpotPlayerLicense;
 use App\Models\User;
 use App\Services\AnimatorshoCatalogService;
-use App\Support\ProfileAccessPresenter;
 use Illuminate\Support\Collection;
 
 class CourseAccessService
@@ -19,7 +14,6 @@ class CourseAccessService
 
     public function __construct(
         private readonly AnimatorshoCatalogService $catalog,
-        private readonly ProfileAccessPresenter $accessPresenter,
     ) {}
 
     public function userHasActiveAccess(User $user): bool
@@ -38,105 +32,126 @@ class CourseAccessService
 
     /**
      * @return array{
-     *     welcome: array{displayName: string, hasFullAccess: bool},
-     *     chapters: list<array{
-     *         slug: string,
+     *     welcome: array{displayName: string, firstName: string},
+     *     progress: array{level: int, totalXp: int, progressPercent: int, xpToNextLevel: int},
+     *     onboarding: array{
      *         title: string,
-     *         chapterNumber: int|null,
-     *         isAccessible: bool,
-     *         accessLabel: ?string
-     *     }>,
-     *     spotPlayerLicenses: list<array{
-     *         packageTitle: string,
-     *         licenseKey: string,
-     *         isFullPackage: bool
-     *     }>
+     *         heading: string,
+     *         description: string,
+     *         imageUrl: ?string,
+     *         imageAlt: string,
+     *         videoUrl: ?string,
+     *         pdfUrl: ?string,
+     *         videoGuideLabel: string,
+     *         pdfGuideLabel: string
+     *     },
+     *     preview: array{
+     *         updates: list<array{
+     *             id: string,
+     *             title: string,
+     *             summary: string,
+     *             type: string,
+     *             typeLabel: string,
+     *             publishedAtLabel: string,
+     *             imageUrl: ?string,
+     *             imageAlt: ?string
+     *         }>,
+     *         resources: list<array{
+     *             id: string,
+     *             title: string,
+     *             description: string,
+     *             type: string,
+     *             typeLabel: string,
+     *             imageUrl: ?string,
+     *             imageAlt: ?string
+     *         }>,
+     *         notificationsUnread: int,
+     *         exercisesSummary: array{total: int, pending: int},
+     *         mentorSummary: array{hasThread: bool, status: ?string},
+     *         medals: array{
+     *             earned: list<array{slug: string, title: string}>,
+     *             locked: list<array{slug: string, title: string}>,
+     *             totalAvailable: int
+     *         },
+     *         sectionVisuals: array{
+     *             exercises: array{
+     *                 imageUrl: ?string,
+     *                 imageAlt: string,
+     *                 placeholderTitle: string,
+     *                 placeholderDescription: ?string
+     *             },
+     *             mentor: array{
+     *                 imageUrl: ?string,
+     *                 imageAlt: string,
+     *                 placeholderTitle: string,
+     *                 placeholderDescription: ?string
+     *             },
+     *             resources: array{
+     *                 imageUrl: ?string,
+     *                 imageAlt: string,
+     *                 placeholderTitle: string,
+     *                 placeholderDescription: ?string
+     *             },
+     *             medals: array{
+     *                 imageUrl: ?string,
+     *                 imageAlt: string,
+     *                 placeholderTitle: string,
+     *                 placeholderDescription: ?string
+     *             },
+     *             updates: array{
+     *                 imageUrl: ?string,
+     *                 imageAlt: string,
+     *                 placeholderTitle: string,
+     *                 placeholderDescription: ?string
+     *             }
+     *         }
+     *     }
      * }
      */
     public function courseHomePropsForUser(User $user): array
     {
-        $packages = $this->catalog->activePackages();
-        $packageIds = $packages->pluck('id');
-
-        $orders = $user->orders()
-            ->whereIn('course_package_id', $packageIds)
-            ->with([
-                'coursePackage',
-                'payments' => fn ($query) => $query->latest(),
-                'spotPlayerLicense',
-            ])
-            ->get();
-
-        $licenses = $user->spotPlayerLicenses()
-            ->whereIn('course_package_id', $packageIds)
-            ->with('coursePackage')
-            ->get();
-
-        $fullPackage = $packages->firstWhere(
-            'slug',
-            AnimatorshoCatalogService::FULL_PACKAGE_SLUG,
-        );
-
-        $hasFullAccess = $fullPackage !== null
-            && $this->accessPresenter->accessStateForPackage($orders, $licenses, $fullPackage->id) === 'access_active';
-
-        $chapters = $packages
-            ->where('type', CoursePackageType::Chapter)
-            ->values()
-            ->map(function (CoursePackage $package) use ($orders, $licenses, $hasFullAccess): array {
-                $isChapterActive = $this->accessPresenter->accessStateForPackage(
-                    $orders,
-                    $licenses,
-                    $package->id,
-                ) === 'access_active';
-
-                $isAccessible = $hasFullAccess || $isChapterActive;
-
-                return [
-                    'slug' => $package->slug,
-                    'title' => $package->title,
-                    'chapterNumber' => $package->chapter_number,
-                    'isAccessible' => $isAccessible,
-                    'accessLabel' => $hasFullAccess
-                        ? 'دسترسی کامل'
-                        : ($isChapterActive ? 'دسترسی فعال' : null),
-                ];
-            })
-            ->all();
-
-        $spotPlayerLicenses = [];
-
-        foreach ($packages as $package) {
-            if ($this->accessPresenter->accessStateForPackage($orders, $licenses, $package->id) !== 'access_active') {
-                continue;
-            }
-
-            $licenseKey = $this->resolveActiveLicenseKey($orders, $licenses, $package->id);
-
-            if ($licenseKey === null) {
-                continue;
-            }
-
-            $spotPlayerLicenses[] = [
-                'packageTitle' => $package->title,
-                'licenseKey' => $licenseKey,
-                'isFullPackage' => $package->type === CoursePackageType::FullCourse,
-            ];
-        }
-
         return [
             'welcome' => [
                 'displayName' => $user->name,
-                'hasFullAccess' => $hasFullAccess,
+                'firstName' => $this->firstNameFromDisplayName($user->name),
             ],
-            'chapters' => $chapters,
-            'spotPlayerLicenses' => $spotPlayerLicenses,
+            'progress' => [
+                'level' => 1,
+                'totalXp' => 0,
+                'progressPercent' => 0,
+                'xpToNextLevel' => 500,
+            ],
+            'onboarding' => config('student_panel.onboarding'),
+            'preview' => [
+                'updates' => config('student_panel.preview.updates'),
+                'resources' => config('student_panel.preview.resources'),
+                'notificationsUnread' => 0,
+                'exercisesSummary' => [
+                    'total' => 0,
+                    'pending' => 0,
+                ],
+                'mentorSummary' => [
+                    'hasThread' => false,
+                    'status' => null,
+                ],
+                'medals' => config('student_panel.preview.medals'),
+                'sectionVisuals' => config('student_panel.sectionVisuals'),
+            ],
         ];
     }
 
+    private function firstNameFromDisplayName(string $displayName): string
+    {
+        $parts = preg_split('/\s+/', trim($displayName), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (! is_array($parts) || $parts === []) {
+            return $displayName;
+        }
+
+        return $parts[0];
+    }
+
     /**
-     * @param  Collection<int, Order>  $orders
-     * @param  Collection<int, SpotPlayerLicense>  $licenses
      * @return Collection<int, int>
      */
     private function animatorshoPackageIds(): Collection
@@ -150,36 +165,5 @@ class CourseAccessService
             ->pluck('id');
 
         return $this->animatorshoPackageIds;
-    }
-
-    /**
-     * @param  Collection<int, Order>  $orders
-     * @param  Collection<int, SpotPlayerLicense>  $licenses
-     */
-    private function resolveActiveLicenseKey(
-        Collection $orders,
-        Collection $licenses,
-        int $packageId,
-    ): ?string {
-        $license = $licenses
-            ->where('course_package_id', $packageId)
-            ->first(fn (SpotPlayerLicense $license): bool => $license->status === SpotPlayerLicenseStatus::Active);
-
-        if ($license?->license_key !== null) {
-            return $license->license_key;
-        }
-
-        foreach ($orders->where('course_package_id', $packageId) as $order) {
-            $orderLicense = $order->spotPlayerLicense;
-
-            if (
-                $orderLicense?->status === SpotPlayerLicenseStatus::Active
-                && $orderLicense->license_key !== null
-            ) {
-                return $orderLicense->license_key;
-            }
-        }
-
-        return null;
     }
 }

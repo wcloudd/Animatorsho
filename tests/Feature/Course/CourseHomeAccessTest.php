@@ -118,17 +118,34 @@ test('user with active full package license can access course home', function ()
         ->assertInertia(fn (Assert $page) => $page
             ->component('animatorsho/course-home')
             ->where('welcome.displayName', 'کاربر دوره')
-            ->where('welcome.hasFullAccess', true)
-            ->where('chapters.0.accessLabel', 'دسترسی کامل')
-            ->where('chapters.1.accessLabel', 'دسترسی کامل')
-            ->has('spotPlayerLicenses', 1)
-            ->where('spotPlayerLicenses.0.licenseKey', 'SPOT-FULL-ACCESS')
-            ->where('spotPlayerLicenses.0.isFullPackage', true)
+            ->where('welcome.firstName', 'کاربر')
+            ->where('progress.level', 1)
+            ->where('progress.totalXp', 0)
+            ->where('onboarding.heading', 'از اینجا شروع کن')
+            ->where('onboarding.imageAlt', 'مسیر شروع انیماتورشو')
+            ->where('onboarding.videoGuideLabel', 'ویدئو راهنما')
+            ->where('onboarding.pdfGuideLabel', 'دانلود راهنما')
+            ->missing('onboarding.cta')
+            ->where('preview.notificationsUnread', 0)
+            ->has('preview.updates', 2)
+            ->has('preview.resources', 3)
+            ->has('preview.medals.locked', 6)
+            ->has('preview.sectionVisuals.exercises')
+            ->where(
+                'preview.sectionVisuals.exercises.placeholderTitle',
+                'تصویر تمرین',
+            )
+            ->where(
+                'preview.sectionVisuals.updates.placeholderTitle',
+                'تصویر آپدیت‌ها',
+            )
+            ->missing('chapters')
+            ->missing('spotPlayerLicenses')
         );
 });
 
-test('user with active chapter license can access course home without full access', function () {
-    $user = User::factory()->create();
+test('user with active chapter license can access course home', function () {
+    $user = User::factory()->create(['name' => 'هنرجوی فصل']);
     $chapterPackage = CoursePackage::query()->where('slug', 'chapter-1')->firstOrFail();
 
     SpotPlayerLicense::factory()
@@ -144,21 +161,19 @@ test('user with active chapter license can access course home without full acces
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('animatorsho/course-home')
-            ->where('welcome.hasFullAccess', false)
-            ->where('chapters.0.slug', 'chapter-1')
-            ->where('chapters.0.isAccessible', true)
-            ->where('chapters.0.accessLabel', 'دسترسی فعال')
-            ->where('chapters.1.isAccessible', false)
-            ->where('chapters.1.accessLabel', null)
-            ->has('spotPlayerLicenses', 1)
-            ->where('spotPlayerLicenses.0.licenseKey', 'SPOT-CHAPTER-1')
-            ->where('spotPlayerLicenses.0.isFullPackage', false)
+            ->where('welcome.displayName', 'هنرجوی فصل')
+            ->where('welcome.firstName', 'هنرجوی')
+            ->has('progress')
+            ->has('onboarding')
+            ->has('preview')
+            ->missing('chapters')
+            ->missing('spotPlayerLicenses')
         );
 });
 
-test('course home only exposes the authenticated users license data', function () {
-    $owner = User::factory()->create();
-    $otherUser = User::factory()->create();
+test('course home only exposes the authenticated users welcome data', function () {
+    $owner = User::factory()->create(['name' => 'کاربر اصلی']);
+    $otherUser = User::factory()->create(['name' => 'کاربر دیگر']);
     $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
 
     SpotPlayerLicense::factory()
@@ -181,8 +196,9 @@ test('course home only exposes the authenticated users license data', function (
         ->get(route('course.home'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('spotPlayerLicenses.0.licenseKey', 'SPOT-OWNER-ONLY')
-            ->missing('spotPlayerLicenses.1')
+            ->where('welcome.displayName', 'کاربر اصلی')
+            ->where('welcome.firstName', 'کاربر')
+            ->missing('spotPlayerLicenses')
         );
 });
 

@@ -1,49 +1,53 @@
 import { Head } from '@inertiajs/react';
-import { CourseHomeChaptersSection } from '@/components/course/course-home-chapters-section';
-import { CourseHomePlaceholderSection } from '@/components/course/course-home-placeholder-section';
-import { CourseHomeSpotPlayerSection } from '@/components/course/course-home-spotplayer-section';
-import { CourseHomeSupportSection } from '@/components/course/course-home-support-section';
-import { CourseHomeWelcomeCard } from '@/components/course/course-home-welcome-card';
+import { CourseHomeExercisesPreview } from '@/components/course/course-home-exercises-preview';
+import { CourseHomeHeader } from '@/components/course/course-home-header';
+import { CourseHomeMedalsShowcase } from '@/components/course/course-home-medals-showcase';
+import { CourseHomeMentorPreview } from '@/components/course/course-home-mentor-preview';
+import { CourseHomeOnboardingSection } from '@/components/course/course-home-onboarding-section';
+import { CourseHomeProfileFootnote } from '@/components/course/course-home-profile-footnote';
+import { CourseHomeResourcesPreview } from '@/components/course/course-home-resources-preview';
+import { CourseHomeUpdatesPreview } from '@/components/course/course-home-updates-preview';
 import { PageContainer } from '@/components/page-container';
 import type { CourseHomePageProps } from '@/lib/course-home-data';
 
 export default function CourseHome({
     welcome,
-    chapters,
-    spotPlayerLicenses,
+    progress,
+    onboarding,
+    preview,
 }: CourseHomePageProps) {
     return (
         <>
-            <Head title="دوره انیماتورشو" />
+            <Head title="پنل هنرجو" />
             <PageContainer>
-                <div className="flex flex-col gap-6">
-                    <CourseHomeWelcomeCard welcome={welcome} />
-                    <CourseHomeChaptersSection
-                        chapters={chapters}
-                        hasFullAccess={welcome.hasFullAccess}
+                <div className="flex flex-col gap-5">
+                    <CourseHomeHeader
+                        welcome={welcome}
+                        progress={progress}
+                        notificationsUnread={preview.notificationsUnread}
                     />
-                    <CourseHomePlaceholderSection
-                        title="تمرین‌ها"
-                        description="تمرین‌های هر فصل به‌زودی از این بخش در دسترس قرار می‌گیرند."
+                    <CourseHomeOnboardingSection onboarding={onboarding} />
+                    <CourseHomeExercisesPreview
+                        exercisesSummary={preview.exercisesSummary}
+                        visual={preview.sectionVisuals.exercises}
                     />
-                    <CourseHomePlaceholderSection
-                        title="فایل‌های تمرین"
-                        description="فایل‌های قابل دانلود تمرین‌ها به‌زودی اینجا قرار می‌گیرند."
+                    <CourseHomeMentorPreview
+                        mentorSummary={preview.mentorSummary}
+                        visual={preview.sectionVisuals.mentor}
                     />
-                    <CourseHomePlaceholderSection
-                        title="ورکشاپ‌ها"
-                        description="ورکشاپ‌های تکمیلی دوره به‌زودی از این بخش معرفی می‌شوند."
+                    <CourseHomeResourcesPreview
+                        resources={preview.resources}
+                        visual={preview.sectionVisuals.resources}
                     />
-                    <CourseHomePlaceholderSection
-                        title="ارتباط با استاد"
-                        description="امکان ارتباط مستقیم با استاد به‌زودی از این بخش فعال می‌شود."
+                    <CourseHomeMedalsShowcase
+                        medals={preview.medals}
+                        visual={preview.sectionVisuals.medals}
                     />
-                    {spotPlayerLicenses.length > 0 ? (
-                        <CourseHomeSpotPlayerSection
-                            licenses={spotPlayerLicenses}
-                        />
-                    ) : null}
-                    <CourseHomeSupportSection />
+                    <CourseHomeUpdatesPreview
+                        updates={preview.updates}
+                        visual={preview.sectionVisuals.updates}
+                    />
+                    <CourseHomeProfileFootnote />
                 </div>
             </PageContainer>
         </>
