@@ -1,7 +1,6 @@
-import { Play } from 'lucide-react';
+import { ImageIcon, Play } from 'lucide-react';
 import { useState } from 'react';
 import { CourseResourceMediaViewer } from '@/components/course/course-resource-media-viewer';
-import { ProfileStatusBadge } from '@/components/profile/profile-status-badge';
 import type { CourseResourceItem } from '@/lib/course-resources-data';
 import { cn } from '@/lib/utils';
 
@@ -15,9 +14,10 @@ function CourseResourceMasonryCard({
     onOpen,
 }: CourseResourceMasonryCardProps) {
     const canOpen = resource.isAvailable && resource.actionUrl !== null;
+    const accessibleLabel = `مشاهده ${resource.title}`;
 
     const mediaPreview = (
-        <div className="overflow-hidden rounded-t-2xl bg-bg">
+        <div className="overflow-hidden rounded-2xl bg-bg">
             {resource.isVideo && resource.actionUrl ? (
                 <div className="relative">
                     <video
@@ -45,27 +45,25 @@ function CourseResourceMasonryCard({
                     className="block w-full object-contain"
                 />
             ) : (
-                <div className="flex min-h-24 items-center justify-center px-3 py-6 text-center text-xs font-medium text-muted">
-                    {resource.title}
+                <div
+                    className="flex min-h-24 items-center justify-center bg-purple-soft/30 px-3 py-6"
+                    aria-hidden="true"
+                >
+                    <ImageIcon className="size-8 text-purple/50" />
                 </div>
             )}
         </div>
     );
 
-    const footer = (
-        <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5">
-            <h3 className="text-sm font-bold text-text">{resource.title}</h3>
-            <ProfileStatusBadge tone="neutral">
-                {resource.typeLabel}
-            </ProfileStatusBadge>
-        </div>
-    );
-
     if (!canOpen) {
         return (
-            <article className="overflow-hidden rounded-2xl bg-bg opacity-80 ring-1 ring-border/70">
+            <article
+                className="overflow-hidden rounded-2xl opacity-80 ring-1 ring-border/70"
+                aria-label={accessibleLabel}
+                aria-disabled="true"
+            >
                 {mediaPreview}
-                {footer}
+                <span className="sr-only">{accessibleLabel}</span>
             </article>
         );
     }
@@ -74,13 +72,13 @@ function CourseResourceMasonryCard({
         <button
             type="button"
             onClick={() => onOpen(resource)}
+            aria-label={accessibleLabel}
             className={cn(
                 'block w-full overflow-hidden rounded-2xl bg-bg text-start ring-1 ring-border/70 transition-colors',
-                'hover:bg-purple-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple/40',
+                'hover:ring-purple/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple/40',
             )}
         >
             {mediaPreview}
-            {footer}
         </button>
     );
 }

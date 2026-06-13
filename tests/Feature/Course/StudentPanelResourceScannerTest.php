@@ -11,18 +11,29 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    $paths = [
-        public_path('media/student-panel/library/references/test-ref.png'),
-        public_path('media/student-panel/library/references/README.md'),
-        public_path('media/student-panel/library/references/.hidden.png'),
-        public_path('media/student-panel/library/references/invalid.exe'),
-        public_path('media/student-panel/library/practice-files/week-1.pdf'),
-        public_path('media/student-panel/library/videos/demo.gif'),
-    ];
+    $base = public_path('media/student-panel/library');
 
-    foreach ($paths as $path) {
-        if (File::exists($path)) {
-            File::delete($path);
+    if (! is_dir($base)) {
+        return;
+    }
+
+    foreach (['references', 'practice-files', 'videos'] as $folder) {
+        $directory = $base.'/'.$folder;
+
+        if (! is_dir($directory)) {
+            continue;
+        }
+
+        foreach (scandir($directory) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..' || $entry === '.gitkeep') {
+                continue;
+            }
+
+            $path = $directory.'/'.$entry;
+
+            if (is_file($path)) {
+                File::delete($path);
+            }
         }
     }
 });
