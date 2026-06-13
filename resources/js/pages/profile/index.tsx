@@ -10,6 +10,7 @@ import type { ProfilePageProps } from '@/lib/profile-data';
 export default function ProfileIndex({
     user,
     accessItems,
+    accessLinks,
     orderHistory,
     hasOrderHistory,
 }: ProfilePageProps) {
@@ -19,7 +20,10 @@ export default function ProfileIndex({
             <PageContainer>
                 <div className="flex flex-col gap-6">
                     <ProfileWelcomeCard user={user} />
-                    <ProfileAccessCard accessItems={accessItems} />
+                    <ProfileAccessCard
+                        accessItems={accessItems}
+                        accessLinks={accessLinks}
+                    />
                     <ProfileOrderHistorySection
                         orderHistory={orderHistory}
                         hasOrderHistory={hasOrderHistory}

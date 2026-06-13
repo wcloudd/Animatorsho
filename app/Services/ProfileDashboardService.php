@@ -52,7 +52,11 @@ class ProfileDashboardService
      *         amountToman: int,
      *         createdAt: ?string
      *     }>,
-     *     hasOrderHistory: bool
+     *     hasOrderHistory: bool,
+     *     accessLinks: array{
+     *         spotplayerInstallGuideUrl: ?string,
+     *         studentGroupUrl: ?string
+     *     }
      * }
      */
     public function forUser(User $user): array
@@ -82,7 +86,24 @@ class ProfileDashboardService
             'accessItems' => $this->accessPresenter->present($orders, $licenses),
             'orderHistory' => $this->mapOrderHistory($orders),
             'hasOrderHistory' => $orders->isNotEmpty(),
+            'accessLinks' => [
+                'spotplayerInstallGuideUrl' => $this->nullableConfigUrl('student_panel.profile.spotplayerInstallGuideUrl'),
+                'studentGroupUrl' => $this->nullableConfigUrl('student_panel.profile.studentGroupUrl'),
+            ],
         ];
+    }
+
+    private function nullableConfigUrl(string $key): ?string
+    {
+        $url = config($key);
+
+        if (! is_string($url)) {
+            return null;
+        }
+
+        $url = trim($url);
+
+        return $url === '' ? null : $url;
     }
 
     /**

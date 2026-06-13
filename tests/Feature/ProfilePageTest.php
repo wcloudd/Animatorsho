@@ -44,6 +44,8 @@ test('authenticated profile loads consolidated access and order history', functi
             ->where('user.displayName', 'کاربر تست')
             ->where('user.email', 'test@example.com')
             ->where('hasOrderHistory', true)
+            ->where('accessLinks.spotplayerInstallGuideUrl', null)
+            ->where('accessLinks.studentGroupUrl', null)
             ->has('accessItems', 1)
             ->where('accessItems.0.title', 'دوره جامع انیماتورشو')
             ->where('accessItems.0.accessState', 'payment_pending')
@@ -311,7 +313,26 @@ test('active license shows key in consolidated access card', function () {
             ->where('accessItems.0.accessState', 'access_active')
             ->where('accessItems.0.statusLabel', 'دسترسی فعال')
             ->where('accessItems.0.licenseKey', 'SPOT-TEST-1234')
+            ->where('accessLinks.spotplayerInstallGuideUrl', null)
+            ->where('accessLinks.studentGroupUrl', null)
             ->has('orderHistory', 1)
+        );
+});
+
+test('profile exposes configured access resource links', function () {
+    config([
+        'student_panel.profile.spotplayerInstallGuideUrl' => 'https://example.com/spotplayer-guide',
+        'student_panel.profile.studentGroupUrl' => 'https://example.com/student-group',
+    ]);
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('profile'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('accessLinks.spotplayerInstallGuideUrl', 'https://example.com/spotplayer-guide')
+            ->where('accessLinks.studentGroupUrl', 'https://example.com/student-group')
         );
 });
 

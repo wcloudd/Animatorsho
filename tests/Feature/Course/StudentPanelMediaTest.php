@@ -49,46 +49,58 @@ test('resolveUrl auto detects local file when configured url is empty', function
 });
 
 test('resolvedOnboarding keeps null media urls when files are missing', function () {
-    $onboarding = StudentPanelMedia::resolvedOnboarding();
+    withoutDefaultStudentPanelMediaFiles(function () {
+        $onboarding = StudentPanelMedia::resolvedOnboarding();
 
-    expect($onboarding['imageUrl'])->toBeNull()
-        ->and($onboarding['videoUrl'])->toBeNull()
-        ->and($onboarding['videoPosterUrl'])->toBeNull()
-        ->and($onboarding['pdfUrl'])->toBeNull()
-        ->and($onboarding['videoTitle'])->toBe('ویدئو راهنمای پنل هنرجو');
+        expect($onboarding['imageUrl'])->toBeNull()
+            ->and($onboarding['videoUrl'])->toBeNull()
+            ->and($onboarding['videoPosterUrl'])->toBeNull()
+            ->and($onboarding['pdfUrl'])->toBeNull()
+            ->and($onboarding['videoTitle'])->toBe('ویدئو راهنمای پنل هنرجو');
+    });
 });
 
 test('resolvedSectionVisuals keeps null image urls when files are missing', function () {
-    $sectionVisuals = StudentPanelMedia::resolvedSectionVisuals();
+    withoutDefaultStudentPanelMediaFiles(function () {
+        $sectionVisuals = StudentPanelMedia::resolvedSectionVisuals();
 
-    expect($sectionVisuals['exercises']['imageUrl'])->toBeNull()
-        ->and($sectionVisuals['mentor']['imageUrl'])->toBeNull()
-        ->and($sectionVisuals['resources']['imageUrl'])->toBeNull()
-        ->and($sectionVisuals['medals']['imageUrl'])->toBeNull()
-        ->and($sectionVisuals['updates']['imageUrl'])->toBeNull()
-        ->and($sectionVisuals['exercises']['placeholderTitle'])->toBe('تصویر تمرین');
+        expect($sectionVisuals['exercises']['imageUrl'])->toBeNull()
+            ->and($sectionVisuals['mentor']['imageUrl'])->toBeNull()
+            ->and($sectionVisuals['resources']['imageUrl'])->toBeNull()
+            ->and($sectionVisuals['medals']['imageUrl'])->toBeNull()
+            ->and($sectionVisuals['updates']['imageUrl'])->toBeNull()
+            ->and($sectionVisuals['exercises']['placeholderTitle'])->toBe('تصویر تمرین');
+    });
+});
+
+test('readme in student panel media directory does not auto activate section visuals', function () {
+    withoutDefaultStudentPanelMediaFiles(function () {
+        expect(is_file(public_path('media/student-panel/README.md')))->toBeTrue();
+
+        $sectionVisuals = StudentPanelMedia::resolvedSectionVisuals();
+
+        expect($sectionVisuals['exercises']['imageUrl'])->toBeNull()
+            ->and(StudentPanelMedia::resolveUrl(null, 'exercises-header.png'))->toBeNull();
+    });
 });
 
 test('resolvedOnboarding auto activates video url when start guide file exists', function () {
-    $relativePath = 'media/student-panel/start-guide.mp4';
-    $fullPath = public_path($relativePath);
+    withoutDefaultStudentPanelMediaFiles(function () {
+        $relativePath = 'media/student-panel/start-guide.mp4';
+        $fullPath = public_path($relativePath);
 
-    if (! is_dir(dirname($fullPath))) {
-        mkdir(dirname($fullPath), 0777, true);
-    }
+        if (! is_dir(dirname($fullPath))) {
+            mkdir(dirname($fullPath), 0777, true);
+        }
 
-    $created = ! is_file($fullPath);
-    if ($created) {
         file_put_contents($fullPath, 'video');
-    }
 
-    try {
-        $onboarding = StudentPanelMedia::resolvedOnboarding();
+        try {
+            $onboarding = StudentPanelMedia::resolvedOnboarding();
 
-        expect($onboarding['videoUrl'])->toBe('/media/student-panel/start-guide.mp4');
-    } finally {
-        if ($created) {
+            expect($onboarding['videoUrl'])->toBe('/media/student-panel/start-guide.mp4');
+        } finally {
             @unlink($fullPath);
         }
-    }
+    });
 });

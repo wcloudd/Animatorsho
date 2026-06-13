@@ -2,6 +2,11 @@
 
 return [
 
+    'profile' => [
+        'spotplayerInstallGuideUrl' => env('STUDENT_PANEL_SPOTPLAYER_INSTALL_GUIDE_URL'),
+        'studentGroupUrl' => env('STUDENT_PANEL_GROUP_URL'),
+    ],
+
     'media' => [
         'basePath' => 'media/student-panel',
         'onboardingBanner' => 'onboarding-banner.png',

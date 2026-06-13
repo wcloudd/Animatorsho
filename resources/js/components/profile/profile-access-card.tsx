@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import type {
     ProfileAccessItem,
+    ProfileAccessLinks,
     ProfileAccessPostAction,
     ProfileAccessSecondaryAction,
 } from '@/lib/profile-data';
@@ -10,11 +11,13 @@ import { checkout } from '@/routes';
 import { formatTomanPrice } from '@/lib/format-toman';
 import { ProfileSectionCard } from '@/components/profile/profile-section-card';
 import { ProfileStatusBadge } from '@/components/profile/profile-status-badge';
+import { showCoursePanelComingSoonToast } from '@/components/course/course-home-coming-soon-button';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { cn } from '@/lib/utils';
 
 type ProfileAccessCardProps = {
     accessItems: ProfileAccessItem[];
+    accessLinks: ProfileAccessLinks;
 };
 
 const accessStateAccentClassNames: Record<
@@ -135,7 +138,13 @@ function AccessItemCancelAction({
     );
 }
 
-function LicenseKeyCopyField({ licenseKey }: { licenseKey: string }) {
+function LicenseKeyCopyField({
+    licenseKey,
+    accessLinks,
+}: {
+    licenseKey: string;
+    accessLinks: ProfileAccessLinks;
+}) {
     const [, copy] = useClipboard();
     const [copied, setCopied] = useState(false);
 
@@ -179,6 +188,66 @@ function LicenseKeyCopyField({ licenseKey }: { licenseKey: string }) {
             >
                 {copied ? 'در کلیپ‌بورد ذخیره شد' : 'کپی کد لایسنس'}
             </button>
+            <ProfileAccessResourceLinks accessLinks={accessLinks} />
+        </div>
+    );
+}
+
+const compactAccessLinkClassName =
+    'flex h-9 min-w-0 flex-1 items-center justify-center rounded-pill px-3 text-xs font-bold transition-opacity hover:opacity-95 bg-surface text-purple ring-1 ring-purple/25';
+
+function ProfileAccessResourceLink({
+    label,
+    url,
+}: {
+    label: string;
+    url: string | null;
+}) {
+    if (url) {
+        return (
+            <a
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className={compactAccessLinkClassName}
+            >
+                {label}
+            </a>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={showCoursePanelComingSoonToast}
+            className={compactAccessLinkClassName}
+        >
+            {label}
+        </button>
+    );
+}
+
+function ProfileAccessResourceLinks({
+    accessLinks,
+}: {
+    accessLinks: ProfileAccessLinks;
+}) {
+    return (
+        <div className="flex flex-col gap-2">
+            <p className="text-right text-xs font-medium leading-relaxed text-muted">
+                بعد از کپی لایسنس، آموزش نصب اسپات‌پلیر را ببین و وارد گروه
+                دوره شو.
+            </p>
+            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+                <ProfileAccessResourceLink
+                    label="آموزش نصب اسپات‌پلیر"
+                    url={accessLinks.spotplayerInstallGuideUrl}
+                />
+                <ProfileAccessResourceLink
+                    label="عضویت در گروه انیماتورشو"
+                    url={accessLinks.studentGroupUrl}
+                />
+            </div>
         </div>
     );
 }
@@ -214,7 +283,10 @@ function AccessItemActions({ item }: { item: ProfileAccessItem }) {
     );
 }
 
-export function ProfileAccessCard({ accessItems }: ProfileAccessCardProps) {
+export function ProfileAccessCard({
+    accessItems,
+    accessLinks,
+}: ProfileAccessCardProps) {
     return (
         <ProfileSectionCard
             id="access"
@@ -302,6 +374,7 @@ export function ProfileAccessCard({ accessItems }: ProfileAccessCardProps) {
                             item.licenseKey ? (
                                 <LicenseKeyCopyField
                                     licenseKey={item.licenseKey}
+                                    accessLinks={accessLinks}
                                 />
                             ) : null}
 

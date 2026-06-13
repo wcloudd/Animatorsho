@@ -67,9 +67,15 @@ export type ProfileOrderHistoryItem = {
     createdAt: string | null;
 };
 
+export type ProfileAccessLinks = {
+    spotplayerInstallGuideUrl: string | null;
+    studentGroupUrl: string | null;
+};
+
 export type ProfilePageProps = {
     user: ProfileUser;
     accessItems: ProfileAccessItem[];
     orderHistory: ProfileOrderHistoryItem[];
     hasOrderHistory: boolean;
+    accessLinks: ProfileAccessLinks;
 };

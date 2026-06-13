@@ -68,6 +68,57 @@ function validCheckoutCustomerNameOnly(): array
     ];
 }
 
+/**
+ * @template T
+ *
+ * @param  callable(): T  $callback
+ * @return T
+ */
+function withoutDefaultStudentPanelMediaFiles(callable $callback): mixed
+{
+    $directory = public_path('media/student-panel');
+    $filenames = [
+        'onboarding-banner.png',
+        'exercises-header.png',
+        'mentor-header.png',
+        'resources-header.png',
+        'medals-header.png',
+        'updates-header.png',
+        'start-guide.mp4',
+        'start-guide-poster.png',
+        'start-guide.pdf',
+    ];
+
+    $restored = [];
+
+    foreach ($filenames as $filename) {
+        $path = $directory.DIRECTORY_SEPARATOR.$filename;
+
+        if (! is_file($path)) {
+            continue;
+        }
+
+        $backupPath = $path.'.pest-backup';
+
+        if (is_file($backupPath)) {
+            @unlink($backupPath);
+        }
+
+        rename($path, $backupPath);
+        $restored[$path] = $backupPath;
+    }
+
+    try {
+        return $callback();
+    } finally {
+        foreach ($restored as $originalPath => $backupPath) {
+            if (is_file($backupPath)) {
+                rename($backupPath, $originalPath);
+            }
+        }
+    }
+}
+
 function prepareAuthPageTests(): void
 {
     config(['inertia.ssr.enabled' => false]);
