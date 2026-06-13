@@ -1,14 +1,36 @@
 import { Head, Link } from '@inertiajs/react';
 import { BookOpen, ChevronLeft } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { CourseResourceMasonryGrid } from '@/components/course/course-resource-masonry-grid';
 import { CourseResourceRow } from '@/components/course/course-resource-row';
 import { PageContainer } from '@/components/page-container';
 import type { CourseResourcesIndexPageProps } from '@/lib/course-resources-data';
+import { cn } from '@/lib/utils';
 
 export default function CourseResources({
-    groups,
+    categories,
+    sections,
     totalCount,
 }: CourseResourcesIndexPageProps) {
+    const [activeFilter, setActiveFilter] = useState('all');
     const hasResources = totalCount > 0;
+
+    const filteredSections = useMemo(() => {
+        if (activeFilter === 'all') {
+            return sections;
+        }
+
+        return sections.filter((section) => section.id === activeFilter);
+    }, [activeFilter, sections]);
+
+    const filteredCount = useMemo(
+        () =>
+            filteredSections.reduce(
+                (count, section) => count + section.resources.length,
+                0,
+            ),
+        [filteredSections],
+    );
 
     return (
         <>
@@ -37,33 +59,77 @@ export default function CourseResources({
                         </p>
                     </header>
 
-                    {!hasResources ? (
+                    {hasResources ? (
+                        <>
+                            <div className="flex flex-wrap gap-2">
+                                {categories.map((category) => (
+                                    <button
+                                        key={category.id}
+                                        type="button"
+                                        onClick={() =>
+                                            setActiveFilter(category.id)
+                                        }
+                                        className={cn(
+                                            'rounded-pill px-3 py-1.5 text-xs font-bold transition-colors',
+                                            activeFilter === category.id
+                                                ? 'bg-purple text-white'
+                                                : 'bg-surface text-muted ring-1 ring-border/70 hover:bg-purple-soft/30',
+                                        )}
+                                    >
+                                        {category.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {filteredCount === 0 ? (
+                                <p className="rounded-2xl bg-surface px-4 py-4 text-sm font-medium leading-relaxed text-muted shadow-soft ring-1 ring-border">
+                                    در این دسته هنوز منبعی منتشر نشده است.
+                                </p>
+                            ) : (
+                                <div className="flex flex-col gap-5">
+                                    {filteredSections.map((section) => (
+                                        <section
+                                            key={section.id}
+                                            className="flex flex-col gap-3 rounded-[28px] bg-surface px-4 py-4 shadow-soft ring-1 ring-border"
+                                        >
+                                            <h2 className="text-sm font-bold text-text">
+                                                {section.title}
+                                            </h2>
+                                            {section.layout === 'masonry' ? (
+                                                <CourseResourceMasonryGrid
+                                                    resources={
+                                                        section.resources
+                                                    }
+                                                />
+                                            ) : (
+                                                <ul className="flex flex-col gap-2.5">
+                                                    {section.resources.map(
+                                                        (resource) => (
+                                                            <li
+                                                                key={resource.id}
+                                                            >
+                                                                <CourseResourceRow
+                                                                    resource={
+                                                                        resource
+                                                                    }
+                                                                    showCategory={
+                                                                        false
+                                                                    }
+                                                                />
+                                                            </li>
+                                                        ),
+                                                    )}
+                                                </ul>
+                                            )}
+                                        </section>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    ) : (
                         <p className="rounded-2xl bg-surface px-4 py-4 text-sm font-medium leading-relaxed text-muted shadow-soft ring-1 ring-border">
                             هنوز منبعی برای این بخش منتشر نشده است.
                         </p>
-                    ) : (
-                        <div className="flex flex-col gap-5">
-                            {groups.map((group) => (
-                                <section
-                                    key={group.id}
-                                    className="flex flex-col gap-3 rounded-[28px] bg-surface px-4 py-4 shadow-soft ring-1 ring-border"
-                                >
-                                    <h2 className="text-sm font-bold text-text">
-                                        {group.title}
-                                    </h2>
-                                    <ul className="flex flex-col gap-2.5">
-                                        {group.resources.map((resource) => (
-                                            <li key={resource.id}>
-                                                <CourseResourceRow
-                                                    resource={resource}
-                                                    showCategory={false}
-                                                />
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </section>
-                            ))}
-                        </div>
                     )}
                 </div>
             </PageContainer>

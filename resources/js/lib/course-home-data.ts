@@ -74,12 +74,18 @@ export type CourseHomeResourcePreview = CourseHomePreviewImage & {
     description: string;
     type: string;
     typeLabel: string;
+    libraryCategory?: string;
+    layout?: 'masonry' | 'list';
+    fileExtension?: string | null;
     categoryLabel: string | null;
     publishedAt: string | null;
     publishedAtLabel: string;
     actionUrl: string | null;
     actionLabel: string;
     isAvailable: boolean;
+    previewUrl?: string | null;
+    isVideo?: boolean;
+    isGif?: boolean;
 };
 
 export type CourseHomeMedalItem = {

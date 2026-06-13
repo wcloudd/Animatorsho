@@ -25,9 +25,7 @@ export default function AdminCourseResourcesEdit({
         file_path: resource.filePath,
         external_url: resource.externalUrl,
         status: resource.status,
-        access_scope: resource.accessScope,
-        course_package_id: resource.coursePackageId,
-        course_resource_category_id: resource.categoryId,
+        library_category: resource.libraryCategory,
         display_order: resource.displayOrder,
         published_at: resource.publishedAt,
     });
@@ -58,9 +56,7 @@ export default function AdminCourseResourcesEdit({
                         filePath: data.file_path,
                         externalUrl: data.external_url,
                         status: data.status,
-                        accessScope: data.access_scope,
-                        coursePackageId: data.course_package_id,
-                        categoryId: data.course_resource_category_id,
+                        libraryCategory: data.library_category,
                         displayOrder: data.display_order,
                         publishedAt: data.published_at,
                     }}
@@ -77,9 +73,7 @@ export default function AdminCourseResourcesEdit({
                             filePath: 'file_path',
                             externalUrl: 'external_url',
                             status: 'status',
-                            accessScope: 'access_scope',
-                            coursePackageId: 'course_package_id',
-                            categoryId: 'course_resource_category_id',
+                            libraryCategory: 'library_category',
                             displayOrder: 'display_order',
                             publishedAt: 'published_at',
                         } as const;

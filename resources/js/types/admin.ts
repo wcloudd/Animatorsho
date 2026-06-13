@@ -445,8 +445,17 @@ export type AdminCourseUpdateFormItem = {
 export type AdminCourseResourceFormOptions = {
     typeOptions: AdminStatusOption[];
     statusOptions: AdminStatusOption[];
-    accessScopeOptions: AdminStatusOption[];
-    categoryOptions: AdminStatusOption[];
+    libraryCategoryOptions: AdminStatusOption[];
+    detectedFileOptions: AdminStatusOption[];
+};
+
+export type AdminCourseResourceDetectedFile = {
+    title: string;
+    filePath: string;
+    libraryCategory: string;
+    libraryCategoryLabel: string;
+    typeLabel: string;
+    createUrl: string;
 };
 
 export type AdminCourseResourceListItem = {
@@ -460,7 +469,7 @@ export type AdminCourseResourceListItem = {
     statusLabel: string;
     statusTone: AdminStatusTone;
     categoryLabel: string;
-    accessScopeLabel: string;
+    sourceLabel: string;
     displayOrder: number;
     publishedAt: string | null;
     publishedAtLabel: string;
@@ -476,9 +485,7 @@ export type AdminCourseResourceFormItem = {
     filePath: string;
     externalUrl: string;
     status: string;
-    accessScope: string;
-    coursePackageId: number | null;
-    categoryId: number | null;
+    libraryCategory: string;
     displayOrder: number;
     publishedAt: string | null;
 };

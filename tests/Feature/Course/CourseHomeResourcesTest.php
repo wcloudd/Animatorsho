@@ -1,19 +1,60 @@
 <?php
 
 use App\Enums\CourseResourceAccessScope;
+use App\Enums\CourseResourceLibraryCategory;
 use App\Enums\CourseResourceType;
 use App\Models\CoursePackage;
 use App\Models\CourseResource;
 use App\Models\CourseResourceCategory;
 use App\Models\SpotPlayerLicense;
 use App\Models\User;
+use App\Support\StudentPanel\CourseResourcePredefinedCategories;
 use Database\Seeders\AnimatorshoCourseSeeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->withoutVite();
     $this->seed(AnimatorshoCourseSeeder::class);
+    CourseResourcePredefinedCategories::ensureSynced();
+});
+
+function placeStudentLibraryFile(string $folder, string $filename, string $content = 'test'): string
+{
+    $directory = public_path('media/student-panel/library/'.$folder);
+    File::ensureDirectoryExists($directory);
+    File::put($directory.'/'.$filename, $content);
+
+    return '/media/student-panel/library/'.$folder.'/'.$filename;
+}
+
+afterEach(function () {
+    $base = public_path('media/student-panel/library');
+
+    if (! is_dir($base)) {
+        return;
+    }
+
+    foreach (['references', 'practice-files', 'videos'] as $folder) {
+        $directory = $base.'/'.$folder;
+
+        if (! is_dir($directory)) {
+            continue;
+        }
+
+        foreach (scandir($directory) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..' || $entry === '.gitkeep') {
+                continue;
+            }
+
+            $path = $directory.'/'.$entry;
+
+            if (is_file($path)) {
+                File::delete($path);
+            }
+        }
+    }
 });
 
 test('active student sees published course resources on course home', function () {
@@ -28,16 +69,16 @@ test('active student sees published course resources on course home', function (
             'license_key' => 'SPOT-RESOURCES-1',
         ]);
 
-    $category = CourseResourceCategory::factory()->create([
-        'title' => 'رفرنس‌های طراحی',
-    ]);
+    $filePath = placeStudentLibraryFile('practice-files', 'week-1.pdf', 'pdf');
 
     CourseResource::factory()->published()->create([
         'title' => 'فایل تمرین هفته اول',
         'description' => 'تمرین ساده انیمیشن',
         'type' => CourseResourceType::Pdf,
-        'file_path' => '/media/student-panel/resources/week-1.pdf',
-        'course_resource_category_id' => $category->id,
+        'file_path' => $filePath,
+        'course_resource_category_id' => CourseResourcePredefinedCategories::idFor(
+            CourseResourceLibraryCategory::PracticeFiles,
+        ),
         'published_at' => now()->subDay(),
     ]);
 
@@ -49,10 +90,10 @@ test('active student sees published course resources on course home', function (
             ->where('preview.resources.0.title', 'فایل تمرین هفته اول')
             ->where('preview.resources.0.type', 'pdf')
             ->where('preview.resources.0.typeLabel', 'PDF')
-            ->where('preview.resources.0.categoryLabel', 'رفرنس‌های طراحی')
+            ->where('preview.resources.0.categoryLabel', 'فایل‌های تمرین و پروژه')
             ->where('preview.resources.0.isAvailable', true)
-            ->where('preview.resources.0.actionLabel', 'دانلود')
-            ->where('preview.resources.0.actionUrl', '/media/student-panel/resources/week-1.pdf')
+            ->where('preview.resources.0.actionLabel', 'مشاهده')
+            ->where('preview.resources.0.actionUrl', route('course.resources.index'))
         );
 });
 
@@ -309,7 +350,7 @@ test('external link resource uses view action label on course home', function ()
             ->where('preview.resources.0.type', 'external_link')
             ->where('preview.resources.0.typeLabel', 'لینک بیرونی')
             ->where('preview.resources.0.actionLabel', 'مشاهده')
-            ->where('preview.resources.0.actionUrl', 'https://example.com/reference')
+            ->where('preview.resources.0.actionUrl', route('course.resources.index'))
         );
 });
 
@@ -388,8 +429,11 @@ test('active student can visit course resources index', function () {
             'license_key' => 'SPOT-RESOURCES-INDEX',
         ]);
 
+    $filePath = placeStudentLibraryFile('practice-files', 'week-1.pdf', 'pdf');
+
     CourseResource::factory()->published()->create([
         'title' => 'فایل تمرین کامل',
+        'file_path' => $filePath,
         'course_resource_category_id' => null,
     ]);
 
@@ -399,9 +443,9 @@ test('active student can visit course resources index', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('animatorsho/course-resources')
             ->where('totalCount', 1)
-            ->has('groups', 1)
-            ->where('groups.0.title', 'بدون دسته‌بندی')
-            ->where('groups.0.resources.0.title', 'فایل تمرین کامل')
+            ->has('sections', 1)
+            ->where('sections.0.title', 'فایل‌های تمرین و پروژه')
+            ->where('sections.0.resources.0.title', 'فایل تمرین کامل')
         );
 });
 
@@ -434,9 +478,9 @@ test('course resources index shows all published resources while home preview st
             'license_key' => 'SPOT-RESOURCES-ALL',
         ]);
 
-    CourseResource::factory()->count(5)->published()->create([
-        'course_resource_category_id' => null,
-    ]);
+    foreach (range(1, 5) as $index) {
+        placeStudentLibraryFile('practice-files', "practice-{$index}.pdf", 'pdf');
+    }
 
     $this->actingAs($user)
         ->get(route('course.home'))
@@ -448,8 +492,8 @@ test('course resources index shows all published resources while home preview st
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('totalCount', 5)
-            ->has('groups', 1)
-            ->has('groups.0.resources', 5)
+            ->has('sections', 1)
+            ->has('sections.0.resources', 5)
         );
 });
 
@@ -478,7 +522,7 @@ test('draft resources are hidden from course resources index', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('totalCount', 1)
-            ->where('groups.0.resources.0.title', 'منبع منتشرشده')
+            ->where('sections.0.resources.0.title', 'منبع منتشرشده')
         );
 });
 
@@ -509,7 +553,7 @@ test('future scheduled resources are hidden from course resources index', functi
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('totalCount', 1)
-            ->where('groups.0.resources.0.title', 'منبع قابل مشاهده')
+            ->where('sections.0.resources.0.title', 'منبع قابل مشاهده')
         );
 });
 
@@ -527,14 +571,13 @@ test('resources in inactive categories are hidden from course resources index', 
 
     $inactiveCategory = CourseResourceCategory::factory()->inactive()->create();
 
-    CourseResource::factory()->published()->create([
-        'title' => 'منبع دسته غیرفعال',
-        'course_resource_category_id' => $inactiveCategory->id,
-    ]);
+    $hiddenPath = placeStudentLibraryFile('practice-files', 'hidden.pdf', 'pdf');
+    placeStudentLibraryFile('practice-files', 'visible.pdf', 'pdf');
 
     CourseResource::factory()->published()->create([
-        'title' => 'منبع بدون دسته',
-        'course_resource_category_id' => null,
+        'title' => 'منبع دسته غیرفعال',
+        'file_path' => $hiddenPath,
+        'course_resource_category_id' => $inactiveCategory->id,
     ]);
 
     $this->actingAs($user)
@@ -542,12 +585,11 @@ test('resources in inactive categories are hidden from course resources index', 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('totalCount', 1)
-            ->where('groups.0.title', 'بدون دسته‌بندی')
-            ->where('groups.0.resources.0.title', 'منبع بدون دسته')
+            ->where('sections.0.resources.0.title', 'visible')
         );
 });
 
-test('course resources index groups resources by category with uncategorized last', function () {
+test('course resources index sections resources by predefined library categories', function () {
     $user = User::factory()->create();
     $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
 
@@ -556,43 +598,28 @@ test('course resources index groups resources by category with uncategorized las
         ->create([
             'user_id' => $user->id,
             'course_package_id' => $package->id,
-            'license_key' => 'SPOT-RESOURCES-GROUPS',
+            'license_key' => 'SPOT-RESOURCES-SECTIONS',
         ]);
 
-    $firstCategory = CourseResourceCategory::factory()->create([
-        'title' => 'فایل‌های تمرین',
-        'display_order' => 1,
-    ]);
-
-    $secondCategory = CourseResourceCategory::factory()->create([
-        'title' => 'رفرنس‌ها',
-        'display_order' => 2,
-    ]);
-
-    CourseResource::factory()->published()->create([
-        'title' => 'منبع بدون دسته',
-        'course_resource_category_id' => null,
-    ]);
+    placeStudentLibraryFile('references', 'ref-a.png', 'png');
+    $practicePath = placeStudentLibraryFile('practice-files', 'week-1.pdf', 'pdf');
 
     CourseResource::factory()->published()->create([
         'title' => 'تمرین هفته اول',
-        'course_resource_category_id' => $firstCategory->id,
-    ]);
-
-    CourseResource::factory()->published()->create([
-        'title' => 'رفرنس طراحی',
-        'course_resource_category_id' => $secondCategory->id,
+        'file_path' => $practicePath,
+        'course_resource_category_id' => CourseResourcePredefinedCategories::idFor(
+            CourseResourceLibraryCategory::PracticeFiles,
+        ),
     ]);
 
     $this->actingAs($user)
         ->get(route('course.resources.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('totalCount', 3)
-            ->has('groups', 3)
-            ->where('groups.0.title', 'فایل‌های تمرین')
-            ->where('groups.1.title', 'رفرنس‌ها')
-            ->where('groups.2.title', 'بدون دسته‌بندی')
+            ->where('totalCount', 2)
+            ->has('sections', 2)
+            ->where('sections.0.title', 'رفرنس‌ها')
+            ->where('sections.1.title', 'فایل‌های تمرین و پروژه')
         );
 });
 
@@ -613,6 +640,153 @@ test('course resources index shows empty state when no published resources exist
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('totalCount', 0)
-            ->has('groups', 0)
+            ->has('sections', 0)
+        );
+});
+
+test('auto-detected image appears on course resources index without database record', function () {
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    SpotPlayerLicense::factory()
+        ->active()
+        ->create([
+            'user_id' => $user->id,
+            'course_package_id' => $package->id,
+            'license_key' => 'SPOT-AUTO-IMAGE',
+        ]);
+
+    placeStudentLibraryFile('references', 'pose-reference.png', 'png');
+
+    $this->actingAs($user)
+        ->get(route('course.resources.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('totalCount', 1)
+            ->where('sections.0.title', 'رفرنس‌ها')
+            ->where('sections.0.layout', 'masonry')
+            ->where('sections.0.resources.0.title', 'pose reference')
+            ->where('sections.0.resources.0.isAvailable', true)
+        );
+});
+
+test('auto-detected practice file appears with download link', function () {
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    SpotPlayerLicense::factory()
+        ->active()
+        ->create([
+            'user_id' => $user->id,
+            'course_package_id' => $package->id,
+            'license_key' => 'SPOT-AUTO-PRACTICE',
+        ]);
+
+    $filePath = placeStudentLibraryFile('practice-files', 'week-1-homework.pdf', 'pdf');
+
+    $this->actingAs($user)
+        ->get(route('course.resources.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('sections.0.layout', 'list')
+            ->where('sections.0.resources.0.actionLabel', 'دانلود')
+            ->where('sections.0.resources.0.actionUrl', $filePath)
+        );
+});
+
+test('draft database record hides detected library file with same path', function () {
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    SpotPlayerLicense::factory()
+        ->active()
+        ->create([
+            'user_id' => $user->id,
+            'course_package_id' => $package->id,
+            'license_key' => 'SPOT-DRAFT-HIDE',
+        ]);
+
+    $filePath = placeStudentLibraryFile('practice-files', 'hidden-draft.pdf', 'pdf');
+
+    CourseResource::factory()->draft()->create([
+        'title' => 'پیش‌نویس مخفی',
+        'file_path' => $filePath,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('course.resources.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('totalCount', 0)
+            ->has('sections', 0)
+        );
+});
+
+test('database metadata overrides fallback title for matching library file path', function () {
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    SpotPlayerLicense::factory()
+        ->active()
+        ->create([
+            'user_id' => $user->id,
+            'course_package_id' => $package->id,
+            'license_key' => 'SPOT-DB-OVERRIDE',
+        ]);
+
+    $filePath = placeStudentLibraryFile('references', 'raw-name.png', 'png');
+
+    CourseResource::factory()->published()->create([
+        'title' => 'رفرنس حالت بدن',
+        'description' => 'برای تمرین طراحی',
+        'file_path' => $filePath,
+        'type' => CourseResourceType::Image,
+        'course_resource_category_id' => CourseResourcePredefinedCategories::idFor(
+            CourseResourceLibraryCategory::References,
+        ),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('course.resources.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('totalCount', 1)
+            ->where('sections.0.resources.0.title', 'رفرنس حالت بدن')
+            ->where('sections.0.resources.0.description', 'برای تمرین طراحی')
+            ->where('sections.0.layout', 'masonry')
+        );
+});
+
+test('course resources index includes descriptions for masonry media items', function () {
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    SpotPlayerLicense::factory()
+        ->active()
+        ->create([
+            'user_id' => $user->id,
+            'course_package_id' => $package->id,
+            'license_key' => 'SPOT-MEDIA-DESC',
+        ]);
+
+    $filePath = placeStudentLibraryFile('references', 'character-pose.png', 'png');
+
+    CourseResource::factory()->published()->create([
+        'title' => 'رفرنس حالت شخصیت',
+        'description' => 'برای تمرین طراحی حالت بدن',
+        'file_path' => $filePath,
+        'type' => CourseResourceType::Image,
+        'course_resource_category_id' => CourseResourcePredefinedCategories::idFor(
+            CourseResourceLibraryCategory::References,
+        ),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('course.resources.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('sections.0.layout', 'masonry')
+            ->where('sections.0.resources.0.description', 'برای تمرین طراحی حالت بدن')
+            ->where('sections.0.resources.0.previewUrl', $filePath)
         );
 });

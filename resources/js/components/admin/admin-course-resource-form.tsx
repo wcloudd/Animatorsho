@@ -29,8 +29,7 @@ type AdminCourseResourceFormProps = {
             | 'file_path'
             | 'external_url'
             | 'status'
-            | 'access_scope'
-            | 'course_resource_category_id'
+            | 'library_category'
             | 'display_order'
             | 'published_at',
             string
@@ -46,6 +45,13 @@ type AdminCourseResourceFormProps = {
     ) => void;
 };
 
+const libraryPathHints: Record<string, string> = {
+    references: '/media/student-panel/library/references/example.png',
+    practice_files: '/media/student-panel/library/practice-files/example.pdf',
+    videos: '/media/student-panel/library/videos/example.mp4',
+    external_links: 'https://example.com/reference',
+};
+
 export function AdminCourseResourceForm({
     data,
     errors,
@@ -58,7 +64,7 @@ export function AdminCourseResourceForm({
     const { date: publishedDate, time: publishedTime } = splitDateTimeLocal(
         data.publishedAt,
     );
-    const isExternalLink = data.type === 'external_link';
+    const isExternalLink = data.libraryCategory === 'external_links';
 
     const handlePublishedDateChange = (date: string) => {
         onChange(
@@ -105,6 +111,33 @@ export function AdminCourseResourceForm({
 
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
+                    <Label htmlFor="libraryCategory">دسته‌بندی</Label>
+                    <Select
+                        value={data.libraryCategory}
+                        onValueChange={(value) =>
+                            onChange('libraryCategory', value)
+                        }
+                    >
+                        <SelectTrigger id="libraryCategory">
+                            <SelectValue placeholder="انتخاب دسته" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {formOptions.libraryCategoryOptions.map(
+                                (option) => (
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </SelectItem>
+                                ),
+                            )}
+                        </SelectContent>
+                    </Select>
+                    <InputError message={errors.library_category} />
+                </div>
+
+                <div className="grid gap-2">
                     <Label htmlFor="type">نوع منبع</Label>
                     <Select
                         value={data.type}
@@ -126,41 +159,6 @@ export function AdminCourseResourceForm({
                     </Select>
                     <InputError message={errors.type} />
                 </div>
-
-                <div className="grid gap-2">
-                    <Label htmlFor="categoryId">دسته‌بندی</Label>
-                    <Select
-                        value={
-                            data.categoryId !== null
-                                ? String(data.categoryId)
-                                : 'none'
-                        }
-                        onValueChange={(value) =>
-                            onChange(
-                                'categoryId',
-                                value === 'none' ? null : Number(value),
-                            )
-                        }
-                    >
-                        <SelectTrigger id="categoryId">
-                            <SelectValue placeholder="بدون دسته" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">بدون دسته</SelectItem>
-                            {formOptions.categoryOptions.map((option) => (
-                                <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <InputError
-                        message={errors.course_resource_category_id}
-                    />
-                </div>
             </div>
 
             {isExternalLink ? (
@@ -172,31 +170,72 @@ export function AdminCourseResourceForm({
                         onChange={(event) =>
                             onChange('externalUrl', event.target.value)
                         }
-                        placeholder="https://example.com/reference"
+                        placeholder={libraryPathHints.external_links}
                         dir="ltr"
                         className="text-left"
                     />
                     <InputError message={errors.external_url} />
                 </div>
             ) : (
-                <div className="grid gap-2">
-                    <Label htmlFor="filePath">مسیر فایل عمومی</Label>
-                    <Input
-                        id="filePath"
-                        value={data.filePath}
-                        onChange={(event) =>
-                            onChange('filePath', event.target.value)
-                        }
-                        placeholder="/media/student-panel/resources/example.pdf"
-                        dir="ltr"
-                        className="text-left"
-                    />
-                    <p className="text-xs text-muted">
-                        مسیر فایل در پوشه public یا آدرس قابل دسترس برای
-                        هنرجو. آپلود فایل در این نسخه پشتیبانی نمی‌شود.
-                    </p>
-                    <InputError message={errors.file_path} />
-                </div>
+                <>
+                    {formOptions.detectedFileOptions.length > 0 ? (
+                        <div className="grid gap-2">
+                            <Label htmlFor="detectedFile">
+                                انتخاب فایل شناسایی‌شده
+                            </Label>
+                            <Select
+                                value={data.filePath || 'custom'}
+                                onValueChange={(value) => {
+                                    if (value !== 'custom') {
+                                        onChange('filePath', value);
+                                    }
+                                }}
+                            >
+                                <SelectTrigger id="detectedFile">
+                                    <SelectValue placeholder="انتخاب فایل" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="custom">
+                                        مسیر دستی
+                                    </SelectItem>
+                                    {formOptions.detectedFileOptions.map(
+                                        (option) => (
+                                            <SelectItem
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </SelectItem>
+                                        ),
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ) : null}
+                    <div className="grid gap-2">
+                        <Label htmlFor="filePath">مسیر فایل عمومی</Label>
+                        <Input
+                            id="filePath"
+                            value={data.filePath}
+                            onChange={(event) =>
+                                onChange('filePath', event.target.value)
+                            }
+                            placeholder={
+                                libraryPathHints[data.libraryCategory] ??
+                                '/media/student-panel/library/...'
+                            }
+                            dir="ltr"
+                            className="text-left"
+                        />
+                        <p className="text-xs text-muted">
+                            فایل‌ها را در پوشه‌های
+                            references، practice-files یا videos داخل
+                            public/media/student-panel/library قرار دهید. فایل‌های
+                            مجاز به‌صورت خودکار نمایش داده می‌شوند.
+                        </p>
+                        <InputError message={errors.file_path} />
+                    </div>
+                </>
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -224,64 +263,6 @@ export function AdminCourseResourceForm({
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="accessScope">محدوده دسترسی</Label>
-                    <Select
-                        value={data.accessScope}
-                        onValueChange={(value) =>
-                            onChange('accessScope', value)
-                        }
-                    >
-                        <SelectTrigger id="accessScope">
-                            <SelectValue placeholder="انتخاب محدوده" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {formOptions.accessScopeOptions.map((option) => (
-                                <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted">
-                        در این نسخه فقط منابع «همه هنرجوها» در پنل نمایش داده
-                        می‌شوند.
-                    </p>
-                    <InputError message={errors.access_scope} />
-                </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
-                    <AdminJalaliDateInput
-                        id="publishedAt"
-                        label="تاریخ انتشار"
-                        value={publishedDate}
-                        onChange={handlePublishedDateChange}
-                        placeholder="انتخاب تاریخ شمسی"
-                    />
-                    <div className="grid gap-2">
-                        <Label htmlFor="publishedTime">ساعت انتشار</Label>
-                        <Input
-                            id="publishedTime"
-                            type="time"
-                            value={publishedTime}
-                            onChange={(event) =>
-                                handlePublishedTimeChange(event.target.value)
-                            }
-                            disabled={publishedDate === ''}
-                        />
-                    </div>
-                    <p className="text-xs text-muted">
-                        برای انتشار، اگر تاریخ خالی بماند زمان فعلی ثبت
-                        می‌شود.
-                    </p>
-                    <InputError message={errors.published_at} />
-                </div>
-
-                <div className="grid gap-2">
                     <Label htmlFor="displayOrder">ترتیب نمایش</Label>
                     <Input
                         id="displayOrder"
@@ -295,6 +276,32 @@ export function AdminCourseResourceForm({
                     />
                     <InputError message={errors.display_order} />
                 </div>
+            </div>
+
+            <div className="grid gap-2">
+                <AdminJalaliDateInput
+                    id="publishedAt"
+                    label="تاریخ انتشار"
+                    value={publishedDate}
+                    onChange={handlePublishedDateChange}
+                    placeholder="انتخاب تاریخ شمسی"
+                />
+                <div className="grid gap-2">
+                    <Label htmlFor="publishedTime">ساعت انتشار</Label>
+                    <Input
+                        id="publishedTime"
+                        type="time"
+                        value={publishedTime}
+                        onChange={(event) =>
+                            handlePublishedTimeChange(event.target.value)
+                        }
+                        disabled={publishedDate === ''}
+                    />
+                </div>
+                <p className="text-xs text-muted">
+                    برای انتشار، اگر تاریخ خالی بماند زمان فعلی ثبت می‌شود.
+                </p>
+                <InputError message={errors.published_at} />
             </div>
 
             <AdminButton type="submit" disabled={processing}>

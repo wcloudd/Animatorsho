@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\CourseResourceAccessScope;
+use App\Enums\CourseResourceLibraryCategory;
 use App\Enums\CourseResourceStatus;
 use App\Enums\CourseResourceType;
 use Illuminate\Foundation\Http\FormRequest;
@@ -60,9 +60,7 @@ class StoreCourseResourceRequest extends FormRequest
             'file_path' => ['nullable', 'string', 'max:500'],
             'external_url' => ['nullable', 'string', 'max:500'],
             'status' => ['required', Rule::enum(CourseResourceStatus::class)],
-            'access_scope' => ['required', Rule::enum(CourseResourceAccessScope::class)],
-            'course_package_id' => ['nullable', 'integer', 'exists:course_packages,id'],
-            'course_resource_category_id' => ['nullable', 'integer', 'exists:course_resource_categories,id'],
+            'library_category' => ['required', Rule::enum(CourseResourceLibraryCategory::class)],
             'display_order' => ['required', 'integer', 'min:0'],
             'published_at' => ['nullable', 'date'],
         ];

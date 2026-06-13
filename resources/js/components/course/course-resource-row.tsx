@@ -41,6 +41,11 @@ export function CourseResourceRow({
                     <ProfileStatusBadge tone="neutral">
                         {resource.typeLabel}
                     </ProfileStatusBadge>
+                    {resource.fileExtension ? (
+                        <ProfileStatusBadge tone="neutral">
+                            {resource.fileExtension}
+                        </ProfileStatusBadge>
+                    ) : null}
                 </span>
                 {showCategory && resource.categoryLabel ? (
                     <span className="text-[11px] font-medium text-muted">

@@ -26,7 +26,7 @@ class CourseResourceFactory extends Factory
             'title' => fake()->sentence(3),
             'description' => fake()->optional()->sentence(),
             'type' => CourseResourceType::Pdf,
-            'file_path' => '/media/student-panel/resources/example.pdf',
+            'file_path' => '/media/student-panel/library/practice-files/example.pdf',
             'external_url' => null,
             'status' => CourseResourceStatus::Draft,
             'access_scope' => CourseResourceAccessScope::AllStudents,

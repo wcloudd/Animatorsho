@@ -8,6 +8,11 @@ import type { AdminCourseResourceFormOptions } from '@/types/admin';
 
 type PageProps = {
     formOptions: AdminCourseResourceFormOptions;
+    defaults?: {
+        filePath?: string;
+        libraryCategory?: string;
+        title?: string;
+    };
 };
 
 const defaultFormValues = {
@@ -17,17 +22,28 @@ const defaultFormValues = {
     file_path: '',
     external_url: '',
     status: 'draft',
-    access_scope: 'all_students',
-    course_package_id: null as number | null,
-    course_resource_category_id: null as number | null,
+    library_category: 'practice_files',
     display_order: 0,
     published_at: null as string | null,
 };
 
 export default function AdminCourseResourcesCreate({
     formOptions,
+    defaults = {},
 }: PageProps) {
-    const { data, setData, post, processing, errors } = useForm(defaultFormValues);
+    const { data, setData, post, processing, errors } = useForm({
+        ...defaultFormValues,
+        title: defaults.title ?? defaultFormValues.title,
+        file_path: defaults.filePath ?? defaultFormValues.file_path,
+        library_category:
+            defaults.libraryCategory ?? defaultFormValues.library_category,
+        type:
+            defaults.libraryCategory === 'references'
+                ? 'image'
+                : defaults.libraryCategory === 'videos'
+                  ? 'file'
+                  : defaultFormValues.type,
+    });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -39,7 +55,7 @@ export default function AdminCourseResourcesCreate({
             <Head title="منبع جدید تمرین" />
             <AdminPageHeader
                 title="منبع جدید"
-                description="فایل یا لینک جدید برای کتابخانه تمرین ایجاد کنید."
+                description="اطلاعات نمایشی برای فایل کتابخانه یا لینک بیرونی ثبت کنید."
                 actions={
                     <AdminButton asChild size="sm" adminVariant="outline">
                         <Link href="/admin/course-resources">بازگشت</Link>
@@ -55,9 +71,7 @@ export default function AdminCourseResourcesCreate({
                         filePath: data.file_path,
                         externalUrl: data.external_url,
                         status: data.status,
-                        accessScope: data.access_scope,
-                        coursePackageId: data.course_package_id,
-                        categoryId: data.course_resource_category_id,
+                        libraryCategory: data.library_category,
                         displayOrder: data.display_order,
                         publishedAt: data.published_at,
                     }}
@@ -74,9 +88,7 @@ export default function AdminCourseResourcesCreate({
                             filePath: 'file_path',
                             externalUrl: 'external_url',
                             status: 'status',
-                            accessScope: 'access_scope',
-                            coursePackageId: 'course_package_id',
-                            categoryId: 'course_resource_category_id',
+                            libraryCategory: 'library_category',
                             displayOrder: 'display_order',
                             publishedAt: 'published_at',
                         } as const;
