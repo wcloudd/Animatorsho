@@ -5,6 +5,7 @@ namespace App\Services\Course;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\User;
 use App\Services\AnimatorshoCatalogService;
+use App\Support\StudentPanel\StudentPanelMedia;
 use Illuminate\Support\Collection;
 
 class CourseAccessService
@@ -124,7 +125,7 @@ class CourseAccessService
                 'progressPercent' => 0,
                 'xpToNextLevel' => 500,
             ],
-            'onboarding' => config('student_panel.onboarding'),
+            'onboarding' => StudentPanelMedia::resolvedOnboarding(),
             'preview' => [
                 'updates' => config('student_panel.preview.updates'),
                 'resources' => config('student_panel.preview.resources'),
@@ -138,7 +139,7 @@ class CourseAccessService
                     'status' => null,
                 ],
                 'medals' => config('student_panel.preview.medals'),
-                'sectionVisuals' => config('student_panel.sectionVisuals'),
+                'sectionVisuals' => StudentPanelMedia::resolvedSectionVisuals(),
             ],
         ];
     }

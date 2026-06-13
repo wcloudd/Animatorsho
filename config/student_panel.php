@@ -2,16 +2,25 @@
 
 return [
 
+    'media' => [
+        'basePath' => 'media/student-panel',
+        'onboardingBanner' => 'onboarding-banner.png',
+        'exercisesHeader' => 'exercises-header.png',
+        'mentorHeader' => 'mentor-header.png',
+        'resourcesHeader' => 'resources-header.png',
+        'medalsHeader' => 'medals-header.png',
+        'updatesHeader' => 'updates-header.png',
+        'startGuideVideo' => 'start-guide.mp4',
+        'startGuidePoster' => 'start-guide-poster.png',
+        'startGuidePdf' => 'start-guide.pdf',
+    ],
+
     'onboarding' => [
         'title' => 'مسیر انیماتورشو',
         'heading' => 'از اینجا شروع کن',
         'description' => 'راهنمای استفاده از پنل، ارسال تمرین و ارتباط با استاد',
         'imageUrl' => null,
         'imageAlt' => 'مسیر شروع انیماتورشو',
-        // Future public media paths (site owner):
-        // videoUrl: /media/student-panel/start-guide.mp4
-        // videoPosterUrl: /media/student-panel/start-guide-poster.png
-        // pdfUrl: /media/student-panel/start-guide.pdf
         'videoUrl' => null,
         'videoPosterUrl' => null,
         'videoTitle' => 'ویدئو راهنمای پنل هنرجو',
