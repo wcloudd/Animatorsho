@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { serializeJsonLd } from '@/lib/json-ld';
 import type { SeoHeadProps } from '@/types/seo';
 
 function JsonLdScript({
@@ -15,7 +16,7 @@ function JsonLdScript({
                     key={`json-ld-${index}`}
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{
-                        __html: JSON.stringify(entry),
+                        __html: serializeJsonLd(entry),
                     }}
                 />
             ))}

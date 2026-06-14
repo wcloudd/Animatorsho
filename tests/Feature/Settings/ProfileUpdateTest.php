@@ -1,6 +1,10 @@
 <?php
 
+use App\Enums\SpotPlayerLicenseStatus;
+use App\Models\CoursePackage;
+use App\Models\SpotPlayerLicense;
 use App\Models\User;
+use Database\Seeders\AnimatorshoCourseSeeder;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -100,6 +104,49 @@ test('correct password must be provided to delete account', function () {
         ->from(route('profile.edit'))
         ->delete(route('profile.destroy'), [
             'password' => 'wrong-password',
+        ]);
+
+    $response
+        ->assertSessionHasErrors('password')
+        ->assertRedirect(route('profile.edit'));
+
+    expect($user->fresh())->not->toBeNull();
+});
+
+test('otp only user without a password can delete their account', function () {
+    $user = User::factory()->otpOnly()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->delete(route('profile.destroy'));
+
+    $response
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('home'));
+
+    $this->assertGuest();
+    expect($user->fresh())->toBeNull();
+});
+
+test('user with active course access cannot delete their account', function () {
+    $this->seed(AnimatorshoCourseSeeder::class);
+
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    SpotPlayerLicense::factory()
+        ->create([
+            'user_id' => $user->id,
+            'course_package_id' => $package->id,
+            'status' => SpotPlayerLicenseStatus::Active,
+            'license_key' => 'SPOT-ACTIVE-DELETE-GUARD',
+        ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->from(route('profile.edit'))
+        ->delete(route('profile.destroy'), [
+            'password' => 'password',
         ]);
 
     $response
