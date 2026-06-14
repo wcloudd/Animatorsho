@@ -171,6 +171,26 @@ test('admin update ignores email password and is admin fields', function () {
         ->is_admin->toBeFalse();
 });
 
+test('is_admin cannot be set through model mass assignment', function () {
+    $user = User::factory()->create(['is_admin' => false]);
+
+    // fill() must apply the whitelisted field but silently drop is_admin.
+    $user->fill(['name' => 'تلاش برای ارتقا', 'is_admin' => true])->save();
+
+    expect($user->fresh())
+        ->name->toBe('تلاش برای ارتقا')
+        ->is_admin->toBeFalse();
+
+    $created = User::create([
+        'name' => 'کاربر جدید',
+        'mobile' => '09120001122',
+        'password' => 'secret-password',
+        'is_admin' => true,
+    ]);
+
+    expect($created->fresh()->is_admin)->toBeFalse();
+});
+
 test('after admin update user can still receive manual enrollment grant', function () {
     $admin = User::factory()->admin()->create();
     $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();

@@ -12,7 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'username', 'avatar_preset', 'email', 'password', 'mobile', 'mobile_verified_at', 'is_admin'])]
+// is_admin is intentionally NOT fillable: admin status is granted only via
+// trusted code (seeders / explicit query updates), never mass assignment.
+#[Fillable(['name', 'username', 'avatar_preset', 'email', 'password', 'mobile', 'mobile_verified_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {

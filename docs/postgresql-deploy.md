@@ -238,6 +238,18 @@ For production, configure a process supervisor (systemd, Supervisor, Laravel For
 
 ---
 
+## Scheduler (cron)
+
+Scheduled tasks (currently the daily `security:prune-events` cleanup) only run if the Laravel scheduler is triggered every minute. Add **one** cron entry on the server:
+
+```cron
+* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1
+```
+
+On Laravel Forge / managed hosts, add the equivalent "scheduler" daemon instead. Verify with `php artisan schedule:list`.
+
+---
+
 ## File Permissions and Cache
 
 After deploy or `.env` changes:
