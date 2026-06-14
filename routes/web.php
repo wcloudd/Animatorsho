@@ -4,6 +4,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CheckoutOrderController;
 use App\Http\Controllers\CheckoutZarinpalCallbackController;
 use App\Http\Controllers\ConsultationController;
+use App\Http\Controllers\CourseExercisesController;
 use App\Http\Controllers\CourseHomeController;
 use App\Http\Controllers\CourseResourcesController;
 use App\Http\Controllers\HomeController;
@@ -26,6 +27,22 @@ Route::get('/course', [CourseHomeController::class, 'index'])
 Route::get('/course/resources', [CourseResourcesController::class, 'index'])
     ->middleware('auth')
     ->name('course.resources.index');
+
+Route::get('/course/exercises', [CourseExercisesController::class, 'index'])
+    ->middleware('auth')
+    ->name('course.exercises.index');
+
+Route::get('/course/exercises/create', [CourseExercisesController::class, 'create'])
+    ->middleware('auth')
+    ->name('course.exercises.create');
+
+Route::post('/course/exercises', [CourseExercisesController::class, 'store'])
+    ->middleware(['auth', 'honeypot', 'throttle:exercise-submission-create'])
+    ->name('course.exercises.store');
+
+Route::get('/course/exercises/{exerciseSubmission}/attachment', [CourseExercisesController::class, 'attachment'])
+    ->middleware('auth')
+    ->name('course.exercises.attachment');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 

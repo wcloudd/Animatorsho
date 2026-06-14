@@ -114,6 +114,12 @@ class SecurityServiceProvider extends ServiceProvider
             return $this->configuredLimit('consultation-submit')->by('consultation-submit|'.$userId);
         });
 
+        RateLimiter::for('exercise-submission-create', function (Request $request) {
+            $userId = $request->user()?->id ?? $request->ip();
+
+            return $this->configuredLimit('exercise-submission-create')->by('exercise-submission-create|'.$userId);
+        });
+
         RateLimiter::for('checkout-order', function (Request $request) {
             return $this->configuredLimit('checkout-order')
                 ->by($this->authenticatedUserThrottleKey($request, 'checkout-order'));

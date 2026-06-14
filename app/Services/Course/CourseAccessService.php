@@ -17,6 +17,7 @@ class CourseAccessService
         private readonly AnimatorshoCatalogService $catalog,
         private readonly CourseUpdateQueryService $courseUpdates,
         private readonly CourseResourceQueryService $courseResources,
+        private readonly ExerciseSubmissionQueryService $exerciseSubmissions,
     ) {}
 
     public function userHasActiveAccess(User $user): bool
@@ -84,7 +85,18 @@ class CourseAccessService
      *         }>,
      *         resourcesIndexUrl: string,
      *         notificationsUnread: int,
-     *         exercisesSummary: array{total: int, pending: int},
+     *         exercisesSummary: array{
+     *             total: int,
+     *             pending: int,
+     *             latest: ?array{
+     *                 title: string,
+     *                 status: string,
+     *                 statusLabel: string,
+     *                 statusTone: string
+     *             },
+     *             exercisesIndexUrl: string,
+     *             createUrl: string
+     *         },
      *         mentorSummary: array{hasThread: bool, status: ?string},
      *         medals: array{
      *             earned: list<array{slug: string, title: string}>,
@@ -145,10 +157,7 @@ class CourseAccessService
                 'resources' => $this->courseResources->latestPublishedForHome(),
                 'resourcesIndexUrl' => route('course.resources.index'),
                 'notificationsUnread' => 0,
-                'exercisesSummary' => [
-                    'total' => 0,
-                    'pending' => 0,
-                ],
+                'exercisesSummary' => $this->exerciseSubmissions->summaryForHome($user),
                 'mentorSummary' => [
                     'hasThread' => false,
                     'status' => null,

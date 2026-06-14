@@ -2,7 +2,9 @@ import type { LucideIcon } from 'lucide-react';
 import {
     BookOpen,
     CalendarClock,
+    ClipboardList,
     CreditCard,
+    FileArchive,
     Headphones,
     KeyRound,
     LayoutDashboard,
@@ -125,6 +127,18 @@ export const adminNavGroups: AdminNavGroup[] = [
                 label: 'مشاوره‌ها',
                 match: '/admin/consultations',
                 icon: MessageSquare,
+            },
+            {
+                href: '/admin/exercise-submissions',
+                label: 'تمرین‌های ارسالی',
+                match: '/admin/exercise-submissions',
+                icon: ClipboardList,
+            },
+            {
+                href: '/admin/exercise-attachments',
+                label: 'فایل‌های تمرین',
+                match: '/admin/exercise-attachments',
+                icon: FileArchive,
             },
         ],
     },

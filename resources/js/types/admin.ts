@@ -355,6 +355,63 @@ export type AdminConsultationListItem = {
     updatedAt: string | null;
 };
 
+export type AdminExerciseSubmissionListItem = {
+    id: number;
+    studentName: string;
+    studentMobile: string | null;
+    title: string;
+    status: string;
+    statusValue: string;
+    statusTone: AdminStatusTone;
+    submittedAtLabel: string;
+    reviewUrl: string;
+};
+
+export type AdminExerciseSubmissionDetail = {
+    id: number;
+    studentName: string;
+    studentMobile: string | null;
+    title: string;
+    description: string | null;
+    descriptionHtml: string;
+    status: string;
+    statusValue: string;
+    statusTone: AdminStatusTone;
+    submissionLink: string | null;
+    submissionLinkLabel: string | null;
+    filePathNote: string | null;
+    attachment: AdminExerciseAttachment | null;
+    adminFeedback: string | null;
+    submittedAtLabel: string;
+    reviewedAtLabel: string;
+    reviewedByName: string | null;
+};
+
+export type AdminExerciseAttachment = {
+    originalName: string;
+    sizeBytes: number;
+    sizeLabel: string;
+    mimeType: string;
+    extension: string;
+    downloadUrl: string;
+    isDeleted: boolean;
+};
+
+export type AdminExerciseAttachmentListItem = {
+    id: number;
+    studentName: string;
+    studentMobile: string | null;
+    submissionTitle: string;
+    originalName: string;
+    sizeLabel: string;
+    sizeBytes: number;
+    extension: string;
+    uploadedAtLabel: string;
+    downloadUrl: string;
+    deleteUrl: string;
+    reviewUrl: string;
+};
+
 export type AdminSupportTicketDetail = {
     id: number;
     subject: string;

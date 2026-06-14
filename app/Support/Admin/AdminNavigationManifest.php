@@ -101,6 +101,16 @@ class AdminNavigationManifest
                         'href' => route('admin.consultations.index'),
                         'route' => 'admin.consultations.index',
                     ],
+                    [
+                        'label' => 'تمرین‌های ارسالی',
+                        'href' => route('admin.exercise-submissions.index'),
+                        'route' => 'admin.exercise-submissions.index',
+                    ],
+                    [
+                        'label' => 'فایل‌های تمرین',
+                        'href' => route('admin.exercise-attachments.index'),
+                        'route' => 'admin.exercise-attachments.index',
+                    ],
                 ],
             ],
             [

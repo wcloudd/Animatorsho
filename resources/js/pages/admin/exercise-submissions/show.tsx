@@ -1,0 +1,258 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import { useState } from 'react';
+import { AdminActionRow } from '@/components/admin/admin-action-row';
+import { AdminButton } from '@/components/admin/admin-button';
+import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
+import { AdminDetailRow } from '@/components/admin/admin-detail-row';
+import { AdminInfoGrid } from '@/components/admin/admin-info-grid';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
+import { AdminSectionTitle } from '@/components/admin/admin-section-title';
+import { AdminStatusBadge } from '@/components/admin/admin-status-badge';
+import { SafeStoryText } from '@/components/course/safe-story-text';
+import InputError from '@/components/input-error';
+import { surfaceCardClassName } from '@/components/page-container';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import type {
+    AdminExerciseSubmissionDetail,
+    AdminStatusOption,
+} from '@/types/admin';
+import { cn } from '@/lib/utils';
+
+const textareaClassName = cn(
+    'border-input bg-surface text-text placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm text-start shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+    'min-h-[120px]',
+);
+
+type PageProps = {
+    submission: AdminExerciseSubmissionDetail;
+    statusOptions: AdminStatusOption[];
+};
+
+export default function AdminExerciseSubmissionShow({
+    submission,
+    statusOptions,
+}: PageProps) {
+    const [confirmKey, setConfirmKey] = useState<string | number | null>(null);
+    const { data, setData, patch, processing, errors } = useForm({
+        status: submission.statusValue,
+        admin_feedback: submission.adminFeedback ?? '',
+    });
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        patch(`/admin/exercise-submissions/${submission.id}`, {
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <>
+            <Head title={`بررسی تمرین — ${submission.title}`} />
+            <AdminPageHeader
+                title={submission.title}
+                description={`${submission.studentName} · ${submission.studentMobile ?? '—'}`}
+                actions={
+                    <AdminButton asChild size="sm" adminVariant="outline">
+                        <Link href="/admin/exercise-submissions">
+                            بازگشت به لیست
+                        </Link>
+                    </AdminButton>
+                }
+            />
+
+            <div
+                className={cn(
+                    surfaceCardClassName,
+                    'mb-4 flex flex-col gap-4 p-4 sm:p-5',
+                )}
+            >
+                <div className="flex flex-wrap items-center gap-2">
+                    <AdminStatusBadge tone={submission.statusTone}>
+                        {submission.status}
+                    </AdminStatusBadge>
+                </div>
+
+                <AdminInfoGrid>
+                    <AdminDetailRow
+                        label="نام هنرجو"
+                        value={submission.studentName}
+                    />
+                    <AdminDetailRow
+                        label="موبایل"
+                        value={submission.studentMobile ?? '—'}
+                    />
+                    <AdminDetailRow
+                        label="تاریخ ارسال"
+                        value={submission.submittedAtLabel}
+                    />
+                    <AdminDetailRow
+                        label="آخرین بررسی"
+                        value={submission.reviewedAtLabel}
+                    />
+                    <AdminDetailRow
+                        label="بررسی‌کننده"
+                        value={submission.reviewedByName ?? '—'}
+                    />
+                </AdminInfoGrid>
+
+                {submission.descriptionHtml ? (
+                    <div className="flex flex-col gap-2">
+                        <AdminSectionTitle className="mb-0">
+                            توضیحات هنرجو
+                        </AdminSectionTitle>
+                        <SafeStoryText
+                            html={submission.descriptionHtml}
+                            className="text-sm leading-relaxed text-muted [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5"
+                        />
+                    </div>
+                ) : null}
+
+                <div className="flex flex-col gap-2">
+                    <AdminSectionTitle className="mb-0">
+                        ارسال تمرین
+                    </AdminSectionTitle>
+                    {submission.submissionLink ? (
+                        <a
+                            href={submission.submissionLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-bold text-purple"
+                        >
+                            {submission.submissionLinkLabel}
+                        </a>
+                    ) : (
+                        <p className="text-sm text-muted">
+                            {submission.filePathNote ??
+                                'لینک عمومی برای این ارسال ثبت نشده است.'}
+                        </p>
+                    )}
+                </div>
+
+                {submission.attachment ? (
+                    <div className="flex flex-col gap-3 rounded-2xl border border-[#e8e0f0] bg-bg p-4">
+                        <AdminSectionTitle className="mb-0">
+                            فایل آپلودی
+                        </AdminSectionTitle>
+
+                        {submission.attachment.isDeleted ? (
+                            <p className="text-sm font-medium text-muted">
+                                فایل حذف شده است
+                            </p>
+                        ) : (
+                            <>
+                                <AdminInfoGrid>
+                                    <AdminDetailRow
+                                        label="نام فایل"
+                                        value={submission.attachment.originalName}
+                                    />
+                                    <AdminDetailRow
+                                        label="حجم"
+                                        value={submission.attachment.sizeLabel}
+                                    />
+                                    <AdminDetailRow
+                                        label="نوع"
+                                        value={submission.attachment.mimeType}
+                                    />
+                                    <AdminDetailRow
+                                        label="پسوند"
+                                        value={submission.attachment.extension}
+                                    />
+                                </AdminInfoGrid>
+
+                                <AdminActionRow>
+                                    <AdminButton asChild size="sm" adminVariant="outline">
+                                        <a href={submission.attachment.downloadUrl}>
+                                            دانلود فایل
+                                        </a>
+                                    </AdminButton>
+                                    <AdminConfirmAction
+                                        actionKey="delete-attachment"
+                                        activeKey={confirmKey}
+                                        onActivate={setConfirmKey}
+                                        onCancel={() => setConfirmKey(null)}
+                                        triggerLabel="حذف فایل"
+                                        confirmLabel="تأیید حذف"
+                                        message="فایل از فضای ذخیره‌سازی حذف می‌شود اما رکورد تمرین باقی می‌ماند."
+                                        href={`/admin/exercise-submissions/${submission.id}/attachment`}
+                                        method="delete"
+                                    />
+                                </AdminActionRow>
+                            </>
+                        )}
+                    </div>
+                ) : null}
+            </div>
+
+            <form
+                onSubmit={submit}
+                className={cn(
+                    surfaceCardClassName,
+                    'flex flex-col gap-4 p-4 sm:p-5',
+                )}
+            >
+                <AdminSectionTitle className="mb-0">
+                    بررسی و بازخورد
+                </AdminSectionTitle>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="exercise-submission-status">وضعیت</Label>
+                    <Select
+                        value={data.status}
+                        onValueChange={(value) => setData('status', value)}
+                    >
+                        <SelectTrigger
+                            id="exercise-submission-status"
+                            className="h-10 w-full"
+                        >
+                            <SelectValue placeholder="انتخاب وضعیت" />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                            {statusOptions.map((option) => (
+                                <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                >
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <InputError message={errors.status} />
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="exercise-submission-feedback">
+                        بازخورد استاد
+                    </Label>
+                    <textarea
+                        id="exercise-submission-feedback"
+                        value={data.admin_feedback}
+                        onChange={(event) =>
+                            setData('admin_feedback', event.target.value)
+                        }
+                        rows={5}
+                        className={textareaClassName}
+                    />
+                    <InputError message={errors.admin_feedback} />
+                </div>
+
+                <AdminButton
+                    type="submit"
+                    size="sm"
+                    adminVariant="brand"
+                    disabled={processing}
+                >
+                    ذخیره بررسی
+                </AdminButton>
+            </form>
+        </>
+    );
+}

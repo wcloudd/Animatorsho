@@ -99,9 +99,19 @@ export type CourseHomeMedalsPreview = {
     totalAvailable: number;
 };
 
+export type CourseHomeExercisesLatest = {
+    title: string;
+    status: string;
+    statusLabel: string;
+    statusTone: 'success' | 'warning' | 'neutral';
+};
+
 export type CourseHomeExercisesSummary = {
     total: number;
     pending: number;
+    latest: CourseHomeExercisesLatest | null;
+    exercisesIndexUrl: string;
+    createUrl: string;
 };
 
 export type CourseHomeMentorSummary = {

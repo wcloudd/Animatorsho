@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\CoursePackageController;
 use App\Http\Controllers\Admin\CourseResourceController;
 use App\Http\Controllers\Admin\CourseUpdateController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ExerciseAttachmentController;
+use App\Http\Controllers\Admin\ExerciseSubmissionController;
 use App\Http\Controllers\Admin\InstallmentController;
 use App\Http\Controllers\Admin\ManualEnrollmentController;
 use App\Http\Controllers\Admin\OrderController;
@@ -72,6 +74,14 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('consultations', [ConsultationController::class, 'index'])->name('consultations.index');
         Route::patch('consultations/{consultation}', [ConsultationController::class, 'update'])->name('consultations.update');
+
+        Route::get('exercise-submissions', [ExerciseSubmissionController::class, 'index'])->name('exercise-submissions.index');
+        Route::get('exercise-submissions/{exerciseSubmission}', [ExerciseSubmissionController::class, 'show'])->name('exercise-submissions.show');
+        Route::patch('exercise-submissions/{exerciseSubmission}', [ExerciseSubmissionController::class, 'update'])->name('exercise-submissions.update');
+        Route::get('exercise-submissions/{exerciseSubmission}/attachment', [ExerciseSubmissionController::class, 'attachment'])->name('exercise-submissions.attachment');
+        Route::delete('exercise-submissions/{exerciseSubmission}/attachment', [ExerciseSubmissionController::class, 'destroyAttachment'])->name('exercise-submissions.attachment.destroy');
+
+        Route::get('exercise-attachments', [ExerciseAttachmentController::class, 'index'])->name('exercise-attachments.index');
 
         Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
         Route::get('support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');

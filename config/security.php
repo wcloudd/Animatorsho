@@ -70,6 +70,10 @@ return [
             'max_attempts' => 3,
             'decay_minutes' => 1,
         ],
+        'exercise-submission-create' => [
+            'max_attempts' => 5,
+            'decay_minutes' => 1,
+        ],
         'checkout-order' => [
             'max_attempts' => 5,
             'decay_minutes' => 1,
