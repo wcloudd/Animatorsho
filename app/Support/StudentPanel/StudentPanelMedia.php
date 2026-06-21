@@ -82,7 +82,6 @@ class StudentPanelMedia
 
         $filenameKeys = [
             'exercises' => 'exercisesHeader',
-            'mentor' => 'mentorHeader',
             'resources' => 'resourcesHeader',
             'medals' => 'medalsHeader',
             'updates' => 'updatesHeader',
@@ -94,7 +93,6 @@ class StudentPanelMedia
             $section = $sectionVisuals[$sectionKey] ?? [];
             $defaultFilename = match ($sectionKey) {
                 'exercises' => 'exercises-header.png',
-                'mentor' => 'mentor-header.png',
                 'resources' => 'resources-header.png',
                 'medals' => 'medals-header.png',
                 'updates' => 'updates-header.png',

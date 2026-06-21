@@ -1,18 +1,16 @@
-import { Bell } from 'lucide-react';
-import type { CourseHomeProgress, CourseHomeWelcome } from '@/lib/course-home-data';
-import { showCoursePanelComingSoonToast } from '@/components/course/course-home-coming-soon-button';
-import { cn } from '@/lib/utils';
+import type { CourseHomeNotifications, CourseHomeProgress, CourseHomeWelcome } from '@/lib/course-home-data';
+import { CourseNotificationsDrawer } from '@/components/course/course-notifications-drawer';
 
 type CourseHomeHeaderProps = {
     welcome: CourseHomeWelcome;
     progress: CourseHomeProgress;
-    notificationsUnread: number;
+    notifications: CourseHomeNotifications;
 };
 
 export function CourseHomeHeader({
     welcome,
     progress,
-    notificationsUnread,
+    notifications,
 }: CourseHomeHeaderProps) {
     return (
         <header className="relative overflow-hidden rounded-[28px] bg-surface px-5 py-5 shadow-soft ring-1 ring-border">
@@ -35,19 +33,7 @@ export function CourseHomeHeader({
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={showCoursePanelComingSoonToast}
-                        aria-label="اعلان‌ها"
-                        className="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-bg ring-1 ring-border/70 transition-colors hover:bg-purple-soft/50"
-                    >
-                        <Bell className="size-[18px] text-purple" />
-                        {notificationsUnread > 0 ? (
-                            <span className="absolute -start-1 -top-1 flex size-4 items-center justify-center rounded-full bg-red text-[10px] font-bold text-white">
-                                {notificationsUnread}
-                            </span>
-                        ) : null}
-                    </button>
+                    <CourseNotificationsDrawer notifications={notifications} />
                 </div>
 
                 <div className="flex flex-col gap-2 rounded-2xl bg-bg/80 px-3.5 py-3 ring-1 ring-border/60">

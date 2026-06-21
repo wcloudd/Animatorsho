@@ -2,8 +2,6 @@ import { Head } from '@inertiajs/react';
 import { CourseHomeExercisesPreview } from '@/components/course/course-home-exercises-preview';
 import { CourseHomeHeader } from '@/components/course/course-home-header';
 import { CourseHomeMedalsShowcase } from '@/components/course/course-home-medals-showcase';
-import { CourseHomeMentorPreview } from '@/components/course/course-home-mentor-preview';
-import { CourseHomeNotificationsPanel } from '@/components/course/course-home-notifications-panel';
 import { CourseHomeOnboardingSection } from '@/components/course/course-home-onboarding-section';
 import { CourseHomeProfileFootnote } from '@/components/course/course-home-profile-footnote';
 import { CourseHomeResourcesPreview } from '@/components/course/course-home-resources-preview';
@@ -26,17 +24,12 @@ export default function CourseHome({
                     <CourseHomeHeader
                         welcome={welcome}
                         progress={progress}
-                        notificationsUnread={preview.notificationsUnread}
+                        notifications={notifications}
                     />
-                    <CourseHomeNotificationsPanel notifications={notifications} />
                     <CourseHomeOnboardingSection onboarding={onboarding} />
                     <CourseHomeExercisesPreview
                         exercisesSummary={preview.exercisesSummary}
                         visual={preview.sectionVisuals.exercises}
-                    />
-                    <CourseHomeMentorPreview
-                        mentorSummary={preview.mentorSummary}
-                        visual={preview.sectionVisuals.mentor}
                     />
                     <CourseHomeResourcesPreview
                         resources={preview.resources}

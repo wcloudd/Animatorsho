@@ -65,11 +65,11 @@ test('resolvedSectionVisuals keeps null image urls when files are missing', func
         $sectionVisuals = StudentPanelMedia::resolvedSectionVisuals();
 
         expect($sectionVisuals['exercises']['imageUrl'])->toBeNull()
-            ->and($sectionVisuals['mentor']['imageUrl'])->toBeNull()
             ->and($sectionVisuals['resources']['imageUrl'])->toBeNull()
             ->and($sectionVisuals['medals']['imageUrl'])->toBeNull()
             ->and($sectionVisuals['updates']['imageUrl'])->toBeNull()
-            ->and($sectionVisuals['exercises']['placeholderTitle'])->toBe('تصویر تمرین');
+            ->and($sectionVisuals['exercises']['placeholderTitle'])->toBe('تصویر تمرین')
+            ->and($sectionVisuals)->not->toHaveKey('mentor');
     });
 });
 

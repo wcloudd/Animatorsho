@@ -103,7 +103,6 @@ class CourseAccessService
      *             exercisesIndexUrl: string,
      *             createUrl: string
      *         },
-     *         mentorSummary: array{hasThread: bool, status: ?string},
      *         medals: array{
      *             earned: list<array{slug: string, title: string}>,
      *             locked: list<array{slug: string, title: string}>,
@@ -111,12 +110,6 @@ class CourseAccessService
      *         },
      *         sectionVisuals: array{
      *             exercises: array{
-     *                 imageUrl: ?string,
-     *                 imageAlt: string,
-     *                 placeholderTitle: string,
-     *                 placeholderDescription: ?string
-     *             },
-     *             mentor: array{
      *                 imageUrl: ?string,
      *                 imageAlt: string,
      *                 placeholderTitle: string,
@@ -160,10 +153,6 @@ class CourseAccessService
                 'resourcesIndexUrl' => route('course.resources.index'),
                 'notificationsUnread' => $this->notificationService->unreadCountForUser($user),
                 'exercisesSummary' => $this->exerciseSubmissions->summaryForHome($user),
-                'mentorSummary' => [
-                    'hasThread' => false,
-                    'status' => null,
-                ],
                 'medals' => $this->medalService->medalsPreviewForUser($user),
                 'sectionVisuals' => StudentPanelMedia::resolvedSectionVisuals(),
             ],

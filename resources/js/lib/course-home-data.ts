@@ -36,7 +36,6 @@ export type CourseHomeSectionVisual = {
 
 export type CourseHomeSectionVisuals = {
     exercises: CourseHomeSectionVisual;
-    mentor: CourseHomeSectionVisual;
     resources: CourseHomeSectionVisual;
     medals: CourseHomeSectionVisual;
     updates: CourseHomeSectionVisual;
@@ -120,18 +119,12 @@ export type CourseHomeExercisesSummary = {
     createUrl: string;
 };
 
-export type CourseHomeMentorSummary = {
-    hasThread: boolean;
-    status: string | null;
-};
-
 export type CourseHomePreview = {
     updates: CourseHomeUpdatePreview[];
     resources: CourseHomeResourcePreview[];
     resourcesIndexUrl: string;
     notificationsUnread: number;
     exercisesSummary: CourseHomeExercisesSummary;
-    mentorSummary: CourseHomeMentorSummary;
     medals: CourseHomeMedalsPreview;
     sectionVisuals: CourseHomeSectionVisuals;
 };
