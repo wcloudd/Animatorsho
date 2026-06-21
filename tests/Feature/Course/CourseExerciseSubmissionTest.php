@@ -71,7 +71,7 @@ test('create form does not render submission url field', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('animatorsho/course-exercises-create')
-            ->where('maxAttachments', 3));
+            ->where('maxAttachments', 5));
 });
 
 test('exercise submission requires at least one uploaded file', function () {
@@ -128,18 +128,39 @@ test('student can upload up to three exercise files', function () {
     expect(ExerciseSubmission::query()->first()?->attachments)->toHaveCount(3);
 });
 
-test('four exercise files are rejected', function () {
+test('student can upload up to five exercise files', function () {
+    [$user] = createActiveStudent();
+
+    $this->actingAs($user)
+        ->post(route('course.exercises.store'), [
+            'title' => 'تمرین پنج فایلی',
+            'attachments' => [
+                UploadedFile::fake()->image('a.png'),
+                UploadedFile::fake()->create('b.pdf', 100, 'application/pdf'),
+                UploadedFile::fake()->create('c.txt', 10, 'text/plain'),
+                UploadedFile::fake()->image('d.jpg'),
+                UploadedFile::fake()->create('e.zip', 200, 'application/zip'),
+            ],
+        ])
+        ->assertRedirect(route('course.exercises.index'));
+
+    expect(ExerciseSubmission::query()->first()?->attachments)->toHaveCount(5);
+});
+
+test('six exercise files are rejected', function () {
     [$user] = createActiveStudent();
 
     $this->actingAs($user)
         ->from(route('course.exercises.create'))
         ->post(route('course.exercises.store'), [
-            'title' => 'تمرین چهار فایلی',
+            'title' => 'تمرین شش فایلی',
             'attachments' => [
                 UploadedFile::fake()->image('1.png'),
                 UploadedFile::fake()->image('2.png'),
                 UploadedFile::fake()->image('3.png'),
                 UploadedFile::fake()->image('4.png'),
+                UploadedFile::fake()->image('5.png'),
+                UploadedFile::fake()->image('6.png'),
             ],
         ])
         ->assertRedirect(route('course.exercises.create'))
