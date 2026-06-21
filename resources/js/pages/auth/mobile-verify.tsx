@@ -36,7 +36,14 @@ export default function MobileVerifyAuth({
     status,
 }: Props) {
     const copy = AUTH_MOBILE_VERIFY_COPY;
-    const subtitle = copy.subtitle.replace('{mobile}', maskedMobile);
+    const [subtitleBefore, subtitleAfter] = copy.subtitle.split('{mobile}');
+    const subtitle = (
+        <>
+            {subtitleBefore}
+            <bdi dir="ltr">{maskedMobile}</bdi>
+            {subtitleAfter}
+        </>
+    );
     const showSentStatus = status === 'otp-sent';
     const resendSeconds = useOtpResendCountdown(resendAvailableAt);
     const [resending, setResending] = useState(false);

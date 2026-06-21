@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ConsultationRequestStatus;
+use App\Enums\ExerciseSubmissionStatus;
 use App\Enums\OrderPaymentType;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
@@ -10,6 +11,7 @@ use App\Enums\SpotPlayerLicenseStatus;
 use App\Enums\SupportTicketStatus;
 use App\Models\ConsultationRequest;
 use App\Models\CoursePackage;
+use App\Models\ExerciseSubmission;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\SecurityEvent;
@@ -56,7 +58,7 @@ test('admin dashboard props include summary and queue sections', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->has('activityMetrics', 2)
             ->has('securityEventsLast24Hours')
-            ->has('summary', 9)
+            ->has('summary', 10)
             ->has('actionQueues')
             ->has('activityQueues')
             ->has('financeSummary')
@@ -330,6 +332,35 @@ test('admin dashboard shows pending payment installment and license counts', fun
             ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'pending_card_to_card', 1))
             ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'pending_installment', 1))
             ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'license_api_failures', 1)));
+});
+
+test('admin dashboard shows zero pending exercise submissions when none exist', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('summary', fn ($summary): bool => summaryCardCountEquals($summary, 'exercise_submissions_pending', 0))
+            ->where('actionQueues', fn ($queues): bool => ! queueKeyExists($queues, 'pending_exercise_submissions')));
+});
+
+test('admin dashboard shows pending exercise submission count and queue', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create(['name' => 'هنرجوی تست']);
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین اول',
+        'status' => ExerciseSubmissionStatus::Submitted,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'exercise_submissions_pending', 1))
+            ->where('actionQueues', fn ($queues): bool => queueKeyExists($queues, 'pending_exercise_submissions'))
+            ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'pending_exercise_submissions', $submission->id)));
 });
 
 function summaryCardCountAtLeast(mixed $summary, string $key, int $minimum): bool

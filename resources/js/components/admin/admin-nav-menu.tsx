@@ -138,7 +138,7 @@ export function AdminNavMenu({
             aria-label="منوی مدیریت"
             className={cn(
                 variant === 'mobile'
-                    ? 'flex flex-col gap-3 p-3'
+                    ? 'flex flex-1 flex-col gap-3 overflow-y-auto p-3'
                     : 'hidden lg:grid lg:grid-cols-4 lg:gap-x-4 lg:gap-y-2 xl:grid-cols-7',
             )}
         >

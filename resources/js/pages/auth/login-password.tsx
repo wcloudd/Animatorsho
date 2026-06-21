@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { AuthForm } from '@/components/auth/auth-form';
 import {
     AuthFormCard,
@@ -9,7 +9,6 @@ import {
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthThrottleError } from '@/components/auth/auth-throttle-error';
 import { AuthPageIntro } from '@/components/auth/auth-page-intro';
-import { AuthSecondaryActionCard } from '@/components/auth/auth-secondary-action-card';
 import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import PasswordInput from '@/components/password-input';
@@ -22,7 +21,7 @@ import { useAuthSupportFallback } from '@/hooks/use-auth-support-fallback';
 import { AUTH_LOGIN_PASSWORD_COPY } from '@/lib/auth-form-data';
 import { localizeAuthStatus } from '@/lib/auth-validation-messages';
 import { cn } from '@/lib/utils';
-import { verify as mobileVerify } from '@/routes/auth/mobile';
+import { sendCodeFromSession } from '@/routes/auth/mobile';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import { MessageSquare } from 'lucide-react';
@@ -40,7 +39,14 @@ export default function LoginPassword({
 }: Props) {
     const copy = AUTH_LOGIN_PASSWORD_COPY;
     const localizedStatus = localizeAuthStatus(status);
-    const subtitle = copy.subtitle.replace('{mobile}', maskedMobile);
+    const [subtitleBefore, subtitleAfter] = copy.subtitle.split('{mobile}');
+    const subtitle = (
+        <>
+            {subtitleBefore}
+            <bdi dir="ltr">{maskedMobile}</bdi>
+            {subtitleAfter}
+        </>
+    );
     const { showSupportFallback, onAuthError } = useAuthSupportFallback();
 
     return (
@@ -121,14 +127,21 @@ export default function LoginPassword({
                                 </Button>
                             </div>
 
-                            <AuthSecondaryActionCard
-                                href={mobileVerify()}
-                                label={copy.otpLoginLabel}
-                                icon={MessageSquare}
-                                alignEnd
+                            <button
+                                type="button"
                                 tabIndex={4}
                                 data-test="login-password-otp-link"
-                            />
+                                onClick={() =>
+                                    router.post(sendCodeFromSession.url())
+                                }
+                                className="flex h-12 w-full items-center justify-start gap-2 rounded-2xl bg-purple-soft/50 px-4 text-sm font-bold text-text shadow-xs ring-1 ring-border transition-colors hover:bg-purple-soft/80"
+                            >
+                                <MessageSquare
+                                    className="size-4 shrink-0 text-muted"
+                                    aria-hidden
+                                />
+                                <span>{copy.otpLoginLabel}</span>
+                            </button>
                         </>
                     )}
                 </AuthForm>

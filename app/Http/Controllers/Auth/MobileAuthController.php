@@ -41,6 +41,21 @@ class MobileAuthController extends Controller
             ->with('status', 'otp-sent');
     }
 
+    public function sendCodeFromSession(Request $request): RedirectResponse
+    {
+        $mobile = $request->session()->get('mobile_otp.mobile');
+
+        if (! is_string($mobile) || $mobile === '') {
+            return redirect()->route('auth.mobile.create');
+        }
+
+        $this->mobileOtpAuth->sendLoginCode($mobile, $request);
+
+        return redirect()
+            ->route('auth.mobile.verify')
+            ->with('status', 'otp-sent');
+    }
+
     public function resendCode(Request $request): RedirectResponse
     {
         $mobile = $request->session()->get('mobile_otp.mobile');

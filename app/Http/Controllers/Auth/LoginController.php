@@ -9,7 +9,6 @@ use App\Http\Requests\Auth\EmailLoginRequest;
 use App\Http\Requests\Auth\MobileLoginRequest;
 use App\Http\Requests\Auth\SubmitAuthIdentifierRequest;
 use App\Services\Auth\AuthIdentifierService;
-use App\Services\Auth\MobileOtpAuthService;
 use App\Services\Auth\RegistrationCompletionService;
 use App\Support\AuthIdentifier;
 use App\Support\AuthRedirect;
@@ -71,7 +70,6 @@ class LoginController extends Controller
     public function resolveIdentifier(
         SubmitAuthIdentifierRequest $request,
         AuthIdentifierService $authIdentifier,
-        MobileOtpAuthService $mobileOtpAuth,
         RegistrationCompletionService $registration,
     ): RedirectResponse {
         $parsed = AuthIdentifier::parse($request->validated('identifier'));
@@ -83,11 +81,9 @@ class LoginController extends Controller
         $resolution = $authIdentifier->resolve($parsed);
 
         if ($resolution['action'] === AuthIdentifierService::ACTION_MOBILE_OTP_LOGIN) {
-            $mobileOtpAuth->sendLoginCode($resolution['mobile'], $request);
+            $request->session()->put('mobile_otp.mobile', $resolution['mobile']);
 
-            return redirect()
-                ->route('auth.mobile.verify')
-                ->with('status', 'otp-sent');
+            return redirect()->route('login.password');
         }
 
         if ($resolution['action'] === AuthIdentifierService::ACTION_REGISTRATION) {

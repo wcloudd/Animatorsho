@@ -41,24 +41,42 @@ test('login page renders unified identifier entry', function () {
         ->assertInertia(fn ($page) => $page->component('auth/login'));
 });
 
-test('existing mobile identifier sends otp and redirects to mobile verify', function () {
+test('existing mobile identifier redirects to password login without sending otp', function () {
     User::factory()->withMobile('09121234567')->create();
 
     submitIdentifier('09121234567')
-        ->assertRedirect(route('auth.mobile.verify'))
-        ->assertSessionHas('status', 'otp-sent')
+        ->assertRedirect(route('login.password'))
         ->assertSessionHas('mobile_otp.mobile', '09121234567');
+
+    $this->assertGuest();
+    expect(OtpCode::query()->where('mobile', '09121234567')->count())->toBe(0);
+});
+
+test('existing mobile identifier is normalized before session store', function () {
+    User::factory()->withMobile('09121234567')->create();
+
+    submitIdentifier('+98 912 123 4567')
+        ->assertRedirect(route('login.password'))
+        ->assertSessionHas('mobile_otp.mobile', '09121234567');
+});
+
+test('send code from session sends otp and redirects to verify when mobile in session', function () {
+    User::factory()->withMobile('09121234567')->create();
+
+    $this->withSession(['mobile_otp.mobile' => '09121234567'])
+        ->post(route('auth.mobile.send-code-from-session'))
+        ->assertRedirect(route('auth.mobile.verify'))
+        ->assertSessionHas('status', 'otp-sent');
 
     $this->assertGuest();
     expect(OtpCode::query()->where('mobile', '09121234567')->count())->toBe(1);
 });
 
-test('existing mobile identifier is normalized before otp send', function () {
-    User::factory()->withMobile('09121234567')->create();
+test('send code from session redirects to mobile create when session mobile is missing', function () {
+    $this->post(route('auth.mobile.send-code-from-session'))
+        ->assertRedirect(route('auth.mobile.create'));
 
-    submitIdentifier('+98 912 123 4567')
-        ->assertRedirect(route('auth.mobile.verify'))
-        ->assertSessionHas('mobile_otp.mobile', '09121234567');
+    expect(OtpCode::query()->count())->toBe(0);
 });
 
 test('new mobile identifier stores pending auth mobile and redirects to registration details', function () {
@@ -177,7 +195,7 @@ test('existing mobile identifier flow allows password login with same mobile', f
     $user = User::factory()->withMobile('09121234567')->create();
 
     submitIdentifier('09121234567')
-        ->assertRedirect(route('auth.mobile.verify'))
+        ->assertRedirect(route('login.password'))
         ->assertSessionHas('mobile_otp.mobile', '09121234567');
 
     $this->get(route('login.password'))
@@ -234,6 +252,10 @@ test('identifier redirect query is preserved through existing mobile otp flow', 
     $this->get(route('login', ['redirect' => $target]));
 
     submitIdentifier('09124445566')
+        ->assertRedirect(route('login.password'))
+        ->assertSessionHas('mobile_otp.mobile', '09124445566');
+
+    $this->post(route('auth.mobile.send-code-from-session'))
         ->assertRedirect(route('auth.mobile.verify'));
 
     $code = OtpTestHelper::extractCodeFromLastSms('09124445566');

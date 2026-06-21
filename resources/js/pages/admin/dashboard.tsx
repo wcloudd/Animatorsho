@@ -14,6 +14,7 @@ import type {
 import { cn } from '@/lib/utils';
 
 const overviewSummaryOrder = [
+    'exercise_submissions_pending',
     'pending_card_to_card',
     'pending_installment',
     'open_support_tickets',

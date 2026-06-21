@@ -52,7 +52,7 @@ export const AUTH_LOGIN_PASSWORD_COPY = {
     rememberLabel: 'مرا به خاطر بسپار',
     forgotPasswordLabel: 'فراموشی رمز عبور',
     submitLabel: 'ورود به حساب',
-    otpLoginLabel: 'ورود با کد یکبارمصرف',
+    otpLoginLabel: 'ارسال کد ورود با پیامک',
 } as const;
 
 export const AUTH_LOGIN_EMAIL_COPY = {

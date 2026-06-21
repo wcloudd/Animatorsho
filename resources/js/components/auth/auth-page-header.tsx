@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react';
+
 type AuthPageHeaderProps = {
     title: string;
-    subtitle?: string;
+    subtitle?: ReactNode;
 };
 
 export function AuthPageHeader({ title, subtitle }: AuthPageHeaderProps) {

@@ -8,6 +8,9 @@ Route::middleware('guest')->prefix('auth/mobile')->name('auth.mobile.')->group(f
     Route::post('/send-code', [MobileAuthController::class, 'sendCode'])
         ->middleware(['login.ip', 'throttle:mobile-otp-send'])
         ->name('send-code');
+    Route::post('/send-code-from-session', [MobileAuthController::class, 'sendCodeFromSession'])
+        ->middleware(['login.ip', 'throttle:mobile-otp-send'])
+        ->name('send-code-from-session');
     Route::post('/resend-code', [MobileAuthController::class, 'resendCode'])
         ->middleware(['login.ip', 'throttle:mobile-otp-send'])
         ->name('resend-code');

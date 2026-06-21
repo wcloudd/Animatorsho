@@ -3,12 +3,14 @@
 namespace App\Services\Admin;
 
 use App\Enums\ConsultationRequestStatus;
+use App\Enums\ExerciseSubmissionStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\SmsMessageStatus;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Enums\SupportTicketStatus;
 use App\Models\ConsultationRequest;
+use App\Models\ExerciseSubmission;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\SecurityEvent;
@@ -118,6 +120,7 @@ class AdminDashboardService
     public function forDashboard(): array
     {
         $actionQueues = $this->nonEmptyQueues([
+            $this->pendingExerciseSubmissionsQueue(),
             $this->pendingCardToCardQueue(),
             $this->pendingInstallmentQueue(),
             $this->newConsultationsQueue(),
@@ -177,6 +180,9 @@ class AdminDashboardService
      */
     private function summaryCards(): array
     {
+        $pendingExerciseSubmissions = ExerciseSubmission::query()
+            ->whereIn('status', [ExerciseSubmissionStatus::Submitted, ExerciseSubmissionStatus::Reviewing])
+            ->count();
         $pendingCardToCard = $this->pendingCardToCardQuery()->count();
         $pendingInstallment = $this->pendingInstallmentQuery()->count();
         $newConsultations = ConsultationRequest::query()
@@ -198,6 +204,12 @@ class AdminDashboardService
         $smsIssues = $this->actionableSmsIssuesQuery()->count();
 
         return [
+            $this->summaryCard(
+                key: 'exercise_submissions_pending',
+                label: 'تمرین نیازمند بررسی',
+                count: $pendingExerciseSubmissions,
+                href: route('admin.exercise-submissions.index', ['status' => ExerciseSubmissionStatus::Submitted->value]),
+            ),
             $this->summaryCard(
                 key: 'pending_card_to_card',
                 label: 'کارت‌به‌کارت در انتظار',
@@ -302,6 +314,63 @@ class AdminDashboardService
             $queues,
             fn (array $queue): bool => $queue['items'] !== [],
         ));
+    }
+
+    /**
+     * @return array{
+     *     key: string,
+     *     title: string,
+     *     viewAllHref: string,
+     *     items: list<array{
+     *         id: int,
+     *         title: string,
+     *         subtitle: string,
+     *         meta: string,
+     *         href: string,
+     *         badge: ?array{label: string, tone: string}
+     *     }>
+     * }
+     */
+    private function pendingExerciseSubmissionsQueue(): array
+    {
+        $items = ExerciseSubmission::query()
+            ->with('user')
+            ->whereIn('status', [ExerciseSubmissionStatus::Submitted, ExerciseSubmissionStatus::Reviewing])
+            ->latest()
+            ->limit(self::ACTION_QUEUE_LIMIT)
+            ->get()
+            ->map(fn (ExerciseSubmission $submission): array => [
+                'id' => $submission->id,
+                'title' => $submission->title,
+                'subtitle' => $submission->user?->name ?? '—',
+                'meta' => match ($submission->status) {
+                    ExerciseSubmissionStatus::Submitted => 'ارسال‌شده',
+                    ExerciseSubmissionStatus::Reviewing => 'در حال بررسی',
+                    default => '—',
+                },
+                'href' => route('admin.exercise-submissions.show', $submission),
+                'badge' => [
+                    'label' => match ($submission->status) {
+                        ExerciseSubmissionStatus::Submitted => 'ارسال‌شده',
+                        ExerciseSubmissionStatus::Reviewing => 'در بررسی',
+                        default => '—',
+                    },
+                    'tone' => match ($submission->status) {
+                        ExerciseSubmissionStatus::Submitted => 'warning',
+                        ExerciseSubmissionStatus::Reviewing => 'neutral',
+                        default => 'neutral',
+                    },
+                ],
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'key' => 'pending_exercise_submissions',
+            'title' => 'تمرین‌های نیازمند بررسی',
+            'viewAllHref' => route('admin.exercise-submissions.index', ['status' => ExerciseSubmissionStatus::Submitted->value]),
+            'items' => $items,
+        ];
     }
 
     /**
