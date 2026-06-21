@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { ChevronLeft, MonitorSmartphone, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type {
@@ -194,15 +195,34 @@ function LicenseKeyCopyField({
 }
 
 const compactAccessLinkClassName =
-    'flex h-9 min-w-0 flex-1 items-center justify-center rounded-pill px-3 text-xs font-bold transition-opacity hover:opacity-95 bg-surface text-purple ring-1 ring-purple/25';
+    'flex w-full items-center gap-3 rounded-2xl bg-surface px-3 py-3 text-start ring-1 ring-purple/20 transition-opacity hover:opacity-95';
 
 function ProfileAccessResourceLink({
-    label,
+    title,
+    subtitle,
     url,
+    icon: Icon,
 }: {
-    label: string;
+    title: string;
+    subtitle: string;
     url: string | null;
+    icon: typeof MonitorSmartphone;
 }) {
+    const content = (
+        <>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-purple-soft text-purple ring-1 ring-purple/15">
+                <Icon className="size-4" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-sm font-bold text-text">{title}</span>
+                <span className="text-[11px] font-medium text-muted">
+                    {subtitle}
+                </span>
+            </span>
+            <ChevronLeft className="size-4 shrink-0 text-muted" aria-hidden />
+        </>
+    );
+
     if (url) {
         return (
             <a
@@ -211,7 +231,7 @@ function ProfileAccessResourceLink({
                 rel="noreferrer"
                 className={compactAccessLinkClassName}
             >
-                {label}
+                {content}
             </a>
         );
     }
@@ -222,7 +242,7 @@ function ProfileAccessResourceLink({
             onClick={showCoursePanelComingSoonToast}
             className={compactAccessLinkClassName}
         >
-            {label}
+            {content}
         </button>
     );
 }
@@ -235,17 +255,20 @@ function ProfileAccessResourceLinks({
     return (
         <div className="flex flex-col gap-2">
             <p className="text-right text-xs font-medium leading-relaxed text-muted">
-                بعد از کپی لایسنس، آموزش نصب اسپات‌پلیر را ببین و وارد گروه
-                دوره شو.
+                بعد از کپی لایسنس، راهنمای نصب را ببین و وارد گروه دوره شو.
             </p>
-            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+            <div className="flex flex-col gap-2">
                 <ProfileAccessResourceLink
-                    label="آموزش نصب اسپات‌پلیر"
+                    title="راهنمای نصب اسپات‌پلیر"
+                    subtitle="آموزش نصب و فعال‌سازی"
                     url={accessLinks.spotplayerInstallGuideUrl}
+                    icon={MonitorSmartphone}
                 />
                 <ProfileAccessResourceLink
-                    label="عضویت در گروه انیماتورشو"
+                    title="گروه انیماتورشو"
+                    subtitle="عضویت در گروه هنرجوها"
                     url={accessLinks.studentGroupUrl}
+                    icon={Users}
                 />
             </div>
         </div>
