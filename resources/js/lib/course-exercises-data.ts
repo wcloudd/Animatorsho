@@ -34,6 +34,7 @@ export type CourseExerciseSubmissionItem = {
     attachments: CourseExerciseAttachment[];
     attachment: CourseExerciseAttachment | null;
     feedbackAttachments: CourseFeedbackAttachment[];
+    awardedXp: number | null;
     adminFeedback: string | null;
     submittedAt: string | null;
     submittedAtLabel: string;

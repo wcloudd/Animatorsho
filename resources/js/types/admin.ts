@@ -396,6 +396,7 @@ export type AdminExerciseSubmissionDetail = {
     attachments: AdminExerciseAttachment[];
     attachment: AdminExerciseAttachment | null;
     feedbackAttachments: AdminExerciseFeedbackAttachment[];
+    awardedXp: number | null;
     adminFeedback: string | null;
     submittedAtLabel: string;
     reviewedAtLabel: string;

@@ -4,6 +4,7 @@ use App\Enums\ExerciseSubmissionStatus;
 use App\Models\ExerciseSubmission;
 use App\Models\ExerciseSubmissionAttachment;
 use App\Models\ExerciseSubmissionFeedbackAttachment;
+use App\Models\StudentXpEvent;
 use App\Models\User;
 use Database\Seeders\AnimatorshoCourseSeeder;
 use Illuminate\Http\UploadedFile;
@@ -514,4 +515,211 @@ test('admin can still download legacy single-column attachment', function () {
     $this->actingAs($admin)
         ->get(route('admin.exercise-submissions.attachment', $submission))
         ->assertOk();
+});
+
+test('admin can approve a submission with 150 XP', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+    $submission = ExerciseSubmission::factory()->forUser($student)->create(['title' => 'تمرین XP']);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'admin_feedback' => 'خوب بود',
+            'xp_award' => 150,
+        ])
+        ->assertRedirect();
+
+    $event = StudentXpEvent::where('source_type', 'exercise_submission')
+        ->where('source_id', $submission->id)
+        ->first();
+
+    expect($event)->not->toBeNull()
+        ->and($event->points)->toBe(150)
+        ->and($event->user_id)->toBe($student->id)
+        ->and($event->awarded_by)->toBe($admin->id);
+});
+
+test('admin can approve a submission with 250 XP', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+    $submission = ExerciseSubmission::factory()->forUser($student)->create(['title' => 'تمرین XP عالی']);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'xp_award' => 250,
+        ])
+        ->assertRedirect();
+
+    $event = StudentXpEvent::where('source_type', 'exercise_submission')
+        ->where('source_id', $submission->id)
+        ->first();
+
+    expect($event)->not->toBeNull()
+        ->and($event->points)->toBe(250);
+});
+
+test('admin can approve with 0 XP and no XP event is created', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+    $submission = ExerciseSubmission::factory()->forUser($student)->create(['title' => 'تمرین بدون XP']);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'xp_award' => 0,
+        ])
+        ->assertRedirect();
+
+    expect(
+        StudentXpEvent::where('source_type', 'exercise_submission')
+            ->where('source_id', $submission->id)
+            ->exists()
+    )->toBeFalse();
+});
+
+test('needs_revision status does not create XP event', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+    $submission = ExerciseSubmission::factory()->forUser($student)->create(['title' => 'تمرین اصلاح']);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::NeedsRevision->value,
+            'xp_award' => 150,
+        ])
+        ->assertRedirect();
+
+    expect(
+        StudentXpEvent::where('source_type', 'exercise_submission')
+            ->where('source_id', $submission->id)
+            ->exists()
+    )->toBeFalse();
+});
+
+test('changing approved to needs_revision removes existing XP event', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین برگشت',
+        'status' => ExerciseSubmissionStatus::Approved,
+    ]);
+
+    StudentXpEvent::create([
+        'user_id' => $student->id,
+        'source_type' => 'exercise_submission',
+        'source_id' => $submission->id,
+        'points' => 150,
+        'awarded_by' => $admin->id,
+        'awarded_at' => now(),
+    ]);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::NeedsRevision->value,
+            'xp_award' => 0,
+        ])
+        ->assertRedirect();
+
+    expect(
+        StudentXpEvent::where('source_type', 'exercise_submission')
+            ->where('source_id', $submission->id)
+            ->exists()
+    )->toBeFalse();
+});
+
+test('approving the same submission twice does not duplicate XP event', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+    $submission = ExerciseSubmission::factory()->forUser($student)->create(['title' => 'تمرین تکراری']);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'xp_award' => 150,
+        ])
+        ->assertRedirect();
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'xp_award' => 150,
+        ])
+        ->assertRedirect();
+
+    expect(
+        StudentXpEvent::where('source_type', 'exercise_submission')
+            ->where('source_id', $submission->id)
+            ->count()
+    )->toBe(1);
+});
+
+test('changing XP for approved submission updates existing event', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+    $submission = ExerciseSubmission::factory()->forUser($student)->create(['title' => 'تمرین ارتقا XP']);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'xp_award' => 150,
+        ])
+        ->assertRedirect();
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'xp_award' => 250,
+        ])
+        ->assertRedirect();
+
+    $events = StudentXpEvent::where('source_type', 'exercise_submission')
+        ->where('source_id', $submission->id)
+        ->get();
+
+    expect($events)->toHaveCount(1)
+        ->and($events->first()->points)->toBe(250);
+});
+
+test('non-admin cannot award XP via review endpoint', function () {
+    $user = User::factory()->create(['is_admin' => false]);
+    $submission = ExerciseSubmission::factory()->create(['title' => 'تمرین غیر ادمین']);
+
+    $this->actingAs($user)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'xp_award' => 150,
+        ])
+        ->assertForbidden();
+
+    expect(
+        StudentXpEvent::where('source_type', 'exercise_submission')
+            ->where('source_id', $submission->id)
+            ->exists()
+    )->toBeFalse();
+});
+
+test('admin show includes awardedXp from existing XP event', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین نمایش XP',
+        'status' => ExerciseSubmissionStatus::Approved,
+    ]);
+
+    StudentXpEvent::create([
+        'user_id' => $student->id,
+        'source_type' => 'exercise_submission',
+        'source_id' => $submission->id,
+        'points' => 250,
+        'awarded_by' => $admin->id,
+        'awarded_at' => now(),
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.exercise-submissions.show', $submission))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('submission.awardedXp', 250));
 });

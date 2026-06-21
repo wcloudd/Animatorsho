@@ -89,11 +89,20 @@ export default function CourseExercises({
                                                     {submission.submittedAtLabel}
                                                 </p>
                                             </div>
-                                            <ProfileStatusBadge
-                                                tone={submission.statusTone}
-                                            >
-                                                {submission.statusLabel}
-                                            </ProfileStatusBadge>
+                                            <div className="flex shrink-0 flex-col items-end gap-1.5">
+                                                <ProfileStatusBadge
+                                                    tone={submission.statusTone}
+                                                >
+                                                    {submission.statusLabel}
+                                                </ProfileStatusBadge>
+                                                {submission.awardedXp != null &&
+                                                submission.awardedXp > 0 ? (
+                                                    <span className="inline-flex items-center rounded-pill bg-gold-soft px-2 py-0.5 text-[11px] font-bold text-gold ring-1 ring-gold/20">
+                                                        +{submission.awardedXp}{' '}
+                                                        XP
+                                                    </span>
+                                                ) : null}
+                                            </div>
                                         </div>
 
                                         {submission.descriptionPreview ? (

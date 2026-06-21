@@ -6,6 +6,7 @@ use App\Models\ExerciseSubmission;
 use App\Models\ExerciseSubmissionAttachment;
 use App\Models\ExerciseSubmissionFeedbackAttachment;
 use App\Models\SpotPlayerLicense;
+use App\Models\StudentXpEvent;
 use App\Models\User;
 use Database\Seeders\AnimatorshoCourseSeeder;
 use Illuminate\Http\UploadedFile;
@@ -451,6 +452,63 @@ test('deleted feedback attachment is not shown to student', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('submissions.0.feedbackAttachments', []));
+});
+
+test('student sees awarded XP on approved submission', function () {
+    [$user] = createActiveStudent();
+    $admin = User::factory()->admin()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($user)->create([
+        'title' => 'تمرین XP هنرجو',
+        'status' => ExerciseSubmissionStatus::Approved,
+    ]);
+
+    StudentXpEvent::create([
+        'user_id' => $user->id,
+        'source_type' => 'exercise_submission',
+        'source_id' => $submission->id,
+        'points' => 150,
+        'awarded_by' => $admin->id,
+        'awarded_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('course.exercises.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('submissions.0.awardedXp', 150));
+});
+
+test('student does not see XP on non-approved submission', function () {
+    [$user] = createActiveStudent();
+
+    ExerciseSubmission::factory()->forUser($user)->create([
+        'title' => 'تمرین در انتظار',
+        'status' => ExerciseSubmissionStatus::NeedsRevision,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('course.exercises.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('submissions.0.awardedXp', null));
+});
+
+test('course home props include total XP for user', function () {
+    [$user] = createActiveStudent();
+    $admin = User::factory()->admin()->create();
+
+    $first = ExerciseSubmission::factory()->forUser($user)->create(['title' => 'تمرین اول', 'status' => ExerciseSubmissionStatus::Approved]);
+    $second = ExerciseSubmission::factory()->forUser($user)->create(['title' => 'تمرین دوم', 'status' => ExerciseSubmissionStatus::Approved]);
+
+    StudentXpEvent::create(['user_id' => $user->id, 'source_type' => 'exercise_submission', 'source_id' => $first->id, 'points' => 150, 'awarded_by' => $admin->id, 'awarded_at' => now()]);
+    StudentXpEvent::create(['user_id' => $user->id, 'source_type' => 'exercise_submission', 'source_id' => $second->id, 'points' => 250, 'awarded_by' => $admin->id, 'awarded_at' => now()]);
+
+    $this->actingAs($user)
+        ->get(route('course.home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('progress.totalXp', 400));
 });
 
 test('rich story text is stored and displayed safely', function () {

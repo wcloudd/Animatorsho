@@ -21,6 +21,7 @@ class UpdateAdminExerciseSubmissionRequest extends FormRequest
         return [
             'status' => ['required', 'string', Rule::enum(ExerciseSubmissionStatus::class)],
             'admin_feedback' => ['nullable', 'string', 'max:5000'],
+            'xp_award' => ['nullable', 'integer', Rule::in([0, 150, 250])],
         ];
     }
 
@@ -32,6 +33,7 @@ class UpdateAdminExerciseSubmissionRequest extends FormRequest
         return [
             'status' => 'وضعیت',
             'admin_feedback' => 'بازخورد استاد',
+            'xp_award' => 'امتیاز XP',
         ];
     }
 }

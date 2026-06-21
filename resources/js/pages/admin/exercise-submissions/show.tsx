@@ -47,6 +47,7 @@ export default function AdminExerciseSubmissionShow({
     const { data, setData, patch, processing, errors } = useForm({
         status: submission.statusValue,
         admin_feedback: submission.adminFeedback ?? '',
+        xp_award: submission.awardedXp ?? 0,
     });
 
     const feedbackFileInputRef = useRef<HTMLInputElement>(null);
@@ -493,6 +494,33 @@ export default function AdminExerciseSubmissionShow({
                         </SelectContent>
                     </Select>
                     <InputError message={errors.status} />
+                </div>
+
+                <div className="grid gap-2">
+                    <Label>امتیاز XP</Label>
+                    <div
+                        className={cn(
+                            'flex flex-wrap gap-2',
+                            data.status !== 'approved' && 'pointer-events-none opacity-40',
+                        )}
+                    >
+                        {([0, 150, 250] as const).map((xp) => (
+                            <button
+                                key={xp}
+                                type="button"
+                                onClick={() => setData('xp_award', xp)}
+                                className={cn(
+                                    'rounded-lg border px-3 py-1.5 text-sm font-bold transition-colors',
+                                    data.xp_award === xp
+                                        ? 'border-purple bg-purple text-white'
+                                        : 'border-border bg-bg text-muted hover:border-purple/50',
+                                )}
+                            >
+                                {xp === 0 ? 'بدون امتیاز' : xp === 150 ? `خوب — ${xp} XP` : `عالی — ${xp} XP`}
+                            </button>
+                        ))}
+                    </div>
+                    <InputError message={errors.xp_award} />
                 </div>
 
                 <div className="grid gap-2">

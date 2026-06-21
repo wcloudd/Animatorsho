@@ -52,6 +52,7 @@ class ExerciseSubmissionController extends Controller
         $this->submissions->review($exerciseSubmission, $request->user(), [
             'status' => ExerciseSubmissionStatus::from($validated['status']),
             'admin_feedback' => $validated['admin_feedback'] ?? null,
+            'xp_award' => isset($validated['xp_award']) ? (int) $validated['xp_award'] : 0,
         ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'بررسی تمرین ذخیره شد.']);

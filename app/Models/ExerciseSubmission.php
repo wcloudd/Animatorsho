@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'user_id',
@@ -121,5 +122,14 @@ class ExerciseSubmission extends Model
     public function activeFeedbackAttachments(): HasMany
     {
         return $this->feedbackAttachments()->whereNull('deleted_at');
+    }
+
+    /**
+     * @return HasOne<StudentXpEvent, $this>
+     */
+    public function xpEvent(): HasOne
+    {
+        return $this->hasOne(StudentXpEvent::class, 'source_id')
+            ->where('source_type', 'exercise_submission');
     }
 }

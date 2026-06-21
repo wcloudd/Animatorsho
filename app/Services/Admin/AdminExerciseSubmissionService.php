@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Course\ExerciseSubmissionAttachmentStorageService;
 use App\Services\Course\ExerciseSubmissionFeedbackStorageService;
 use App\Services\Course\ExerciseSubmissionPresentation;
+use App\Services\StudentXpService;
 use App\Support\ExerciseSubmissionStatusLabels;
 use App\Support\JalaliDateFormatter;
 use App\Support\SafeStoryTextFormatter;
@@ -18,11 +19,12 @@ class AdminExerciseSubmissionService
     public function __construct(
         private readonly ExerciseSubmissionAttachmentStorageService $attachments,
         private readonly ExerciseSubmissionFeedbackStorageService $feedbackAttachments,
+        private readonly StudentXpService $xpService,
     ) {}
 
     public function showForAdmin(ExerciseSubmission $submission): array
     {
-        $submission->loadMissing(['user', 'reviewer', 'attachments', 'feedbackAttachments']);
+        $submission->loadMissing(['user', 'reviewer', 'attachments', 'feedbackAttachments', 'xpEvent']);
 
         $publicLink = ExerciseSubmissionPresentation::publicSubmissionLink(
             $submission->submission_url,
@@ -79,6 +81,7 @@ class AdminExerciseSubmissionService
                 'attachments' => $attachments,
                 'attachment' => $legacyAttachment,
                 'feedbackAttachments' => $feedbackAttachments,
+                'awardedXp' => $submission->xpEvent?->points,
                 'adminFeedback' => $submission->admin_feedback,
                 'submittedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->created_at),
                 'reviewedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->reviewed_at),
@@ -92,7 +95,8 @@ class AdminExerciseSubmissionService
     /**
      * @param  array{
      *     status: ExerciseSubmissionStatus,
-     *     admin_feedback?: ?string
+     *     admin_feedback?: ?string,
+     *     xp_award?: int|null
      * }  $data
      */
     public function review(ExerciseSubmission $submission, User $admin, array $data): ExerciseSubmission
@@ -104,7 +108,11 @@ class AdminExerciseSubmissionService
             'reviewed_at' => now(),
         ]);
 
-        return $submission->fresh();
+        $fresh = $submission->fresh();
+
+        $this->xpService->awardForSubmission($fresh, $admin, (int) ($data['xp_award'] ?? 0));
+
+        return $fresh;
     }
 
     public function deleteAttachment(ExerciseSubmission $submission, User $admin): ExerciseSubmission

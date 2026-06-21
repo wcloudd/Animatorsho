@@ -5,6 +5,7 @@ namespace App\Services\Course;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\User;
 use App\Services\AnimatorshoCatalogService;
+use App\Services\StudentXpService;
 use App\Support\StudentPanel\StudentPanelMedia;
 use Illuminate\Support\Collection;
 
@@ -18,6 +19,7 @@ class CourseAccessService
         private readonly CourseUpdateQueryService $courseUpdates,
         private readonly CourseResourceQueryService $courseResources,
         private readonly ExerciseSubmissionQueryService $exerciseSubmissions,
+        private readonly StudentXpService $xpService,
     ) {}
 
     public function userHasActiveAccess(User $user): bool
@@ -147,7 +149,7 @@ class CourseAccessService
             ],
             'progress' => [
                 'level' => 1,
-                'totalXp' => 0,
+                'totalXp' => $this->xpService->totalXpForUser($user),
                 'progressPercent' => 0,
                 'xpToNextLevel' => 500,
             ],

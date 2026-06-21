@@ -2,6 +2,7 @@
 
 namespace App\Services\Course;
 
+use App\Enums\ExerciseSubmissionStatus;
 use App\Models\ExerciseSubmission;
 use App\Models\User;
 use App\Support\ExerciseSubmissionStatusLabels;
@@ -62,7 +63,7 @@ class ExerciseSubmissionQueryService
     public function indexForUser(User $user): array
     {
         $submissions = ExerciseSubmission::query()
-            ->with(['attachments', 'feedbackAttachments'])
+            ->with(['attachments', 'feedbackAttachments', 'xpEvent'])
             ->where('user_id', $user->id)
             ->latest()
             ->get()
@@ -195,6 +196,9 @@ class ExerciseSubmissionQueryService
             'attachments' => $attachments,
             'attachment' => $legacyAttachment,
             'feedbackAttachments' => $feedbackAttachments,
+            'awardedXp' => $submission->status === ExerciseSubmissionStatus::Approved
+                ? ($submission->xpEvent?->points)
+                : null,
             'adminFeedback' => $submission->admin_feedback,
             'submittedAt' => $submission->created_at?->toIso8601String(),
             'submittedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->created_at),
