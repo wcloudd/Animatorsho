@@ -7,7 +7,7 @@ type AuthPageHeaderProps = {
 
 export function AuthPageHeader({ title, subtitle }: AuthPageHeaderProps) {
     return (
-        <header className="flex w-full flex-row flex-wrap items-center justify-center gap-2 text-center">
+        <header className="flex w-full flex-col flex-nowrap items-center justify-center gap-2 text-center">
             <h1 className="font-display text-[1.35rem] font-bold leading-snug text-text">
                 {title}
             </h1>
