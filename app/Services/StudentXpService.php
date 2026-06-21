@@ -46,4 +46,34 @@ class StudentXpService
     {
         return (int) StudentXpEvent::where('user_id', $user->id)->sum('points');
     }
+
+    /**
+     * @return array{
+     *     totalXp: int,
+     *     level: int,
+     *     currentLevelXp: int,
+     *     xpPerLevel: int,
+     *     xpToNextLevel: int,
+     *     progressPercent: int
+     * }
+     */
+    public function levelProgressForUser(User $user): array
+    {
+        $totalXp = $this->totalXpForUser($user);
+        $xpPerLevel = 500;
+
+        $level = (int) floor($totalXp / $xpPerLevel) + 1;
+        $currentLevelXp = $totalXp % $xpPerLevel;
+        $xpToNextLevel = $xpPerLevel - $currentLevelXp;
+        $progressPercent = (int) floor(($currentLevelXp / $xpPerLevel) * 100);
+
+        return [
+            'totalXp' => $totalXp,
+            'level' => $level,
+            'currentLevelXp' => $currentLevelXp,
+            'xpPerLevel' => $xpPerLevel,
+            'xpToNextLevel' => $xpToNextLevel,
+            'progressPercent' => $progressPercent,
+        ];
+    }
 }

@@ -508,7 +508,12 @@ test('course home props include total XP for user', function () {
         ->get(route('course.home'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('progress.totalXp', 400));
+            ->where('progress.totalXp', 400)
+            ->where('progress.level', 1)
+            ->where('progress.currentLevelXp', 400)
+            ->where('progress.xpPerLevel', 500)
+            ->where('progress.xpToNextLevel', 100)
+            ->where('progress.progressPercent', 80));
 });
 
 test('rich story text is stored and displayed safely', function () {

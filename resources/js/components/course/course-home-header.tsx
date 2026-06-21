@@ -56,8 +56,8 @@ export function CourseHomeHeader({
                             سطح {progress.level}
                         </span>
                         <span className="text-[11px] font-medium text-muted">
-                            {progress.totalXp} XP · {progress.xpToNextLevel} XP
-                            تا سطح بعد
+                            {progress.currentLevelXp} از {progress.xpPerLevel} XP
+                            تا سطح بعدی
                         </span>
                     </div>
                     <div
@@ -69,12 +69,13 @@ export function CourseHomeHeader({
                         aria-label="پیشرفت تا سطح بعد"
                     >
                         <div
-                            className={cn(
-                                'h-full rounded-pill bg-gradient-to-l from-gold to-purple transition-all',
-                            )}
+                            className="h-full rounded-pill bg-gradient-to-l from-gold to-purple transition-all"
                             style={{ width: `${progress.progressPercent}%` }}
                         />
                     </div>
+                    <p className="text-[11px] font-medium text-muted/70">
+                        مجموع XP: {progress.totalXp}
+                    </p>
                 </div>
             </div>
         </header>

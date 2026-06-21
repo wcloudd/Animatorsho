@@ -39,7 +39,7 @@ class CourseAccessService
     /**
      * @return array{
      *     welcome: array{displayName: string, firstName: string},
-     *     progress: array{level: int, totalXp: int, progressPercent: int, xpToNextLevel: int},
+     *     progress: array{totalXp: int, level: int, currentLevelXp: int, xpPerLevel: int, xpToNextLevel: int, progressPercent: int},
      *     onboarding: array{
      *         title: string,
      *         heading: string,
@@ -147,12 +147,7 @@ class CourseAccessService
                 'displayName' => $user->name,
                 'firstName' => $this->firstNameFromDisplayName($user->name),
             ],
-            'progress' => [
-                'level' => 1,
-                'totalXp' => $this->xpService->totalXpForUser($user),
-                'progressPercent' => 0,
-                'xpToNextLevel' => 500,
-            ],
+            'progress' => $this->xpService->levelProgressForUser($user),
             'onboarding' => StudentPanelMedia::resolvedOnboarding(),
             'preview' => [
                 'updates' => $this->courseUpdates->latestPublishedForHome(),

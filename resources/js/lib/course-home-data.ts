@@ -4,10 +4,12 @@ export type CourseHomeWelcome = {
 };
 
 export type CourseHomeProgress = {
-    level: number;
     totalXp: number;
-    progressPercent: number;
+    level: number;
+    currentLevelXp: number;
+    xpPerLevel: number;
     xpToNextLevel: number;
+    progressPercent: number;
 };
 
 export type CourseHomeOnboarding = {
