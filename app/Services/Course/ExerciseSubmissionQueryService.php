@@ -27,6 +27,18 @@ class ExerciseSubmissionQueryService
      *         statusTone: string,
      *         submissionLink: ?string,
      *         submissionLinkLabel: ?string,
+     *         attachments: list<array{
+     *             id: int|null,
+     *             originalName: string,
+     *             sizeBytes: int,
+     *             sizeLabel: string,
+     *             mimeType: string,
+     *             extension: string,
+     *             downloadUrl: string,
+     *             deleteUrl: string|null,
+     *             isDeleted: bool,
+     *             isLegacy: bool
+     *         }>,
      *         attachment: ?array{
      *             originalName: string,
      *             sizeBytes: int,
@@ -48,6 +60,7 @@ class ExerciseSubmissionQueryService
     public function indexForUser(User $user): array
     {
         $submissions = ExerciseSubmission::query()
+            ->with('attachments')
             ->where('user_id', $user->id)
             ->latest()
             ->get()
@@ -112,6 +125,18 @@ class ExerciseSubmissionQueryService
      *     statusTone: string,
      *     submissionLink: ?string,
      *     submissionLinkLabel: ?string,
+     *     attachments: list<array{
+     *         id: int|null,
+     *         originalName: string,
+     *         sizeBytes: int,
+     *         sizeLabel: string,
+     *         mimeType: string,
+     *         extension: string,
+     *         downloadUrl: string,
+     *         deleteUrl: string|null,
+     *         isDeleted: bool,
+     *         isLegacy: bool
+     *     }>,
      *     attachment: ?array{
      *         originalName: string,
      *         sizeBytes: int,
@@ -130,7 +155,12 @@ class ExerciseSubmissionQueryService
      */
     public function toListItem(ExerciseSubmission $submission): array
     {
-        $attachment = $this->attachments->toAttachmentArray(
+        $attachments = $this->attachments->attachmentsForPresentation(
+            $submission,
+            'course.exercises.attachments.download',
+        );
+
+        $legacyAttachment = $this->attachments->toAttachmentArray(
             $submission,
             $submission->hasActiveAttachment()
                 ? route('course.exercises.attachment', $submission)
@@ -155,7 +185,8 @@ class ExerciseSubmissionQueryService
                 $submission->file_path,
                 $submission->hasActiveAttachment(),
             ),
-            'attachment' => $attachment,
+            'attachments' => $attachments,
+            'attachment' => $legacyAttachment,
             'adminFeedback' => $submission->admin_feedback,
             'submittedAt' => $submission->created_at?->toIso8601String(),
             'submittedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->created_at),

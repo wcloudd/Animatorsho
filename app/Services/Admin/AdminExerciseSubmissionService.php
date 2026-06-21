@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Enums\ExerciseSubmissionStatus;
 use App\Models\ExerciseSubmission;
+use App\Models\ExerciseSubmissionAttachment;
 use App\Models\User;
 use App\Services\Course\ExerciseSubmissionAttachmentStorageService;
 use App\Services\Course\ExerciseSubmissionPresentation;
@@ -32,6 +33,18 @@ class AdminExerciseSubmissionService
      *         submissionLink: ?string,
      *         submissionLinkLabel: ?string,
      *         filePathNote: ?string,
+     *         attachments: list<array{
+     *             id: int|null,
+     *             originalName: string,
+     *             sizeBytes: int,
+     *             sizeLabel: string,
+     *             mimeType: string,
+     *             extension: string,
+     *             downloadUrl: string,
+     *             deleteUrl: string|null,
+     *             isDeleted: bool,
+     *             isLegacy: bool
+     *         }>,
      *         attachment: ?array{
      *             originalName: string,
      *             sizeBytes: int,
@@ -51,7 +64,7 @@ class AdminExerciseSubmissionService
      */
     public function showForAdmin(ExerciseSubmission $submission): array
     {
-        $submission->loadMissing(['user', 'reviewer']);
+        $submission->loadMissing(['user', 'reviewer', 'attachments']);
 
         $publicLink = ExerciseSubmissionPresentation::publicSubmissionLink(
             $submission->submission_url,
@@ -67,7 +80,14 @@ class AdminExerciseSubmissionService
             $filePathNote = 'فایل با مسیر داخلی ثبت شده است.';
         }
 
-        $attachment = $this->attachments->toAttachmentArray(
+        $attachments = $this->attachments->attachmentsForPresentation(
+            $submission,
+            'course.exercises.attachments.download',
+            'admin.exercise-submissions.attachments.download',
+            'admin.exercise-submissions.attachments.destroy',
+        );
+
+        $legacyAttachment = $this->attachments->toAttachmentArray(
             $submission,
             $submission->hasActiveAttachment()
                 ? route('admin.exercise-submissions.attachment', $submission)
@@ -92,7 +112,8 @@ class AdminExerciseSubmissionService
                     $submission->hasActiveAttachment(),
                 ),
                 'filePathNote' => $filePathNote,
-                'attachment' => $attachment,
+                'attachments' => $attachments,
+                'attachment' => $legacyAttachment,
                 'adminFeedback' => $submission->admin_feedback,
                 'submittedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->created_at),
                 'reviewedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->reviewed_at),
@@ -126,8 +147,24 @@ class AdminExerciseSubmissionService
             return $submission;
         }
 
-        $this->attachments->markDeleted($submission, $admin);
+        if ($submission->attachment_path !== null && $submission->attachment_deleted_at === null) {
+            $this->attachments->markDeleted($submission, $admin);
+
+            return $submission->fresh();
+        }
 
         return $submission->fresh();
+    }
+
+    public function deleteAttachmentRecord(
+        ExerciseSubmission $submission,
+        ExerciseSubmissionAttachment $attachment,
+        User $admin,
+    ): ExerciseSubmissionAttachment {
+        if ($attachment->exercise_submission_id !== $submission->id) {
+            abort(404);
+        }
+
+        return $this->attachments->markAttachmentDeleted($attachment, $admin);
     }
 }

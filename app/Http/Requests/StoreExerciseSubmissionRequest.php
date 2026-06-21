@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 
 class StoreExerciseSubmissionRequest extends FormRequest
 {
@@ -18,36 +17,21 @@ class StoreExerciseSubmissionRequest extends FormRequest
     public function rules(): array
     {
         $allowedExtensions = config('exercise_submissions.attachment_extensions', []);
+        $maxAttachments = (int) config('exercise_submissions.max_attachments_per_submission', 3);
+        $maxKb = (int) config('exercise_submissions.attachment_max_kb', 5120);
 
         return [
             'title' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:5000'],
             'submission_url' => ['nullable', 'url', 'max:500'],
             'file_path' => ['nullable', 'string', 'max:500', 'not_regex:/^[A-Za-z]:\\\\/'],
-            'attachment' => [
-                'nullable',
+            'attachments' => ['required', 'array', 'min:1', 'max:'.$maxAttachments],
+            'attachments.*' => [
+                'required',
                 'file',
-                'max:'.(int) config('exercise_submissions.attachment_max_kb', 5120),
+                'max:'.$maxKb,
                 'mimes:'.implode(',', $allowedExtensions),
             ],
-        ];
-    }
-
-    public function after(): array
-    {
-        return [
-            function (Validator $validator): void {
-                $submissionUrl = trim((string) $this->input('submission_url', ''));
-                $filePath = trim((string) $this->input('file_path', ''));
-                $hasUploadedFile = $this->file('attachment') !== null;
-
-                if ($submissionUrl === '' && $filePath === '' && ! $hasUploadedFile) {
-                    $validator->errors()->add(
-                        'submission_url',
-                        'حداقل یکی از لینک تمرین، فایل آپلودی یا مسیر فایل را وارد کن.',
-                    );
-                }
-            },
         ];
     }
 
@@ -61,7 +45,8 @@ class StoreExerciseSubmissionRequest extends FormRequest
             'description' => 'توضیح تمرین / متن داستان',
             'submission_url' => 'لینک تمرین',
             'file_path' => 'مسیر فایل',
-            'attachment' => 'فایل تمرین',
+            'attachments' => 'فایل تمرین',
+            'attachments.*' => 'فایل تمرین',
         ];
     }
 }

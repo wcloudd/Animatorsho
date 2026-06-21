@@ -18,21 +18,17 @@ import {
 export default function CourseExercisesCreate({
     storeUrl,
     indexUrl,
-    maxAttachmentKb,
+    maxAttachments,
 }: CourseExercisesCreatePageProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const { data, setData, post, processing, errors } = useForm<{
         title: string;
         description: string;
-        submission_url: string;
-        file_path: string;
-        attachment: File | null;
+        attachments: File[];
     }>({
         title: '',
         description: '',
-        submission_url: '',
-        file_path: '',
-        attachment: null,
+        attachments: [],
     });
     const { field: honeypotField, withHoneypot } = useHoneypotField();
 
@@ -67,7 +63,7 @@ export default function CourseExercisesCreate({
                             ارسال تمرین جدید
                         </h1>
                         <p className="max-w-[320px] text-sm font-medium leading-relaxed text-muted">
-                            لینک ویدئو، فایل تمرین یا متن داستان را ارسال کن
+                            فایل تمرین و در صورت نیاز متن داستان را ارسال کن
                         </p>
                     </header>
 
@@ -106,71 +102,32 @@ export default function CourseExercisesCreate({
 
                         <div className="grid gap-2">
                             <Label
-                                htmlFor="exercise-submission-url"
+                                htmlFor="exercise-attachments"
                                 className={userLabelClassName}
                             >
-                                لینک تمرین
+                                فایل تمرین
                             </Label>
                             <Input
-                                id="exercise-submission-url"
-                                name="submission_url"
-                                type="url"
-                                dir="ltr"
-                                placeholder="https://"
-                                value={data.submission_url}
-                                onChange={(event) =>
-                                    setData('submission_url', event.target.value)
-                                }
-                                className={userFieldClassName}
-                            />
-                            <InputError message={errors.submission_url} />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label
-                                htmlFor="exercise-attachment"
-                                className={userLabelClassName}
-                            >
-                                فایل تمرین (اختیاری)
-                            </Label>
-                            <Input
-                                id="exercise-attachment"
-                                name="attachment"
+                                id="exercise-attachments"
+                                name="attachments[]"
                                 type="file"
+                                multiple
+                                required
                                 onChange={(event) =>
                                     setData(
-                                        'attachment',
-                                        event.target.files?.[0] ?? null,
+                                        'attachments',
+                                        event.target.files
+                                            ? Array.from(event.target.files)
+                                            : [],
                                     )
                                 }
                                 className={userFieldClassName}
                             />
                             <p className="text-xs font-medium text-muted">
-                                حداکثر حجم فایل ۵ مگابایت است.
+                                حداکثر {maxAttachments} فایل، هر فایل تا ۵
+                                مگابایت
                             </p>
-                            <InputError message={errors.attachment} />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label
-                                htmlFor="exercise-file-path"
-                                className={userLabelClassName}
-                            >
-                                مسیر فایل عمومی (اختیاری)
-                            </Label>
-                            <Input
-                                id="exercise-file-path"
-                                name="file_path"
-                                type="text"
-                                dir="ltr"
-                                placeholder="https:// یا مسیر عمومی"
-                                value={data.file_path}
-                                onChange={(event) =>
-                                    setData('file_path', event.target.value)
-                                }
-                                className={userFieldClassName}
-                            />
-                            <InputError message={errors.file_path} />
+                            <InputError message={errors.attachments} />
                         </div>
 
                         <button

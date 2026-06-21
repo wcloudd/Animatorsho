@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExerciseSubmissionRequest;
 use App\Models\ExerciseSubmission;
+use App\Models\ExerciseSubmissionAttachment;
 use App\Services\Course\CourseAccessService;
 use App\Services\Course\ExerciseSubmissionAttachmentStorageService;
 use App\Services\Course\ExerciseSubmissionQueryService;
@@ -48,6 +49,7 @@ class CourseExercisesController extends Controller
             'storeUrl' => route('course.exercises.store'),
             'indexUrl' => route('course.exercises.index'),
             'maxAttachmentKb' => (int) config('exercise_submissions.attachment_max_kb', 5120),
+            'maxAttachments' => (int) config('exercise_submissions.max_attachments_per_submission', 3),
         ]);
     }
 
@@ -70,18 +72,44 @@ class CourseExercisesController extends Controller
                 'description' => $validated['description'] ?? null,
                 'submission_url' => $validated['submission_url'] ?? null,
                 'file_path' => $validated['file_path'] ?? null,
-                'attachment' => $request->file('attachment'),
+                'attachments' => $request->file('attachments', []),
             ]);
         } catch (InvalidArgumentException $exception) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->withErrors(['attachment' => $exception->getMessage()]);
+                ->withErrors(['attachments' => $exception->getMessage()]);
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'تمرین با موفقیت ارسال شد.']);
 
         return redirect()->route('course.exercises.index');
+    }
+
+    public function downloadAttachment(
+        CourseAccessService $courseAccess,
+        ExerciseSubmission $exerciseSubmission,
+        ExerciseSubmissionAttachment $attachment,
+    ): StreamedResponse|RedirectResponse {
+        $user = auth()->user();
+
+        if ($user === null || ! $courseAccess->userHasActiveAccess($user)) {
+            return $this->redirectWithoutAccess();
+        }
+
+        if ($exerciseSubmission->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if ($attachment->exercise_submission_id !== $exerciseSubmission->id) {
+            abort(404);
+        }
+
+        if (! $attachment->isActive()) {
+            abort(404);
+        }
+
+        return $this->attachments->downloadResponseForAttachment($attachment);
     }
 
     public function attachment(
@@ -98,7 +126,7 @@ class CourseExercisesController extends Controller
             abort(403);
         }
 
-        if (! $exerciseSubmission->hasActiveAttachment()) {
+        if ($this->attachments->validatedLegacyPath($exerciseSubmission) === null) {
             abort(404);
         }
 

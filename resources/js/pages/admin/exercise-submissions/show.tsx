@@ -136,7 +136,99 @@ export default function AdminExerciseSubmissionShow({
                     )}
                 </div>
 
-                {submission.attachment ? (
+                {submission.attachments.length > 0 ? (
+                    <div className="flex flex-col gap-3 rounded-2xl border border-[#e8e0f0] bg-bg p-4">
+                        <AdminSectionTitle className="mb-0">
+                            فایل‌های آپلودی
+                        </AdminSectionTitle>
+
+                        <ul className="flex flex-col gap-3">
+                            {submission.attachments.map((attachment) => (
+                                <li
+                                    key={
+                                        attachment.id ??
+                                        `legacy-${attachment.originalName}`
+                                    }
+                                    className="flex flex-col gap-3 rounded-xl border border-[#e8e0f0] bg-surface p-3"
+                                >
+                                    {attachment.isDeleted ? (
+                                        <p className="text-sm font-medium text-muted">
+                                            {attachment.originalName} — فایل
+                                            حذف شده است
+                                        </p>
+                                    ) : (
+                                        <>
+                                            <AdminInfoGrid>
+                                                <AdminDetailRow
+                                                    label="نام فایل"
+                                                    value={
+                                                        attachment.originalName
+                                                    }
+                                                />
+                                                <AdminDetailRow
+                                                    label="حجم"
+                                                    value={
+                                                        attachment.sizeLabel
+                                                    }
+                                                />
+                                                <AdminDetailRow
+                                                    label="نوع"
+                                                    value={
+                                                        attachment.mimeType
+                                                    }
+                                                />
+                                                <AdminDetailRow
+                                                    label="پسوند"
+                                                    value={
+                                                        attachment.extension
+                                                    }
+                                                />
+                                            </AdminInfoGrid>
+
+                                            <AdminActionRow>
+                                                <AdminButton
+                                                    asChild
+                                                    size="sm"
+                                                    adminVariant="outline"
+                                                >
+                                                    <a
+                                                        href={
+                                                            attachment.downloadUrl
+                                                        }
+                                                    >
+                                                        دانلود فایل
+                                                    </a>
+                                                </AdminButton>
+                                                {attachment.deleteUrl ? (
+                                                    <AdminConfirmAction
+                                                        actionKey={
+                                                            attachment.id ??
+                                                            attachment.originalName
+                                                        }
+                                                        activeKey={confirmKey}
+                                                        onActivate={
+                                                            setConfirmKey
+                                                        }
+                                                        onCancel={() =>
+                                                            setConfirmKey(null)
+                                                        }
+                                                        triggerLabel="حذف فایل"
+                                                        confirmLabel="تأیید حذف"
+                                                        message="فایل از فضای ذخیره‌سازی حذف می‌شود اما رکورد تمرین باقی می‌ماند."
+                                                        href={
+                                                            attachment.deleteUrl
+                                                        }
+                                                        method="delete"
+                                                    />
+                                                ) : null}
+                                            </AdminActionRow>
+                                        </>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ) : submission.attachment ? (
                     <div className="flex flex-col gap-3 rounded-2xl border border-[#e8e0f0] bg-bg p-4">
                         <AdminSectionTitle className="mb-0">
                             فایل آپلودی
@@ -151,7 +243,9 @@ export default function AdminExerciseSubmissionShow({
                                 <AdminInfoGrid>
                                     <AdminDetailRow
                                         label="نام فایل"
-                                        value={submission.attachment.originalName}
+                                        value={
+                                            submission.attachment.originalName
+                                        }
                                     />
                                     <AdminDetailRow
                                         label="حجم"
@@ -168,8 +262,17 @@ export default function AdminExerciseSubmissionShow({
                                 </AdminInfoGrid>
 
                                 <AdminActionRow>
-                                    <AdminButton asChild size="sm" adminVariant="outline">
-                                        <a href={submission.attachment.downloadUrl}>
+                                    <AdminButton
+                                        asChild
+                                        size="sm"
+                                        adminVariant="outline"
+                                    >
+                                        <a
+                                            href={
+                                                submission.attachment
+                                                    .downloadUrl
+                                            }
+                                        >
                                             دانلود فایل
                                         </a>
                                     </AdminButton>

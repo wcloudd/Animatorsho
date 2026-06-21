@@ -26,7 +26,7 @@ export default function AdminExerciseAttachmentsIndex({
     summary,
     attachments,
 }: PageProps) {
-    const [confirmId, setConfirmId] = useState<number | null>(null);
+    const [confirmId, setConfirmId] = useState<number | string | null>(null);
 
     return (
         <>

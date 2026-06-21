@@ -6,6 +6,7 @@ use App\Enums\ExerciseSubmissionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateAdminExerciseSubmissionRequest;
 use App\Models\ExerciseSubmission;
+use App\Models\ExerciseSubmissionAttachment;
 use App\Services\Admin\AdminExerciseSubmissionListService;
 use App\Services\Admin\AdminExerciseSubmissionService;
 use App\Services\Course\ExerciseSubmissionAttachmentStorageService;
@@ -58,9 +59,39 @@ class ExerciseSubmissionController extends Controller
         return redirect()->back();
     }
 
+    public function downloadAttachment(
+        ExerciseSubmission $exerciseSubmission,
+        ExerciseSubmissionAttachment $attachment,
+    ): StreamedResponse {
+        if ($attachment->exercise_submission_id !== $exerciseSubmission->id) {
+            abort(404);
+        }
+
+        if (! $attachment->isActive()) {
+            abort(404);
+        }
+
+        return $this->attachments->downloadResponseForAttachment($attachment);
+    }
+
+    public function destroyAttachmentRecord(
+        ExerciseSubmission $exerciseSubmission,
+        ExerciseSubmissionAttachment $attachment,
+    ): RedirectResponse {
+        $this->submissions->deleteAttachmentRecord(
+            $exerciseSubmission,
+            $attachment,
+            auth()->user(),
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'فایل تمرین حذف شد.']);
+
+        return redirect()->back();
+    }
+
     public function attachment(ExerciseSubmission $exerciseSubmission): StreamedResponse
     {
-        if (! $exerciseSubmission->hasActiveAttachment()) {
+        if ($this->attachments->validatedLegacyPath($exerciseSubmission) === null) {
             abort(404);
         }
 

@@ -1,13 +1,16 @@
 import type { ProfileStatusTone } from '@/lib/profile-data';
 
 export type CourseExerciseAttachment = {
+    id: number | null;
     originalName: string;
     sizeBytes: number;
     sizeLabel: string;
     mimeType: string;
     extension: string;
     downloadUrl: string;
+    deleteUrl: string | null;
     isDeleted: boolean;
+    isLegacy: boolean;
 };
 
 export type CourseExerciseSubmissionItem = {
@@ -21,6 +24,7 @@ export type CourseExerciseSubmissionItem = {
     statusTone: ProfileStatusTone;
     submissionLink: string | null;
     submissionLinkLabel: string | null;
+    attachments: CourseExerciseAttachment[];
     attachment: CourseExerciseAttachment | null;
     adminFeedback: string | null;
     submittedAt: string | null;
@@ -38,4 +42,5 @@ export type CourseExercisesCreatePageProps = {
     storeUrl: string;
     indexUrl: string;
     maxAttachmentKb: number;
+    maxAttachments: number;
 };

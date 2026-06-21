@@ -2,6 +2,7 @@
 
 use App\Enums\ExerciseSubmissionStatus;
 use App\Models\ExerciseSubmission;
+use App\Models\ExerciseSubmissionAttachment;
 use App\Models\User;
 use Database\Seeders\AnimatorshoCourseSeeder;
 use Illuminate\Support\Facades\Storage;
@@ -91,6 +92,35 @@ test('admin can view exercise submission detail', function () {
             ->where('submission.submissionLink', 'https://example.com/detail'));
 });
 
+test('admin submission show lists all attachments', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'چند فایلی',
+    ]);
+
+    $first = ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'a.png',
+        'path' => 'exercise-submissions/'.$student->id.'/'.$submission->id.'/a.png',
+    ]);
+    Storage::disk('local')->put($first->path, 'png-a');
+
+    $second = ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'b.pdf',
+        'path' => 'exercise-submissions/'.$student->id.'/'.$submission->id.'/b.pdf',
+    ]);
+    Storage::disk('local')->put($second->path, 'pdf-b');
+
+    $this->actingAs($admin)
+        ->get(route('admin.exercise-submissions.show', $submission))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('submission.attachments', 2)
+            ->where('submission.attachments.0.originalName', 'a.png')
+            ->where('submission.attachments.1.originalName', 'b.pdf'));
+});
+
 test('admin can review and update status and feedback', function () {
     $admin = User::factory()->admin()->create();
     $student = User::factory()->create();
@@ -147,50 +177,55 @@ test('admin can download exercise attachment', function () {
 
     $submission = ExerciseSubmission::factory()->forUser($student)->create([
         'title' => 'تمرین فایل',
-        'submission_url' => null,
-        'attachment_disk' => 'local',
-        'attachment_path' => 'exercise-submissions/1/sample.pdf',
-        'attachment_original_name' => 'sample.pdf',
-        'attachment_mime_type' => 'application/pdf',
-        'attachment_size_bytes' => 1024,
     ]);
 
-    Storage::disk('local')->put($submission->attachment_path, 'pdf-content');
+    $attachment = ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'sample.pdf',
+        'path' => 'exercise-submissions/'.$student->id.'/'.$submission->id.'/sample.pdf',
+    ]);
+
+    Storage::disk('local')->put($attachment->path, 'pdf-content');
 
     $this->actingAs($admin)
-        ->get(route('admin.exercise-submissions.attachment', $submission))
+        ->get(route('admin.exercise-submissions.attachments.download', [$submission, $attachment]))
         ->assertOk();
 });
 
-test('admin can delete exercise attachment without deleting submission', function () {
+test('admin can delete one attachment without deleting submission', function () {
     $admin = User::factory()->admin()->create();
     $student = User::factory()->create();
 
     $submission = ExerciseSubmission::factory()->forUser($student)->create([
         'title' => 'تمرین حذف فایل',
         'submission_url' => 'https://example.com/keep',
-        'attachment_disk' => 'local',
-        'attachment_path' => 'exercise-submissions/2/remove.png',
-        'attachment_original_name' => 'remove.png',
-        'attachment_mime_type' => 'image/png',
-        'attachment_size_bytes' => 2048,
     ]);
 
-    Storage::disk('local')->put($submission->attachment_path, 'png-content');
+    $first = ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'keep.png',
+        'path' => 'exercise-submissions/'.$student->id.'/'.$submission->id.'/keep.png',
+    ]);
+    Storage::disk('local')->put($first->path, 'png-keep');
+
+    $second = ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'remove.png',
+        'path' => 'exercise-submissions/'.$student->id.'/'.$submission->id.'/remove.png',
+    ]);
+    Storage::disk('local')->put($second->path, 'png-remove');
 
     $this->actingAs($admin)
-        ->delete(route('admin.exercise-submissions.attachment.destroy', $submission))
+        ->delete(route('admin.exercise-submissions.attachments.destroy', [$submission, $second]))
         ->assertRedirect();
 
     $fresh = $submission->fresh();
 
     expect($fresh)->not->toBeNull()
         ->and($fresh->title)->toBe('تمرین حذف فایل')
-        ->and($fresh->hasActiveAttachment())->toBeFalse()
-        ->and($fresh->attachment_deleted_at)->not->toBeNull()
-        ->and($fresh->attachment_deleted_by)->toBe($admin->id);
+        ->and($fresh->attachments()->whereNull('deleted_at')->count())->toBe(1)
+        ->and($second->fresh()->deleted_at)->not->toBeNull()
+        ->and($second->fresh()->deleted_by)->toBe($admin->id);
 
-    Storage::disk('local')->assertMissing('exercise-submissions/2/remove.png');
+    Storage::disk('local')->assertMissing($second->path);
+    Storage::disk('local')->assertExists($first->path);
 });
 
 test('admin show includes attachment metadata', function () {
@@ -199,43 +234,43 @@ test('admin show includes attachment metadata', function () {
 
     $submission = ExerciseSubmission::factory()->forUser($student)->create([
         'title' => 'متادیتا',
-        'attachment_disk' => 'local',
-        'attachment_path' => 'exercise-submissions/3/meta.zip',
-        'attachment_original_name' => 'project.zip',
-        'attachment_mime_type' => 'application/zip',
-        'attachment_size_bytes' => 4096,
     ]);
 
-    Storage::disk('local')->put($submission->attachment_path, 'zip-content');
+    $attachment = ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'project.zip',
+        'mime_type' => 'application/zip',
+        'size_bytes' => 4096,
+        'path' => 'exercise-submissions/'.$student->id.'/'.$submission->id.'/project.zip',
+    ]);
+
+    Storage::disk('local')->put($attachment->path, 'zip-content');
 
     $this->actingAs($admin)
         ->get(route('admin.exercise-submissions.show', $submission))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('submission.attachment.originalName', 'project.zip')
-            ->where('submission.attachment.sizeBytes', 4096)
-            ->where('submission.attachment.extension', 'zip')
-            ->where('submission.attachment.isDeleted', false));
+            ->where('submission.attachments.0.originalName', 'project.zip')
+            ->where('submission.attachments.0.sizeBytes', 4096)
+            ->where('submission.attachments.0.extension', 'zip')
+            ->where('submission.attachments.0.isDeleted', false));
 });
 
-test('admin attachment overview shows total count and size', function () {
+test('admin attachment overview counts non-deleted attachments and total size', function () {
     $admin = User::factory()->admin()->create();
     $student = User::factory()->create(['name' => 'هنرجو']);
 
-    ExerciseSubmission::factory()->forUser($student)->create([
-        'title' => 'فایل اول',
-        'attachment_disk' => 'local',
-        'attachment_path' => 'exercise-submissions/4/a.png',
-        'attachment_original_name' => 'a.png',
-        'attachment_size_bytes' => 1000,
+    $firstSubmission = ExerciseSubmission::factory()->forUser($student)->create(['title' => 'فایل اول']);
+    ExerciseSubmissionAttachment::factory()->forSubmission($firstSubmission)->create([
+        'original_name' => 'a.png',
+        'size_bytes' => 1000,
+        'path' => 'exercise-submissions/'.$student->id.'/'.$firstSubmission->id.'/a.png',
     ]);
 
-    ExerciseSubmission::factory()->forUser($student)->create([
-        'title' => 'فایل دوم',
-        'attachment_disk' => 'local',
-        'attachment_path' => 'exercise-submissions/4/b.png',
-        'attachment_original_name' => 'b.png',
-        'attachment_size_bytes' => 2000,
+    $secondSubmission = ExerciseSubmission::factory()->forUser($student)->create(['title' => 'فایل دوم']);
+    ExerciseSubmissionAttachment::factory()->forSubmission($secondSubmission)->create([
+        'original_name' => 'b.png',
+        'size_bytes' => 2000,
+        'path' => 'exercise-submissions/'.$student->id.'/'.$secondSubmission->id.'/b.png',
     ]);
 
     $this->actingAs($admin)
@@ -250,13 +285,32 @@ test('admin attachment overview shows total count and size', function () {
 
 test('non-admin cannot access admin attachment routes', function () {
     $user = User::factory()->create(['is_admin' => false]);
-    $submission = ExerciseSubmission::factory()->create([
-        'attachment_disk' => 'local',
-        'attachment_path' => 'exercise-submissions/9/x.pdf',
-        'attachment_original_name' => 'x.pdf',
+    $submission = ExerciseSubmission::factory()->create(['title' => 'تست']);
+    $attachment = ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'path' => 'exercise-submissions/9/1/x.pdf',
     ]);
 
-    $this->actingAs($user)->get(route('admin.exercise-submissions.attachment', $submission))->assertForbidden();
-    $this->actingAs($user)->delete(route('admin.exercise-submissions.attachment.destroy', $submission))->assertForbidden();
+    $this->actingAs($user)->get(route('admin.exercise-submissions.attachments.download', [$submission, $attachment]))->assertForbidden();
+    $this->actingAs($user)->delete(route('admin.exercise-submissions.attachments.destroy', [$submission, $attachment]))->assertForbidden();
     $this->actingAs($user)->get(route('admin.exercise-attachments.index'))->assertForbidden();
+});
+
+test('admin can still download legacy single-column attachment', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین قدیمی',
+        'attachment_disk' => 'local',
+        'attachment_path' => 'exercise-submissions/1/sample.pdf',
+        'attachment_original_name' => 'sample.pdf',
+        'attachment_mime_type' => 'application/pdf',
+        'attachment_size_bytes' => 1024,
+    ]);
+
+    Storage::disk('local')->put($submission->attachment_path, 'pdf-content');
+
+    $this->actingAs($admin)
+        ->get(route('admin.exercise-submissions.attachment', $submission))
+        ->assertOk();
 });

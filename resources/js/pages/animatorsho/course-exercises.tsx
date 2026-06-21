@@ -60,87 +60,134 @@ export default function CourseExercises({
 
                     {hasSubmissions ? (
                         <ul className="flex flex-col gap-3">
-                            {submissions.map((submission) => (
-                                <li
-                                    key={submission.id}
-                                    className="flex flex-col gap-3 rounded-[28px] bg-surface px-4 py-4 shadow-soft ring-1 ring-border"
-                                >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex min-w-0 flex-col gap-1">
-                                            <h2 className="text-sm font-bold text-text">
-                                                {submission.title}
-                                            </h2>
-                                            <p className="text-xs font-medium text-muted">
-                                                {submission.submittedAtLabel}
-                                            </p>
-                                        </div>
-                                        <ProfileStatusBadge
-                                            tone={submission.statusTone}
-                                        >
-                                            {submission.statusLabel}
-                                        </ProfileStatusBadge>
-                                    </div>
+                            {submissions.map((submission) => {
+                                const activeAttachments =
+                                    submission.attachments.filter(
+                                        (attachment) =>
+                                            !attachment.isDeleted &&
+                                            attachment.downloadUrl !== '',
+                                    );
 
-                                    {submission.descriptionPreview ? (
-                                        <p className="text-sm font-medium leading-relaxed text-muted">
-                                            {submission.descriptionPreview}
-                                        </p>
-                                    ) : submission.descriptionHtml ? (
-                                        <SafeStoryText
-                                            html={submission.descriptionHtml}
-                                            className="text-sm font-medium leading-relaxed text-muted [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5"
-                                        />
-                                    ) : null}
-
-                                    {submission.submissionLink ? (
-                                        <a
-                                            href={submission.submissionLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1 self-start text-xs font-bold text-purple"
-                                        >
-                                            <ExternalLink className="size-3.5" />
-                                            {submission.submissionLinkLabel}
-                                        </a>
-                                    ) : submission.attachment &&
-                                      !submission.attachment.isDeleted ? (
-                                        <a
-                                            href={submission.attachment.downloadUrl}
-                                            className="inline-flex items-center gap-1 self-start text-xs font-bold text-purple"
-                                        >
-                                            <Download className="size-3.5" />
-                                            {submission.submissionLinkLabel ??
-                                                'دانلود فایل تمرین'}
-                                        </a>
-                                    ) : submission.submissionLinkLabel ? (
-                                        <p className="text-xs font-bold text-muted">
-                                            {submission.submissionLinkLabel}
-                                        </p>
-                                    ) : null}
-
-                                    {submission.adminFeedback ? (
-                                        <div
-                                            className={cn(
-                                                'rounded-2xl px-3 py-3 text-sm font-medium leading-relaxed ring-1',
-                                                feedbackToneClassName(
-                                                    submission.status,
-                                                ),
-                                            )}
-                                        >
-                                            <p className="mb-1 text-xs font-bold">
-                                                بازخورد استاد
-                                            </p>
-                                            <p>{submission.adminFeedback}</p>
-                                            {submission.reviewedAtLabel !==
-                                            '—' ? (
-                                                <p className="mt-2 text-[11px] font-medium opacity-80">
-                                                    {submission.reviewedAtLabel}
+                                return (
+                                    <li
+                                        key={submission.id}
+                                        className="flex flex-col gap-3 rounded-[28px] bg-surface px-4 py-4 shadow-soft ring-1 ring-border"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex min-w-0 flex-col gap-1">
+                                                <h2 className="text-sm font-bold text-text">
+                                                    {submission.title}
+                                                </h2>
+                                                <p className="text-xs font-medium text-muted">
+                                                    {submission.submittedAtLabel}
                                                 </p>
-                                            ) : null}
+                                            </div>
+                                            <ProfileStatusBadge
+                                                tone={submission.statusTone}
+                                            >
+                                                {submission.statusLabel}
+                                            </ProfileStatusBadge>
                                         </div>
-                                    ) : null}
-                                </li>
-                            ))}
+
+                                        {submission.descriptionPreview ? (
+                                            <p className="text-sm font-medium leading-relaxed text-muted">
+                                                {submission.descriptionPreview}
+                                            </p>
+                                        ) : submission.descriptionHtml ? (
+                                            <SafeStoryText
+                                                html={
+                                                    submission.descriptionHtml
+                                                }
+                                                className="text-sm font-medium leading-relaxed text-muted [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5"
+                                            />
+                                        ) : null}
+
+                                        {submission.submissionLink ? (
+                                            <a
+                                                href={submission.submissionLink}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 self-start text-xs font-bold text-purple"
+                                            >
+                                                <ExternalLink className="size-3.5" />
+                                                {submission.submissionLinkLabel}
+                                            </a>
+                                        ) : null}
+
+                                        {activeAttachments.length > 0 ? (
+                                            <ul className="flex flex-col gap-2">
+                                                {activeAttachments.map(
+                                                    (attachment) => (
+                                                        <li
+                                                            key={
+                                                                attachment.id ??
+                                                                attachment.originalName
+                                                            }
+                                                        >
+                                                            <a
+                                                                href={
+                                                                    attachment.downloadUrl
+                                                                }
+                                                                className="flex items-center justify-between gap-3 rounded-2xl bg-bg px-3 py-2.5 ring-1 ring-border/70"
+                                                            >
+                                                                <span className="flex min-w-0 flex-col gap-0.5 text-start">
+                                                                    <span className="truncate text-xs font-bold text-text">
+                                                                        {
+                                                                            attachment.originalName
+                                                                        }
+                                                                    </span>
+                                                                    <span className="text-[11px] font-medium text-muted">
+                                                                        {
+                                                                            attachment.sizeLabel
+                                                                        }
+                                                                    </span>
+                                                                </span>
+                                                                <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-purple">
+                                                                    <Download className="size-3.5" />
+                                                                    دانلود
+                                                                </span>
+                                                            </a>
+                                                        </li>
+                                                    ),
+                                                )}
+                                            </ul>
+                                        ) : submission.submissionLinkLabel &&
+                                          !submission.submissionLink ? (
+                                            <p className="text-xs font-bold text-muted">
+                                                {
+                                                    submission.submissionLinkLabel
+                                                }
+                                            </p>
+                                        ) : null}
+
+                                        {submission.adminFeedback ? (
+                                            <div
+                                                className={cn(
+                                                    'rounded-2xl px-3 py-3 text-sm font-medium leading-relaxed ring-1',
+                                                    feedbackToneClassName(
+                                                        submission.status,
+                                                    ),
+                                                )}
+                                            >
+                                                <p className="mb-1 text-xs font-bold">
+                                                    بازخورد استاد
+                                                </p>
+                                                <p>
+                                                    {submission.adminFeedback}
+                                                </p>
+                                                {submission.reviewedAtLabel !==
+                                                '—' ? (
+                                                    <p className="mt-2 text-[11px] font-medium opacity-80">
+                                                        {
+                                                            submission.reviewedAtLabel
+                                                        }
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        ) : null}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     ) : (
                         <p className="rounded-2xl bg-surface px-4 py-4 text-sm font-medium leading-relaxed text-muted shadow-soft ring-1 ring-border">

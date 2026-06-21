@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'user_id',
@@ -47,9 +48,17 @@ class ExerciseSubmission extends Model
 
     public function hasActiveAttachment(): bool
     {
-        return $this->attachment_path !== null
+        if ($this->attachment_path !== null
             && $this->attachment_disk !== null
-            && $this->attachment_deleted_at === null;
+            && $this->attachment_deleted_at === null) {
+            return true;
+        }
+
+        if ($this->relationLoaded('attachments')) {
+            return $this->attachments->contains(fn (ExerciseSubmissionAttachment $attachment): bool => $attachment->isActive());
+        }
+
+        return $this->attachments()->whereNull('deleted_at')->exists();
     }
 
     public function attachmentWasDeleted(): bool
@@ -80,5 +89,21 @@ class ExerciseSubmission extends Model
     public function attachmentDeleter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'attachment_deleted_by');
+    }
+
+    /**
+     * @return HasMany<ExerciseSubmissionAttachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(ExerciseSubmissionAttachment::class);
+    }
+
+    /**
+     * @return HasMany<ExerciseSubmissionAttachment, $this>
+     */
+    public function activeAttachments(): HasMany
+    {
+        return $this->attachments()->whereNull('deleted_at');
     }
 }

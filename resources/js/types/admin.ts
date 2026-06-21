@@ -380,6 +380,7 @@ export type AdminExerciseSubmissionDetail = {
     submissionLink: string | null;
     submissionLinkLabel: string | null;
     filePathNote: string | null;
+    attachments: AdminExerciseAttachment[];
     attachment: AdminExerciseAttachment | null;
     adminFeedback: string | null;
     submittedAtLabel: string;
@@ -388,17 +389,20 @@ export type AdminExerciseSubmissionDetail = {
 };
 
 export type AdminExerciseAttachment = {
+    id: number | null;
     originalName: string;
     sizeBytes: number;
     sizeLabel: string;
     mimeType: string;
     extension: string;
     downloadUrl: string;
+    deleteUrl: string | null;
     isDeleted: boolean;
+    isLegacy: boolean;
 };
 
 export type AdminExerciseAttachmentListItem = {
-    id: number;
+    id: number | string;
     studentName: string;
     studentMobile: string | null;
     submissionTitle: string;
@@ -410,6 +414,7 @@ export type AdminExerciseAttachmentListItem = {
     downloadUrl: string;
     deleteUrl: string;
     reviewUrl: string;
+    isLegacy: boolean;
 };
 
 export type AdminSupportTicketDetail = {

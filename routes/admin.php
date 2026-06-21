@@ -80,6 +80,8 @@ Route::middleware(['auth', 'admin'])
         Route::patch('exercise-submissions/{exerciseSubmission}', [ExerciseSubmissionController::class, 'update'])->name('exercise-submissions.update');
         Route::get('exercise-submissions/{exerciseSubmission}/attachment', [ExerciseSubmissionController::class, 'attachment'])->name('exercise-submissions.attachment');
         Route::delete('exercise-submissions/{exerciseSubmission}/attachment', [ExerciseSubmissionController::class, 'destroyAttachment'])->name('exercise-submissions.attachment.destroy');
+        Route::get('exercise-submissions/{exerciseSubmission}/attachments/{attachment}', [ExerciseSubmissionController::class, 'downloadAttachment'])->name('exercise-submissions.attachments.download');
+        Route::delete('exercise-submissions/{exerciseSubmission}/attachments/{attachment}', [ExerciseSubmissionController::class, 'destroyAttachmentRecord'])->name('exercise-submissions.attachments.destroy');
 
         Route::get('exercise-attachments', [ExerciseAttachmentController::class, 'index'])->name('exercise-attachments.index');
 
