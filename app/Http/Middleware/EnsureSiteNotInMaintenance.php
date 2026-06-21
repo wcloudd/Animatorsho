@@ -47,6 +47,7 @@ class EnsureSiteNotInMaintenance
             'admin',
             'admin/*',
             'login',
+            'login/*',
             'logout',
             'register',
             'forgot-password',

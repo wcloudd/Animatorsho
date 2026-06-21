@@ -69,11 +69,14 @@ export function ProfileWelcomeCard({ user }: ProfileWelcomeCardProps) {
                             سلام، {firstName}!
                         </h1>
                         <p
-                            className="truncate text-sm font-medium text-muted"
-                            dir={user.email ? 'ltr' : undefined}
+                            className="flex w-full flex-wrap text-right text-sm font-medium text-muted"
                             title={contact}
                         >
-                            {contact}
+                            {user.maskedMobile || user.email ? (
+                                <bdi dir="ltr">{contact}</bdi>
+                            ) : (
+                                contact
+                            )}
                         </p>
                     </div>
                 </div>

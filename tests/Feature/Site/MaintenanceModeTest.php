@@ -60,6 +60,29 @@ test('guest can reach login during maintenance mode', function () {
     $this->get(route('login'))->assertOk();
 });
 
+test('guest can complete login identifier step during maintenance mode', function () {
+    enableMaintenanceMode();
+
+    $admin = User::factory()->admin()->withMobile('09121234567')->create();
+
+    $this->post(route('login.identifier'), [
+        'identifier' => $admin->mobile,
+    ])
+        ->assertRedirect(route('login.password'))
+        ->assertSessionHas('mobile_otp.mobile', $admin->mobile);
+});
+
+test('guest can reach login password page during maintenance mode', function () {
+    enableMaintenanceMode();
+
+    $admin = User::factory()->admin()->withMobile('09121234567')->create();
+
+    $this->withSession(['mobile_otp.mobile' => $admin->mobile])
+        ->get(route('login.password'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('auth/login-password'));
+});
+
 test('admin panel remains accessible during maintenance mode', function () {
     enableMaintenanceMode();
 
