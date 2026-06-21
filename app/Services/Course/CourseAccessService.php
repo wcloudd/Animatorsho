@@ -5,6 +5,7 @@ namespace App\Services\Course;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\User;
 use App\Services\AnimatorshoCatalogService;
+use App\Services\StudentMedalService;
 use App\Services\StudentXpService;
 use App\Support\StudentPanel\StudentPanelMedia;
 use Illuminate\Support\Collection;
@@ -20,6 +21,7 @@ class CourseAccessService
         private readonly CourseResourceQueryService $courseResources,
         private readonly ExerciseSubmissionQueryService $exerciseSubmissions,
         private readonly StudentXpService $xpService,
+        private readonly StudentMedalService $medalService,
     ) {}
 
     public function userHasActiveAccess(User $user): bool
@@ -159,7 +161,7 @@ class CourseAccessService
                     'hasThread' => false,
                     'status' => null,
                 ],
-                'medals' => config('student_panel.preview.medals'),
+                'medals' => $this->medalService->medalsPreviewForUser($user),
                 'sectionVisuals' => StudentPanelMedia::resolvedSectionVisuals(),
             ],
         ];

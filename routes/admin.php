@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\SecurityEventController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\SmsController;
 use App\Http\Controllers\Admin\SpotPlayerLicenseController;
+use App\Http\Controllers\Admin\StudentMedalController;
 use App\Http\Controllers\Admin\SupportTicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,10 @@ Route::middleware(['auth', 'admin'])
         Route::delete('exercise-submissions/{exerciseSubmission}/feedback-attachments/{feedbackAttachment}', [ExerciseSubmissionFeedbackAttachmentController::class, 'destroy'])->name('exercise-submissions.feedback-attachments.destroy');
 
         Route::get('exercise-attachments', [ExerciseAttachmentController::class, 'index'])->name('exercise-attachments.index');
+
+        Route::get('student-medals', [StudentMedalController::class, 'index'])->name('student-medals.index');
+        Route::post('student-medals', [StudentMedalController::class, 'store'])->name('student-medals.store');
+        Route::delete('student-medals/{studentMedalAward}', [StudentMedalController::class, 'destroy'])->name('student-medals.destroy');
 
         Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
         Route::get('support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');

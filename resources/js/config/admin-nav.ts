@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+    Award,
     BookOpen,
     CalendarClock,
     ClipboardList,
@@ -139,6 +140,12 @@ export const adminNavGroups: AdminNavGroup[] = [
                 label: 'فایل‌های تمرین',
                 match: '/admin/exercise-attachments',
                 icon: FileArchive,
+            },
+            {
+                href: '/admin/student-medals',
+                label: 'مدال‌های هنرجوها',
+                match: '/admin/student-medals',
+                icon: Award,
             },
         ],
     },

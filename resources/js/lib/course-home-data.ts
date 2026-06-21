@@ -91,12 +91,16 @@ export type CourseHomeResourcePreview = CourseHomePreviewImage & {
 };
 
 export type CourseHomeMedalItem = {
-    slug: string;
+    key: string;
     title: string;
 };
 
+export type CourseHomeEarnedMedalItem = CourseHomeMedalItem & {
+    earnedAtLabel: string;
+};
+
 export type CourseHomeMedalsPreview = {
-    earned: CourseHomeMedalItem[];
+    earned: CourseHomeEarnedMedalItem[];
     locked: CourseHomeMedalItem[];
     totalAvailable: number;
 };

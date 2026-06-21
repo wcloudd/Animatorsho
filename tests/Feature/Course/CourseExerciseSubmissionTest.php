@@ -6,8 +6,10 @@ use App\Models\ExerciseSubmission;
 use App\Models\ExerciseSubmissionAttachment;
 use App\Models\ExerciseSubmissionFeedbackAttachment;
 use App\Models\SpotPlayerLicense;
+use App\Models\StudentMedalAward;
 use App\Models\StudentXpEvent;
 use App\Models\User;
+use App\Services\StudentMedalService;
 use Database\Seeders\AnimatorshoCourseSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -542,4 +544,48 @@ test('rich story text is stored and displayed safely', function () {
             ->where('submissions.0.descriptionPreview', fn (string $preview): bool => str_contains($preview, 'شروع'))
             ->where('submissions.0.descriptionHtml', fn (string $html): bool => str_contains($html, '<strong>شروع</strong>')
                 && ! str_contains($html, '<script>')));
+});
+
+test('course home props include all 6 medals', function () {
+    [$user] = createActiveStudent();
+
+    $this->actingAs($user)
+        ->get(route('course.home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('preview.medals.totalAvailable', 6)
+            ->where('preview.medals.earned', [])
+            ->has('preview.medals.locked', 6));
+});
+
+test('earned medal appears active in course home props', function () {
+    [$user] = createActiveStudent();
+    $admin = User::factory()->admin()->create();
+
+    StudentMedalAward::create([
+        'user_id' => $user->id,
+        'medal_key' => 'first_approved_exercise',
+        'awarded_by' => $admin->id,
+        'awarded_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('course.home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('preview.medals.earned', 1)
+            ->has('preview.medals.locked', 5)
+            ->where('preview.medals.earned.0.key', 'first_approved_exercise')
+            ->where('preview.medals.earned.0.title', StudentMedalService::MEDALS['first_approved_exercise']));
+});
+
+test('unearned medals appear locked in course home props', function () {
+    [$user] = createActiveStudent();
+
+    $this->actingAs($user)
+        ->get(route('course.home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('preview.medals.locked', 6)
+            ->where('preview.medals.locked.0.key', array_key_first(StudentMedalService::MEDALS)));
 });
