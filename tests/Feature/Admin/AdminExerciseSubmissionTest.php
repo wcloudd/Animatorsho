@@ -45,7 +45,9 @@ test('admin can list exercise submissions', function () {
             ->where('submissions.data.0.title', 'تمرین اول')
             ->where('submissions.data.0.studentName', 'هنرجوی تست')
             ->where('submissions.data.0.studentMobile', '09121234567')
-            ->where('submissions.data.0.status', 'ارسال‌شده'));
+            ->where('submissions.data.0.status', 'ارسال‌شده')
+            ->where('submissions.data.0.attachmentCount', 0)
+            ->where('submissions.data.0.reviewedAtLabel', '—'));
 });
 
 test('admin index includes jalali submitted date label', function () {
@@ -293,6 +295,30 @@ test('non-admin cannot access admin attachment routes', function () {
     $this->actingAs($user)->get(route('admin.exercise-submissions.attachments.download', [$submission, $attachment]))->assertForbidden();
     $this->actingAs($user)->delete(route('admin.exercise-submissions.attachments.destroy', [$submission, $attachment]))->assertForbidden();
     $this->actingAs($user)->get(route('admin.exercise-attachments.index'))->assertForbidden();
+});
+
+test('admin list shows attachment count for submission with files', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create(['name' => 'هنرجو']);
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین چند فایلی',
+    ]);
+
+    ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'a.png',
+        'path' => 'exercise-submissions/'.$student->id.'/'.$submission->id.'/a.png',
+    ]);
+    ExerciseSubmissionAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'b.pdf',
+        'path' => 'exercise-submissions/'.$student->id.'/'.$submission->id.'/b.pdf',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.exercise-submissions.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('submissions.data.0.attachmentCount', 2));
 });
 
 test('admin can still download legacy single-column attachment', function () {

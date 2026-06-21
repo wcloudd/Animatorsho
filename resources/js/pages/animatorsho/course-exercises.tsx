@@ -71,7 +71,14 @@ export default function CourseExercises({
                                 return (
                                     <li
                                         key={submission.id}
-                                        className="flex flex-col gap-3 rounded-[28px] bg-surface px-4 py-4 shadow-soft ring-1 ring-border"
+                                        className={cn(
+                                            'flex flex-col gap-3 rounded-[28px] bg-surface px-4 py-4 shadow-soft ring-1',
+                                            submission.status === 'needs_revision'
+                                                ? 'ring-gold/40'
+                                                : submission.status === 'approved'
+                                                  ? 'ring-green/30'
+                                                  : 'ring-border',
+                                        )}
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex min-w-0 flex-col gap-1">

@@ -21,7 +21,9 @@ class AdminExerciseSubmissionListService
      *         status: string,
      *         statusValue: string,
      *         statusTone: string,
+     *         attachmentCount: int,
      *         submittedAtLabel: string,
+     *         reviewedAtLabel: string,
      *         reviewUrl: string
      *     }>,
      *     filters: array{status: ?string, q: ?string},
@@ -34,6 +36,7 @@ class AdminExerciseSubmissionListService
     ): array {
         $query = ExerciseSubmission::query()
             ->with('user')
+            ->withCount(['attachments as active_attachment_count' => fn ($q) => $q->whereNull('deleted_at')])
             ->latest();
 
         if ($statusFilter !== null && $statusFilter !== '') {
@@ -88,7 +91,9 @@ class AdminExerciseSubmissionListService
      *     status: string,
      *     statusValue: string,
      *     statusTone: string,
+     *     attachmentCount: int,
      *     submittedAtLabel: string,
+     *     reviewedAtLabel: string,
      *     reviewUrl: string
      * }
      */
@@ -102,7 +107,9 @@ class AdminExerciseSubmissionListService
             'status' => ExerciseSubmissionStatusLabels::status($submission->status),
             'statusValue' => $submission->status->value,
             'statusTone' => ExerciseSubmissionStatusLabels::statusTone($submission->status),
+            'attachmentCount' => (int) ($submission->active_attachment_count ?? 0),
             'submittedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->created_at),
+            'reviewedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->reviewed_at),
             'reviewUrl' => route('admin.exercise-submissions.show', $submission),
         ];
     }

@@ -11,7 +11,7 @@ class ExerciseSubmissionStatusLabels
         return match ($status) {
             ExerciseSubmissionStatus::Submitted => 'ارسال‌شده',
             ExerciseSubmissionStatus::Reviewing => 'در حال بررسی',
-            ExerciseSubmissionStatus::NeedsRevision => 'نیازمند اصلاح',
+            ExerciseSubmissionStatus::NeedsRevision => 'نیاز به اصلاح',
             ExerciseSubmissionStatus::Approved => 'تأیید شده',
         };
     }

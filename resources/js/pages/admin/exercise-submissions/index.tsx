@@ -78,6 +78,16 @@ export default function AdminExerciseSubmissionsIndex({
                                 label="تاریخ ارسال"
                                 value={item.submittedAtLabel}
                             />
+                            <AdminDetailRow
+                                label="فایل‌های پیوست"
+                                value={`${item.attachmentCount} عدد`}
+                            />
+                            {item.reviewedAtLabel !== '—' ? (
+                                <AdminDetailRow
+                                    label="تاریخ بررسی"
+                                    value={item.reviewedAtLabel}
+                                />
+                            ) : null}
                         </AdminInfoGrid>
                     </AdminCommerceCard>
                 ))}

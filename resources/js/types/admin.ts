@@ -363,7 +363,9 @@ export type AdminExerciseSubmissionListItem = {
     status: string;
     statusValue: string;
     statusTone: AdminStatusTone;
+    attachmentCount: number;
     submittedAtLabel: string;
+    reviewedAtLabel: string;
     reviewUrl: string;
 };
 
