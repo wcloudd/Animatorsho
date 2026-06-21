@@ -136,9 +136,27 @@ export type CourseHomePreview = {
     sectionVisuals: CourseHomeSectionVisuals;
 };
 
+export type CourseHomeNotificationItem = {
+    id: number;
+    type: string;
+    title: string;
+    body: string | null;
+    actionLabel: string | null;
+    actionUrl: string | null;
+    readAt: string | null;
+    createdAtLabel: string;
+    isUnread: boolean;
+};
+
+export type CourseHomeNotifications = {
+    unreadCount: number;
+    items: CourseHomeNotificationItem[];
+};
+
 export type CourseHomePageProps = {
     welcome: CourseHomeWelcome;
     progress: CourseHomeProgress;
     onboarding: CourseHomeOnboarding;
+    notifications: CourseHomeNotifications;
     preview: CourseHomePreview;
 };

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminStudentNotificationController;
 use App\Http\Controllers\Admin\ConsultationController;
 use App\Http\Controllers\Admin\CoursePackageController;
 use App\Http\Controllers\Admin\CourseResourceController;
@@ -94,6 +95,9 @@ Route::middleware(['auth', 'admin'])
         Route::get('student-medals', [StudentMedalController::class, 'index'])->name('student-medals.index');
         Route::post('student-medals', [StudentMedalController::class, 'store'])->name('student-medals.store');
         Route::delete('student-medals/{studentMedalAward}', [StudentMedalController::class, 'destroy'])->name('student-medals.destroy');
+
+        Route::get('student-notifications', [AdminStudentNotificationController::class, 'index'])->name('student-notifications.index');
+        Route::post('student-notifications', [AdminStudentNotificationController::class, 'store'])->name('student-notifications.store');
 
         Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
         Route::get('support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExerciseSubmission;
 use App\Models\ExerciseSubmissionFeedbackAttachment;
 use App\Services\Course\ExerciseSubmissionFeedbackStorageService;
+use App\Services\StudentNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +18,7 @@ class ExerciseSubmissionFeedbackAttachmentController extends Controller
 {
     public function __construct(
         private readonly ExerciseSubmissionFeedbackStorageService $service,
+        private readonly StudentNotificationService $notifications,
     ) {}
 
     public function store(Request $request, ExerciseSubmission $exerciseSubmission): RedirectResponse
@@ -35,14 +37,29 @@ class ExerciseSubmissionFeedbackAttachmentController extends Controller
             ],
         ]);
 
+        $files = $request->file('feedback_files', []);
+
         try {
-            $this->service->storeMany(
-                $exerciseSubmission,
-                $request->user(),
-                $request->file('feedback_files', []),
-            );
+            $this->service->storeMany($exerciseSubmission, $request->user(), $files);
         } catch (InvalidArgumentException $e) {
             throw ValidationException::withMessages(['feedback_files' => $e->getMessage()]);
+        }
+
+        $student = $exerciseSubmission->user;
+
+        if ($student !== null) {
+            $count = is_array($files) ? count($files) : 0;
+            $body = $count > 1
+                ? 'استاد چند فایل برای تمرینت ارسال کرد.'
+                : 'استاد یک فایل برای تمرینت ارسال کرد.';
+
+            $this->notifications->upsertForSource(
+                $student,
+                StudentNotificationService::TYPE_TEACHER_FEEDBACK_ATTACHMENT_ADDED,
+                'exercise_submission',
+                $exerciseSubmission->id,
+                ['title' => 'فایل استاد برای تمرینت اضافه شد', 'body' => $body, 'action_url' => route('course.exercises.index')],
+            );
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'فایل‌های استاد آپلود شد.']);

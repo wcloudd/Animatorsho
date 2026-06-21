@@ -6,6 +6,7 @@ use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\User;
 use App\Services\AnimatorshoCatalogService;
 use App\Services\StudentMedalService;
+use App\Services\StudentNotificationService;
 use App\Services\StudentXpService;
 use App\Support\StudentPanel\StudentPanelMedia;
 use Illuminate\Support\Collection;
@@ -22,6 +23,7 @@ class CourseAccessService
         private readonly ExerciseSubmissionQueryService $exerciseSubmissions,
         private readonly StudentXpService $xpService,
         private readonly StudentMedalService $medalService,
+        private readonly StudentNotificationService $notificationService,
     ) {}
 
     public function userHasActiveAccess(User $user): bool
@@ -151,11 +153,12 @@ class CourseAccessService
             ],
             'progress' => $this->xpService->levelProgressForUser($user),
             'onboarding' => StudentPanelMedia::resolvedOnboarding(),
+            'notifications' => $this->notificationService->notificationsForHome($user),
             'preview' => [
                 'updates' => $this->courseUpdates->latestPublishedForHome(),
                 'resources' => $this->courseResources->latestPublishedForHome(),
                 'resourcesIndexUrl' => route('course.resources.index'),
-                'notificationsUnread' => 0,
+                'notificationsUnread' => $this->notificationService->unreadCountForUser($user),
                 'exercisesSummary' => $this->exerciseSubmissions->summaryForHome($user),
                 'mentorSummary' => [
                     'hasThread' => false,

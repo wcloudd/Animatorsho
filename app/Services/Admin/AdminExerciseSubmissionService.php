@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Course\ExerciseSubmissionAttachmentStorageService;
 use App\Services\Course\ExerciseSubmissionFeedbackStorageService;
 use App\Services\Course\ExerciseSubmissionPresentation;
+use App\Services\StudentNotificationService;
 use App\Services\StudentXpService;
 use App\Support\ExerciseSubmissionStatusLabels;
 use App\Support\JalaliDateFormatter;
@@ -20,6 +21,7 @@ class AdminExerciseSubmissionService
         private readonly ExerciseSubmissionAttachmentStorageService $attachments,
         private readonly ExerciseSubmissionFeedbackStorageService $feedbackAttachments,
         private readonly StudentXpService $xpService,
+        private readonly StudentNotificationService $notificationService,
     ) {}
 
     public function showForAdmin(ExerciseSubmission $submission): array
@@ -101,6 +103,9 @@ class AdminExerciseSubmissionService
      */
     public function review(ExerciseSubmission $submission, User $admin, array $data): ExerciseSubmission
     {
+        $oldStatus = $submission->status;
+        $oldFeedback = $submission->admin_feedback;
+
         $submission->update([
             'status' => $data['status'],
             'admin_feedback' => $data['admin_feedback'] ?? null,
@@ -109,8 +114,49 @@ class AdminExerciseSubmissionService
         ]);
 
         $fresh = $submission->fresh();
+        $fresh->loadMissing('user');
 
         $this->xpService->awardForSubmission($fresh, $admin, (int) ($data['xp_award'] ?? 0));
+
+        $student = $fresh->user;
+
+        if ($student !== null) {
+            $newStatus = $fresh->status;
+            $newFeedback = $fresh->admin_feedback;
+
+            if ($oldStatus !== $newStatus) {
+                $title = match ($newStatus) {
+                    ExerciseSubmissionStatus::Approved => 'تمرینت تأیید شد',
+                    ExerciseSubmissionStatus::NeedsRevision => 'تمرینت نیاز به اصلاح دارد',
+                    ExerciseSubmissionStatus::Reviewing => 'تمرینت در حال بررسی است',
+                    default => 'وضعیت تمرینت تغییر کرد',
+                };
+                $body = $fresh->title !== null && $fresh->title !== ''
+                    ? "تمرین «{$fresh->title}» بررسی شد."
+                    : null;
+
+                $this->notificationService->upsertForSource(
+                    $student,
+                    StudentNotificationService::TYPE_EXERCISE_REVIEWED,
+                    'exercise_submission',
+                    $fresh->id,
+                    ['title' => $title, 'body' => $body, 'action_url' => route('course.exercises.index')],
+                );
+            }
+
+            $hadFeedback = $oldFeedback !== null && $oldFeedback !== '';
+            $hasFeedback = $newFeedback !== null && $newFeedback !== '';
+
+            if ($hasFeedback && ! $hadFeedback) {
+                $this->notificationService->createOnceForSource(
+                    $student,
+                    StudentNotificationService::TYPE_TEACHER_FEEDBACK_ADDED,
+                    'exercise_submission',
+                    $fresh->id,
+                    ['title' => 'بازخورد استاد ثبت شد', 'body' => 'استاد برای تمرینت بازخورد گذاشت.', 'action_url' => route('course.exercises.index')],
+                );
+            }
+        }
 
         return $fresh;
     }

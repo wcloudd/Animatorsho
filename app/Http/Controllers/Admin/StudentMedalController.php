@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreStudentMedalAwardRequest;
 use App\Models\StudentMedalAward;
 use App\Models\User;
 use App\Services\StudentMedalService;
+use App\Services\StudentNotificationService;
 use App\Support\JalaliDateFormatter;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -16,6 +17,7 @@ class StudentMedalController extends Controller
 {
     public function __construct(
         private readonly StudentMedalService $medals,
+        private readonly StudentNotificationService $notifications,
     ) {}
 
     public function index(): Response
@@ -54,6 +56,14 @@ class StudentMedalController extends Controller
             admin: $admin,
             note: isset($validated['note']) && $validated['note'] !== '' ? $validated['note'] : null,
         );
+
+        $medalTitle = StudentMedalService::MEDALS[$validated['medal_key']] ?? '';
+        $this->notifications->create($student, [
+            'type' => StudentNotificationService::TYPE_MEDAL_AWARDED,
+            'title' => 'مدال جدید گرفتی',
+            'body' => "مدال {$medalTitle} برای تو ثبت شد.",
+            'action_url' => route('course.home'),
+        ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'مدال با موفقیت اعطا شد.']);
 

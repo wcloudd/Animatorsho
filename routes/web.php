@@ -4,6 +4,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CheckoutOrderController;
 use App\Http\Controllers\CheckoutZarinpalCallbackController;
 use App\Http\Controllers\ConsultationController;
+use App\Http\Controllers\Course\StudentNotificationController;
 use App\Http\Controllers\CourseExercisesController;
 use App\Http\Controllers\CourseHomeController;
 use App\Http\Controllers\CourseResourcesController;
@@ -51,6 +52,14 @@ Route::get('/course/exercises/{exerciseSubmission}/attachments/{attachment}', [C
 Route::get('/course/exercises/{exerciseSubmission}/feedback-attachments/{feedbackAttachment}', [CourseExercisesController::class, 'downloadFeedbackAttachment'])
     ->middleware('auth')
     ->name('course.exercises.feedback-attachments.download');
+
+Route::patch('/course/notifications/{studentNotification}/read', [StudentNotificationController::class, 'markRead'])
+    ->middleware('auth')
+    ->name('course.notifications.mark-read');
+
+Route::post('/course/notifications/read-all', [StudentNotificationController::class, 'markAllRead'])
+    ->middleware('auth')
+    ->name('course.notifications.mark-all-read');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 

@@ -3,6 +3,7 @@ import { CourseHomeExercisesPreview } from '@/components/course/course-home-exer
 import { CourseHomeHeader } from '@/components/course/course-home-header';
 import { CourseHomeMedalsShowcase } from '@/components/course/course-home-medals-showcase';
 import { CourseHomeMentorPreview } from '@/components/course/course-home-mentor-preview';
+import { CourseHomeNotificationsPanel } from '@/components/course/course-home-notifications-panel';
 import { CourseHomeOnboardingSection } from '@/components/course/course-home-onboarding-section';
 import { CourseHomeProfileFootnote } from '@/components/course/course-home-profile-footnote';
 import { CourseHomeResourcesPreview } from '@/components/course/course-home-resources-preview';
@@ -14,6 +15,7 @@ export default function CourseHome({
     welcome,
     progress,
     onboarding,
+    notifications,
     preview,
 }: CourseHomePageProps) {
     return (
@@ -26,6 +28,7 @@ export default function CourseHome({
                         progress={progress}
                         notificationsUnread={preview.notificationsUnread}
                     />
+                    <CourseHomeNotificationsPanel notifications={notifications} />
                     <CourseHomeOnboardingSection onboarding={onboarding} />
                     <CourseHomeExercisesPreview
                         exercisesSummary={preview.exercisesSummary}
