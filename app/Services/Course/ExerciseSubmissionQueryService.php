@@ -12,6 +12,7 @@ class ExerciseSubmissionQueryService
 {
     public function __construct(
         private readonly ExerciseSubmissionAttachmentStorageService $attachments,
+        private readonly ExerciseSubmissionFeedbackStorageService $feedbackAttachments,
     ) {}
 
     /**
@@ -48,6 +49,7 @@ class ExerciseSubmissionQueryService
      *             downloadUrl: string,
      *             isDeleted: bool
      *         },
+     *         feedbackAttachments: list<array{id: int, originalName: string, sizeLabel: string, downloadUrl: string}>,
      *         adminFeedback: ?string,
      *         submittedAt: ?string,
      *         submittedAtLabel: string,
@@ -60,7 +62,7 @@ class ExerciseSubmissionQueryService
     public function indexForUser(User $user): array
     {
         $submissions = ExerciseSubmission::query()
-            ->with('attachments')
+            ->with(['attachments', 'feedbackAttachments'])
             ->where('user_id', $user->id)
             ->latest()
             ->get()
@@ -167,6 +169,11 @@ class ExerciseSubmissionQueryService
                 : '',
         );
 
+        $feedbackAttachments = $this->feedbackAttachments->forStudentPresentation(
+            $submission,
+            'course.exercises.feedback-attachments.download',
+        );
+
         return [
             'id' => $submission->id,
             'title' => $submission->title,
@@ -187,6 +194,7 @@ class ExerciseSubmissionQueryService
             ),
             'attachments' => $attachments,
             'attachment' => $legacyAttachment,
+            'feedbackAttachments' => $feedbackAttachments,
             'adminFeedback' => $submission->admin_feedback,
             'submittedAt' => $submission->created_at?->toIso8601String(),
             'submittedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->created_at),

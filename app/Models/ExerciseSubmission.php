@@ -106,4 +106,20 @@ class ExerciseSubmission extends Model
     {
         return $this->attachments()->whereNull('deleted_at');
     }
+
+    /**
+     * @return HasMany<ExerciseSubmissionFeedbackAttachment, $this>
+     */
+    public function feedbackAttachments(): HasMany
+    {
+        return $this->hasMany(ExerciseSubmissionFeedbackAttachment::class);
+    }
+
+    /**
+     * @return HasMany<ExerciseSubmissionFeedbackAttachment, $this>
+     */
+    public function activeFeedbackAttachments(): HasMany
+    {
+        return $this->feedbackAttachments()->whereNull('deleted_at');
+    }
 }

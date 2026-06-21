@@ -369,6 +369,17 @@ export type AdminExerciseSubmissionListItem = {
     reviewUrl: string;
 };
 
+export type AdminExerciseFeedbackAttachment = {
+    id: number;
+    originalName: string;
+    sizeBytes: number;
+    sizeLabel: string;
+    extension: string;
+    downloadUrl: string;
+    deleteUrl: string | null;
+    isDeleted: boolean;
+};
+
 export type AdminExerciseSubmissionDetail = {
     id: number;
     studentName: string;
@@ -384,6 +395,7 @@ export type AdminExerciseSubmissionDetail = {
     filePathNote: string | null;
     attachments: AdminExerciseAttachment[];
     attachment: AdminExerciseAttachment | null;
+    feedbackAttachments: AdminExerciseFeedbackAttachment[];
     adminFeedback: string | null;
     submittedAtLabel: string;
     reviewedAtLabel: string;

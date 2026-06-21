@@ -3,8 +3,10 @@
 use App\Enums\ExerciseSubmissionStatus;
 use App\Models\ExerciseSubmission;
 use App\Models\ExerciseSubmissionAttachment;
+use App\Models\ExerciseSubmissionFeedbackAttachment;
 use App\Models\User;
 use Database\Seeders\AnimatorshoCourseSeeder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -319,6 +321,179 @@ test('admin list shows attachment count for submission with files', function () 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('submissions.data.0.attachmentCount', 2));
+});
+
+test('admin can upload feedback attachment while reviewing', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین با فایل استاد',
+    ]);
+
+    $file = UploadedFile::fake()->create('feedback.pdf', 100, 'application/pdf');
+
+    $this->actingAs($admin)
+        ->post(route('admin.exercise-submissions.feedback-attachments.store', $submission), [
+            'feedback_files' => [$file],
+        ])
+        ->assertRedirect();
+
+    expect(
+        ExerciseSubmissionFeedbackAttachment::query()
+            ->where('exercise_submission_id', $submission->id)
+            ->whereNull('deleted_at')
+            ->count()
+    )->toBe(1);
+});
+
+test('admin can review without uploading feedback files', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'بررسی بدون فایل',
+        'submission_url' => 'https://example.com/review',
+    ]);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.exercise-submissions.update', $submission), [
+            'status' => ExerciseSubmissionStatus::Approved->value,
+            'admin_feedback' => 'عالی بود',
+        ])
+        ->assertRedirect();
+
+    expect($submission->fresh()->status)->toBe(ExerciseSubmissionStatus::Approved)
+        ->and(ExerciseSubmissionFeedbackAttachment::query()->where('exercise_submission_id', $submission->id)->count())->toBe(0);
+});
+
+test('admin can download feedback attachment', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین دانلود استاد',
+    ]);
+
+    $attachment = ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'teacher-notes.pdf',
+        'path' => 'exercise-submission-feedback/'.$submission->id.'/teacher-notes.pdf',
+    ]);
+
+    Storage::disk('local')->put($attachment->path, 'pdf-content');
+
+    $this->actingAs($admin)
+        ->get(route('admin.exercise-submissions.feedback-attachments.download', [$submission, $attachment]))
+        ->assertOk();
+});
+
+test('admin can delete feedback attachment', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین حذف فایل استاد',
+    ]);
+
+    $attachment = ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'to-delete.pdf',
+        'path' => 'exercise-submission-feedback/'.$submission->id.'/to-delete.pdf',
+    ]);
+
+    Storage::disk('local')->put($attachment->path, 'pdf-content');
+
+    $this->actingAs($admin)
+        ->delete(route('admin.exercise-submissions.feedback-attachments.destroy', [$submission, $attachment]))
+        ->assertRedirect();
+
+    $fresh = $attachment->fresh();
+    expect($fresh->deleted_at)->not->toBeNull()
+        ->and($fresh->deleted_by)->toBe($admin->id);
+
+    Storage::disk('local')->assertMissing($attachment->path);
+});
+
+test('admin show includes feedback attachments', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین با فایل استاد',
+    ]);
+
+    ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'notes.pdf',
+        'path' => 'exercise-submission-feedback/'.$submission->id.'/notes.pdf',
+    ]);
+
+    Storage::disk('local')->put(
+        'exercise-submission-feedback/'.$submission->id.'/notes.pdf',
+        'content',
+    );
+
+    $this->actingAs($admin)
+        ->get(route('admin.exercise-submissions.show', $submission))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('submission.feedbackAttachments', 1)
+            ->where('submission.feedbackAttachments.0.originalName', 'notes.pdf')
+            ->where('submission.feedbackAttachments.0.isDeleted', false));
+});
+
+test('non-admin cannot manage feedback attachments', function () {
+    $user = User::factory()->create(['is_admin' => false]);
+    $submission = ExerciseSubmission::factory()->create(['title' => 'تست']);
+    $attachment = ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'path' => 'exercise-submission-feedback/'.$submission->id.'/x.pdf',
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('admin.exercise-submissions.feedback-attachments.store', $submission), [
+            'feedback_files' => [UploadedFile::fake()->create('x.pdf', 10, 'application/pdf')],
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($user)
+        ->get(route('admin.exercise-submissions.feedback-attachments.download', [$submission, $attachment]))
+        ->assertForbidden();
+
+    $this->actingAs($user)
+        ->delete(route('admin.exercise-submissions.feedback-attachments.destroy', [$submission, $attachment]))
+        ->assertForbidden();
+});
+
+test('validation rejects more than three feedback files', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین تست حداکثر فایل',
+    ]);
+
+    $files = array_fill(0, 4, UploadedFile::fake()->create('f.pdf', 10, 'application/pdf'));
+
+    $this->actingAs($admin)
+        ->post(route('admin.exercise-submissions.feedback-attachments.store', $submission), [
+            'feedback_files' => $files,
+        ])
+        ->assertSessionHasErrors('feedback_files');
+});
+
+test('validation rejects feedback file over 5MB', function () {
+    $admin = User::factory()->admin()->create();
+    $student = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($student)->create([
+        'title' => 'تمرین فایل بزرگ',
+    ]);
+
+    $bigFile = UploadedFile::fake()->create('big.pdf', 6000, 'application/pdf');
+
+    $this->actingAs($admin)
+        ->post(route('admin.exercise-submissions.feedback-attachments.store', $submission), [
+            'feedback_files' => [$bigFile],
+        ])
+        ->assertSessionHasErrors('feedback_files.0');
 });
 
 test('admin can still download legacy single-column attachment', function () {

@@ -13,6 +13,13 @@ export type CourseExerciseAttachment = {
     isLegacy: boolean;
 };
 
+export type CourseFeedbackAttachment = {
+    id: number;
+    originalName: string;
+    sizeLabel: string;
+    downloadUrl: string;
+};
+
 export type CourseExerciseSubmissionItem = {
     id: number;
     title: string;
@@ -26,6 +33,7 @@ export type CourseExerciseSubmissionItem = {
     submissionLinkLabel: string | null;
     attachments: CourseExerciseAttachment[];
     attachment: CourseExerciseAttachment | null;
+    feedbackAttachments: CourseFeedbackAttachment[];
     adminFeedback: string | null;
     submittedAt: string | null;
     submittedAtLabel: string;

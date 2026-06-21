@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreExerciseSubmissionRequest;
 use App\Models\ExerciseSubmission;
 use App\Models\ExerciseSubmissionAttachment;
+use App\Models\ExerciseSubmissionFeedbackAttachment;
 use App\Services\Course\CourseAccessService;
 use App\Services\Course\ExerciseSubmissionAttachmentStorageService;
+use App\Services\Course\ExerciseSubmissionFeedbackStorageService;
 use App\Services\Course\ExerciseSubmissionQueryService;
 use App\Services\Course\ExerciseSubmissionService;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +21,7 @@ class CourseExercisesController extends Controller
 {
     public function __construct(
         private readonly ExerciseSubmissionAttachmentStorageService $attachments,
+        private readonly ExerciseSubmissionFeedbackStorageService $feedbackAttachments,
     ) {}
 
     public function index(
@@ -131,6 +134,28 @@ class CourseExercisesController extends Controller
         }
 
         return $this->attachments->downloadResponse($exerciseSubmission);
+    }
+
+    public function downloadFeedbackAttachment(
+        CourseAccessService $courseAccess,
+        ExerciseSubmission $exerciseSubmission,
+        ExerciseSubmissionFeedbackAttachment $feedbackAttachment,
+    ): StreamedResponse|RedirectResponse {
+        $user = auth()->user();
+
+        if ($user === null || ! $courseAccess->userHasActiveAccess($user)) {
+            return $this->redirectWithoutAccess();
+        }
+
+        if ($exerciseSubmission->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if ($feedbackAttachment->exercise_submission_id !== $exerciseSubmission->id) {
+            abort(404);
+        }
+
+        return $this->feedbackAttachments->downloadResponse($feedbackAttachment);
     }
 
     private function redirectWithoutAccess(): RedirectResponse

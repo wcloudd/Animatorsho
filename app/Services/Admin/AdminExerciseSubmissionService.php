@@ -7,6 +7,7 @@ use App\Models\ExerciseSubmission;
 use App\Models\ExerciseSubmissionAttachment;
 use App\Models\User;
 use App\Services\Course\ExerciseSubmissionAttachmentStorageService;
+use App\Services\Course\ExerciseSubmissionFeedbackStorageService;
 use App\Services\Course\ExerciseSubmissionPresentation;
 use App\Support\ExerciseSubmissionStatusLabels;
 use App\Support\JalaliDateFormatter;
@@ -16,55 +17,12 @@ class AdminExerciseSubmissionService
 {
     public function __construct(
         private readonly ExerciseSubmissionAttachmentStorageService $attachments,
+        private readonly ExerciseSubmissionFeedbackStorageService $feedbackAttachments,
     ) {}
 
-    /**
-     * @return array{
-     *     submission: array{
-     *         id: int,
-     *         studentName: string,
-     *         studentMobile: ?string,
-     *         title: string,
-     *         description: ?string,
-     *         descriptionHtml: string,
-     *         status: string,
-     *         statusValue: string,
-     *         statusTone: string,
-     *         submissionLink: ?string,
-     *         submissionLinkLabel: ?string,
-     *         filePathNote: ?string,
-     *         attachments: list<array{
-     *             id: int|null,
-     *             originalName: string,
-     *             sizeBytes: int,
-     *             sizeLabel: string,
-     *             mimeType: string,
-     *             extension: string,
-     *             downloadUrl: string,
-     *             deleteUrl: string|null,
-     *             isDeleted: bool,
-     *             isLegacy: bool
-     *         }>,
-     *         attachment: ?array{
-     *             originalName: string,
-     *             sizeBytes: int,
-     *             sizeLabel: string,
-     *             mimeType: string,
-     *             extension: string,
-     *             downloadUrl: string,
-     *             isDeleted: bool
-     *         },
-     *         adminFeedback: ?string,
-     *         submittedAtLabel: string,
-     *         reviewedAtLabel: string,
-     *         reviewedByName: ?string
-     *     },
-     *     statusOptions: list<array{value: string, label: string}>
-     * }
-     */
     public function showForAdmin(ExerciseSubmission $submission): array
     {
-        $submission->loadMissing(['user', 'reviewer', 'attachments']);
+        $submission->loadMissing(['user', 'reviewer', 'attachments', 'feedbackAttachments']);
 
         $publicLink = ExerciseSubmissionPresentation::publicSubmissionLink(
             $submission->submission_url,
@@ -94,6 +52,12 @@ class AdminExerciseSubmissionService
                 : '',
         );
 
+        $feedbackAttachments = $this->feedbackAttachments->forAdminPresentation(
+            $submission,
+            'admin.exercise-submissions.feedback-attachments.download',
+            'admin.exercise-submissions.feedback-attachments.destroy',
+        );
+
         return [
             'submission' => [
                 'id' => $submission->id,
@@ -114,12 +78,14 @@ class AdminExerciseSubmissionService
                 'filePathNote' => $filePathNote,
                 'attachments' => $attachments,
                 'attachment' => $legacyAttachment,
+                'feedbackAttachments' => $feedbackAttachments,
                 'adminFeedback' => $submission->admin_feedback,
                 'submittedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->created_at),
                 'reviewedAtLabel' => JalaliDateFormatter::publishedAtLabelWithTime($submission->reviewed_at),
                 'reviewedByName' => $submission->reviewer?->name,
             ],
             'statusOptions' => ExerciseSubmissionStatusLabels::statusOptions(),
+            'maxFeedbackAttachments' => (int) config('exercise_submissions.max_feedback_attachments_per_submission', 3),
         ];
     }
 

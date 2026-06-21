@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CourseUpdateController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExerciseAttachmentController;
 use App\Http\Controllers\Admin\ExerciseSubmissionController;
+use App\Http\Controllers\Admin\ExerciseSubmissionFeedbackAttachmentController;
 use App\Http\Controllers\Admin\InstallmentController;
 use App\Http\Controllers\Admin\ManualEnrollmentController;
 use App\Http\Controllers\Admin\OrderController;
@@ -82,6 +83,10 @@ Route::middleware(['auth', 'admin'])
         Route::delete('exercise-submissions/{exerciseSubmission}/attachment', [ExerciseSubmissionController::class, 'destroyAttachment'])->name('exercise-submissions.attachment.destroy');
         Route::get('exercise-submissions/{exerciseSubmission}/attachments/{attachment}', [ExerciseSubmissionController::class, 'downloadAttachment'])->name('exercise-submissions.attachments.download');
         Route::delete('exercise-submissions/{exerciseSubmission}/attachments/{attachment}', [ExerciseSubmissionController::class, 'destroyAttachmentRecord'])->name('exercise-submissions.attachments.destroy');
+
+        Route::post('exercise-submissions/{exerciseSubmission}/feedback-attachments', [ExerciseSubmissionFeedbackAttachmentController::class, 'store'])->name('exercise-submissions.feedback-attachments.store');
+        Route::get('exercise-submissions/{exerciseSubmission}/feedback-attachments/{feedbackAttachment}', [ExerciseSubmissionFeedbackAttachmentController::class, 'download'])->name('exercise-submissions.feedback-attachments.download');
+        Route::delete('exercise-submissions/{exerciseSubmission}/feedback-attachments/{feedbackAttachment}', [ExerciseSubmissionFeedbackAttachmentController::class, 'destroy'])->name('exercise-submissions.feedback-attachments.destroy');
 
         Route::get('exercise-attachments', [ExerciseAttachmentController::class, 'index'])->name('exercise-attachments.index');
 

@@ -1,6 +1,6 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
 import { AdminButton } from '@/components/admin/admin-button';
 import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
@@ -21,6 +21,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type {
+    AdminExerciseFeedbackAttachment,
     AdminExerciseSubmissionDetail,
     AdminStatusOption,
 } from '@/types/admin';
@@ -34,17 +35,58 @@ const textareaClassName = cn(
 type PageProps = {
     submission: AdminExerciseSubmissionDetail;
     statusOptions: AdminStatusOption[];
+    maxFeedbackAttachments: number;
 };
 
 export default function AdminExerciseSubmissionShow({
     submission,
     statusOptions,
+    maxFeedbackAttachments,
 }: PageProps) {
     const [confirmKey, setConfirmKey] = useState<string | number | null>(null);
     const { data, setData, patch, processing, errors } = useForm({
         status: submission.statusValue,
         admin_feedback: submission.adminFeedback ?? '',
     });
+
+    const feedbackFileInputRef = useRef<HTMLInputElement>(null);
+    const [feedbackFiles, setFeedbackFiles] = useState<File[]>([]);
+    const [feedbackUploading, setFeedbackUploading] = useState(false);
+
+    const activeFeedbackCount = submission.feedbackAttachments.filter(
+        (a: AdminExerciseFeedbackAttachment) => !a.isDeleted,
+    ).length;
+    const remainingSlots = maxFeedbackAttachments - activeFeedbackCount;
+
+    const handleFeedbackFilesChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        setFeedbackFiles(Array.from(e.target.files ?? []).slice(0, remainingSlots));
+    };
+
+    const submitFeedbackUpload = (e: FormEvent) => {
+        e.preventDefault();
+        if (feedbackFiles.length === 0) return;
+
+        const formData = new FormData();
+        feedbackFiles.forEach((f) => formData.append('feedback_files[]', f));
+
+        setFeedbackUploading(true);
+        router.post(
+            `/admin/exercise-submissions/${submission.id}/feedback-attachments`,
+            formData,
+            {
+                onFinish: () => {
+                    setFeedbackUploading(false);
+                    setFeedbackFiles([]);
+                    if (feedbackFileInputRef.current) {
+                        feedbackFileInputRef.current.value = '';
+                    }
+                },
+                preserveScroll: true,
+            },
+        );
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -291,6 +333,128 @@ export default function AdminExerciseSubmissionShow({
                             </>
                         )}
                     </div>
+                ) : null}
+            </div>
+
+            <div
+                className={cn(
+                    surfaceCardClassName,
+                    'mb-4 flex flex-col gap-4 p-4 sm:p-5',
+                )}
+            >
+                <AdminSectionTitle className="mb-0">
+                    فایل‌های استاد برای هنرجو
+                </AdminSectionTitle>
+
+                {submission.feedbackAttachments.length > 0 ? (
+                    <ul className="flex flex-col gap-3">
+                        {submission.feedbackAttachments.map((attachment) => (
+                            <li
+                                key={attachment.id}
+                                className="flex flex-col gap-3 rounded-xl border border-[#e8e0f0] bg-surface p-3"
+                            >
+                                {attachment.isDeleted ? (
+                                    <p className="text-sm font-medium text-muted">
+                                        {attachment.originalName} — حذف شده
+                                    </p>
+                                ) : (
+                                    <>
+                                        <AdminInfoGrid>
+                                            <AdminDetailRow
+                                                label="نام فایل"
+                                                value={attachment.originalName}
+                                            />
+                                            <AdminDetailRow
+                                                label="حجم"
+                                                value={attachment.sizeLabel}
+                                            />
+                                            <AdminDetailRow
+                                                label="پسوند"
+                                                value={attachment.extension}
+                                            />
+                                        </AdminInfoGrid>
+                                        <AdminActionRow>
+                                            <AdminButton
+                                                asChild
+                                                size="sm"
+                                                adminVariant="outline"
+                                            >
+                                                <a href={attachment.downloadUrl}>
+                                                    دانلود
+                                                </a>
+                                            </AdminButton>
+                                            {attachment.deleteUrl ? (
+                                                <AdminConfirmAction
+                                                    actionKey={`feedback-${attachment.id}`}
+                                                    activeKey={confirmKey}
+                                                    onActivate={setConfirmKey}
+                                                    onCancel={() =>
+                                                        setConfirmKey(null)
+                                                    }
+                                                    triggerLabel="حذف فایل"
+                                                    confirmLabel="تأیید حذف"
+                                                    message="فایل استاد از فضای ذخیره‌سازی حذف می‌شود."
+                                                    href={attachment.deleteUrl}
+                                                    method="delete"
+                                                />
+                                            ) : null}
+                                        </AdminActionRow>
+                                    </>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm font-medium text-muted">
+                        هنوز فایلی برای هنرجو آپلود نشده است.
+                    </p>
+                )}
+
+                {remainingSlots > 0 ? (
+                    <form
+                        onSubmit={submitFeedbackUpload}
+                        className="flex flex-col gap-3"
+                    >
+                        <input
+                            ref={feedbackFileInputRef}
+                            type="file"
+                            multiple
+                            id="feedback-file-input"
+                            className="hidden"
+                            onChange={handleFeedbackFilesChange}
+                        />
+                        <label
+                            htmlFor="feedback-file-input"
+                            className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[#c4b5d9] bg-bg px-4 py-3 text-sm font-bold text-purple transition-colors hover:bg-purple/5"
+                        >
+                            انتخاب فایل‌ها
+                            <span className="mr-1 text-xs font-medium text-muted">
+                                ({remainingSlots} جای خالی)
+                            </span>
+                        </label>
+                        {feedbackFiles.length > 0 ? (
+                            <ul className="flex flex-col gap-1">
+                                {feedbackFiles.map((f, i) => (
+                                    <li
+                                        key={i}
+                                        className="text-xs font-medium text-muted"
+                                    >
+                                        {f.name}
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : null}
+                        {feedbackFiles.length > 0 ? (
+                            <AdminButton
+                                type="submit"
+                                size="sm"
+                                adminVariant="brand"
+                                disabled={feedbackUploading}
+                            >
+                                آپلود فایل‌های استاد
+                            </AdminButton>
+                        ) : null}
+                    </form>
                 ) : null}
             </div>
 

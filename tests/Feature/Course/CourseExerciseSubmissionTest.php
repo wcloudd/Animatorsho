@@ -4,6 +4,7 @@ use App\Enums\ExerciseSubmissionStatus;
 use App\Models\CoursePackage;
 use App\Models\ExerciseSubmission;
 use App\Models\ExerciseSubmissionAttachment;
+use App\Models\ExerciseSubmissionFeedbackAttachment;
 use App\Models\SpotPlayerLicense;
 use App\Models\User;
 use Database\Seeders\AnimatorshoCourseSeeder;
@@ -344,6 +345,112 @@ test('deleted exercise attachment is not downloadable by student', function () {
     $this->actingAs($user)
         ->get(route('course.exercises.attachments.download', [$submission, $attachment->fresh()]))
         ->assertNotFound();
+});
+
+test('student sees teacher feedback attachments on exercises index', function () {
+    [$user] = createActiveStudent();
+
+    $submission = ExerciseSubmission::factory()->forUser($user)->create([
+        'title' => 'تمرین با فایل استاد',
+    ]);
+
+    $path = 'exercise-submission-feedback/'.$submission->id.'/notes.pdf';
+
+    ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'notes.pdf',
+        'path' => $path,
+        'size_bytes' => 2048,
+    ]);
+
+    Storage::disk('local')->put($path, 'pdf-content');
+
+    $this->actingAs($user)
+        ->get(route('course.exercises.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('submissions.0.feedbackAttachments', 1)
+            ->where('submissions.0.feedbackAttachments.0.originalName', 'notes.pdf'));
+});
+
+test('student can download own feedback attachment', function () {
+    [$user] = createActiveStudent();
+
+    $submission = ExerciseSubmission::factory()->forUser($user)->create([
+        'title' => 'تمرین دانلود فایل استاد',
+    ]);
+
+    $path = 'exercise-submission-feedback/'.$submission->id.'/notes.pdf';
+
+    $attachment = ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'notes.pdf',
+        'path' => $path,
+    ]);
+
+    Storage::disk('local')->put($path, 'pdf-content');
+
+    $this->actingAs($user)
+        ->get(route('course.exercises.feedback-attachments.download', [$submission, $attachment]))
+        ->assertOk();
+});
+
+test('student cannot download another students feedback attachment', function () {
+    [$owner] = createActiveStudent();
+    [$other] = createActiveStudent();
+
+    $submission = ExerciseSubmission::factory()->forUser($owner)->create([
+        'title' => 'تمرین خصوصی',
+    ]);
+
+    $path = 'exercise-submission-feedback/'.$submission->id.'/private.pdf';
+
+    $attachment = ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'private.pdf',
+        'path' => $path,
+    ]);
+
+    Storage::disk('local')->put($path, 'content');
+
+    $this->actingAs($other)
+        ->get(route('course.exercises.feedback-attachments.download', [$submission, $attachment]))
+        ->assertForbidden();
+});
+
+test('guest cannot download feedback attachment', function () {
+    $user = User::factory()->create();
+
+    $submission = ExerciseSubmission::factory()->forUser($user)->create([
+        'title' => 'تمرین',
+    ]);
+
+    $attachment = ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'notes.pdf',
+        'path' => 'exercise-submission-feedback/'.$submission->id.'/notes.pdf',
+    ]);
+
+    $this->get(route('course.exercises.feedback-attachments.download', [$submission, $attachment]))
+        ->assertRedirect(route('login'));
+});
+
+test('deleted feedback attachment is not shown to student', function () {
+    [$user] = createActiveStudent();
+
+    $submission = ExerciseSubmission::factory()->forUser($user)->create([
+        'title' => 'تمرین حذف‌شده',
+    ]);
+
+    $path = 'exercise-submission-feedback/'.$submission->id.'/deleted.pdf';
+
+    ExerciseSubmissionFeedbackAttachment::factory()->forSubmission($submission)->create([
+        'original_name' => 'deleted.pdf',
+        'path' => $path,
+        'deleted_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('course.exercises.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('submissions.0.feedbackAttachments', []));
 });
 
 test('rich story text is stored and displayed safely', function () {

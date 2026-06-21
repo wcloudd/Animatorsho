@@ -48,6 +48,10 @@ Route::get('/course/exercises/{exerciseSubmission}/attachments/{attachment}', [C
     ->middleware('auth')
     ->name('course.exercises.attachments.download');
 
+Route::get('/course/exercises/{exerciseSubmission}/feedback-attachments/{feedbackAttachment}', [CourseExercisesController::class, 'downloadFeedbackAttachment'])
+    ->middleware('auth')
+    ->name('course.exercises.feedback-attachments.download');
+
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 
 Route::get('/checkout/confirm', [CheckoutController::class, 'confirm'])->name('checkout.confirm');

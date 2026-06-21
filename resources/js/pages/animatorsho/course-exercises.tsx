@@ -1,9 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft, ClipboardList, Download, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Download, ExternalLink, FileDown } from 'lucide-react';
 import { SafeStoryText } from '@/components/course/safe-story-text';
 import { PageContainer } from '@/components/page-container';
 import { ProfileStatusBadge } from '@/components/profile/profile-status-badge';
-import type { CourseExercisesIndexPageProps } from '@/lib/course-exercises-data';
+import type { CourseFeedbackAttachment, CourseExercisesIndexPageProps } from '@/lib/course-exercises-data';
 import { cn } from '@/lib/utils';
 
 function feedbackToneClassName(status: string): string {
@@ -190,6 +190,49 @@ export default function CourseExercises({
                                                         }
                                                     </p>
                                                 ) : null}
+                                            </div>
+                                        ) : null}
+
+                                        {submission.feedbackAttachments.length >
+                                        0 ? (
+                                            <div className="flex flex-col gap-2 rounded-2xl bg-bg px-3 py-3 ring-1 ring-border/60">
+                                                <p className="flex items-center gap-1.5 text-xs font-bold text-text">
+                                                    <FileDown className="size-3.5 text-purple" />
+                                                    فایل‌های استاد
+                                                </p>
+                                                <ul className="flex flex-col gap-1.5">
+                                                    {submission.feedbackAttachments.map(
+                                                        (
+                                                            fa: CourseFeedbackAttachment,
+                                                        ) => (
+                                                            <li key={fa.id}>
+                                                                <a
+                                                                    href={
+                                                                        fa.downloadUrl
+                                                                    }
+                                                                    className="flex items-center justify-between gap-3 rounded-xl bg-surface px-3 py-2 ring-1 ring-border/70"
+                                                                >
+                                                                    <span className="flex min-w-0 flex-col gap-0.5 text-start">
+                                                                        <span className="truncate text-xs font-bold text-text">
+                                                                            {
+                                                                                fa.originalName
+                                                                            }
+                                                                        </span>
+                                                                        <span className="text-[11px] font-medium text-muted">
+                                                                            {
+                                                                                fa.sizeLabel
+                                                                            }
+                                                                        </span>
+                                                                    </span>
+                                                                    <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-purple">
+                                                                        <Download className="size-3.5" />
+                                                                        دانلود
+                                                                    </span>
+                                                                </a>
+                                                            </li>
+                                                        ),
+                                                    )}
+                                                </ul>
                                             </div>
                                         ) : null}
                                     </li>
