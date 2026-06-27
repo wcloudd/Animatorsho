@@ -59,12 +59,19 @@ class CheckoutOrderService
                 'cash' => $paymentChannel === 'card_to_card'
                     ? $this->createFullCardToCardOrder($user, $coursePackage, $customerData)
                     : $this->createFullCashOrder($user, $coursePackage, $customerData),
-                'installment' => $this->createFullInstallmentOrder(
-                    $user,
-                    $coursePackage,
-                    $customerData,
-                    $installmentData ?? [],
-                ),
+                'installment' => $paymentChannel === 'card_to_card'
+                    ? $this->createFullInstallmentCardToCardOrder(
+                        $user,
+                        $coursePackage,
+                        $customerData,
+                        $installmentData ?? [],
+                    )
+                    : $this->createFullInstallmentOrder(
+                        $user,
+                        $coursePackage,
+                        $customerData,
+                        $installmentData ?? [],
+                    ),
                 default => throw new InvalidArgumentException('Invalid payment type.'),
             },
             'chapter' => $paymentChannel === 'card_to_card'
@@ -145,26 +152,10 @@ class CheckoutOrderService
         array $customerData,
         array $installmentData,
     ): array {
-        $term = $installmentData['installment_term'] ?? null;
-
-        if (! is_string($term) || $term === '') {
-            throw new InvalidArgumentException('Installment term is required.');
-        }
-
-        $pricing = InstallmentPricing::calculate((int) $coursePackage->price_toman, $term);
-
-        $paymentMeta = [
-            'requested_term' => $term,
-            'months' => $pricing['months'],
-            'note' => $installmentData['note'] ?? null,
-            'down_payment_percent' => $pricing['down_payment_percent'],
-            'cash_price_toman' => $pricing['cash_price_toman'],
-            'extra_amount_toman' => $pricing['extra_amount_toman'],
-            'installment_total_toman' => $pricing['installment_total_toman'],
-            'down_payment_toman' => $pricing['down_payment_toman'],
-            'remaining_toman' => $pricing['remaining_toman'],
-            'submitted_at' => now()->toIso8601String(),
-        ];
+        ['pricing' => $pricing, 'meta' => $paymentMeta] = $this->buildInstallmentContext(
+            $coursePackage,
+            $installmentData,
+        );
 
         return $this->persistOrder(
             user: $user,
@@ -181,6 +172,83 @@ class CheckoutOrderService
             orderFinalAmountToman: $pricing['installment_total_toman'],
             paymentAmountToman: $pricing['down_payment_toman'],
         );
+    }
+
+    /**
+     * Card-to-card installment down payment. Mirrors the online installment
+     * order but the down payment is settled via an uploaded receipt: the order
+     * waits in InstallmentDownPaymentReview until an admin approves the receipt,
+     * which then moves it into the same InstallmentReview state the online down
+     * payment reaches. No SpotPlayer license is issued at this stage.
+     *
+     * @param  array{customer_name: string, customer_mobile: string}  $customerData
+     * @param  array{installment_term?: string, note?: ?string}  $installmentData
+     * @return array{order: Order, resultStatus: string}
+     */
+    private function createFullInstallmentCardToCardOrder(
+        User $user,
+        CoursePackage $coursePackage,
+        array $customerData,
+        array $installmentData,
+    ): array {
+        ['pricing' => $pricing, 'meta' => $paymentMeta] = $this->buildInstallmentContext(
+            $coursePackage,
+            $installmentData,
+        );
+
+        $paymentMeta = [
+            ...$paymentMeta,
+            'down_payment_channel' => 'card_to_card',
+            'customer_name' => $customerData['customer_name'],
+            'customer_mobile' => $customerData['customer_mobile'],
+        ];
+
+        return $this->persistOrder(
+            user: $user,
+            coursePackage: $coursePackage,
+            orderStatus: OrderStatus::InstallmentDownPaymentReview,
+            orderPaymentType: OrderPaymentType::Installment,
+            paymentMethod: PaymentMethod::Installment,
+            paymentStatus: PaymentStatus::Reviewing,
+            resultStatus: 'manual-review',
+            customerName: $customerData['customer_name'],
+            customerMobile: $customerData['customer_mobile'],
+            paymentMeta: $paymentMeta,
+            orderAmountToman: $pricing['cash_price_toman'],
+            orderFinalAmountToman: $pricing['installment_total_toman'],
+            paymentAmountToman: $pricing['down_payment_toman'],
+        );
+    }
+
+    /**
+     * @param  array{installment_term?: string, note?: ?string}  $installmentData
+     * @return array{pricing: array<string, int>, meta: array<string, mixed>}
+     */
+    private function buildInstallmentContext(CoursePackage $coursePackage, array $installmentData): array
+    {
+        $term = $installmentData['installment_term'] ?? null;
+
+        if (! is_string($term) || $term === '') {
+            throw new InvalidArgumentException('Installment term is required.');
+        }
+
+        $pricing = InstallmentPricing::calculate((int) $coursePackage->price_toman, $term);
+
+        return [
+            'pricing' => $pricing,
+            'meta' => [
+                'requested_term' => $term,
+                'months' => $pricing['months'],
+                'note' => $installmentData['note'] ?? null,
+                'down_payment_percent' => $pricing['down_payment_percent'],
+                'cash_price_toman' => $pricing['cash_price_toman'],
+                'extra_amount_toman' => $pricing['extra_amount_toman'],
+                'installment_total_toman' => $pricing['installment_total_toman'],
+                'down_payment_toman' => $pricing['down_payment_toman'],
+                'remaining_toman' => $pricing['remaining_toman'],
+                'submitted_at' => now()->toIso8601String(),
+            ],
+        ];
     }
 
     /**

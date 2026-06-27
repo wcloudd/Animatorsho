@@ -80,7 +80,9 @@ class PaymentController extends Controller
 
     public function receipt(Payment $payment): StreamedResponse
     {
-        if ($payment->method !== PaymentMethod::CardToCard) {
+        // Receipts exist for full card-to-card payments and for card-to-card
+        // installment down payments (stored on the Installment payment).
+        if (! in_array($payment->method, [PaymentMethod::CardToCard, PaymentMethod::Installment], true)) {
             abort(404);
         }
 

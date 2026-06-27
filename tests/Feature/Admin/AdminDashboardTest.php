@@ -430,6 +430,29 @@ function queueItemHrefContains(mixed $queues, string $key, string $href): bool
     );
 }
 
+test('dashboard routes card-to-card installment down payment review to the payments page', function () {
+    $admin = User::factory()->admin()->create();
+    $payment = createDashboardCardToCardInstallmentDownPayment();
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            // Still counted as a pending installment on the dashboard summary.
+            ->where('summary', fn ($summary): bool => summaryCardCountAtLeast($summary, 'pending_installment', 1))
+            ->where('actionQueues', fn ($queues): bool => queueContainsItemId($queues, 'pending_installment', $payment->id))
+            // Option A: the queue item links straight to the payments review page,
+            // where the receipt is visible and approvable.
+            ->where('actionQueues', fn ($queues): bool => queueItemHrefContains(
+                $queues,
+                'pending_installment',
+                route('admin.payments.index', [
+                    'status' => PaymentStatus::Reviewing->value,
+                    'focus' => $payment->id,
+                ]),
+            )));
+});
+
 function createDashboardReviewingCardToCardPayment(): Payment
 {
     Storage::fake('local');
@@ -475,6 +498,45 @@ function createDashboardReviewingInstallmentPayment(): Payment
             'status' => PaymentStatus::Reviewing,
         ])
         ->fresh(['order']);
+}
+
+function createDashboardCardToCardInstallmentDownPayment(): Payment
+{
+    Storage::fake('local');
+
+    $user = User::factory()->create();
+    $package = CoursePackage::query()->where('slug', 'full')->firstOrFail();
+
+    $order = Order::factory()
+        ->for($user)
+        ->forPackage($package)
+        ->create([
+            'payment_type' => OrderPaymentType::Installment,
+            'status' => OrderStatus::InstallmentDownPaymentReview,
+            'customer_name' => 'نگار احمدی',
+            'customer_mobile' => '09120001122',
+        ]);
+
+    $payment = Payment::factory()
+        ->forOrder($order)
+        ->create([
+            'method' => PaymentMethod::Installment,
+            'status' => PaymentStatus::Reviewing,
+            'meta' => ['down_payment_channel' => 'card_to_card'],
+        ]);
+
+    $path = 'payment-receipts/'.$payment->id.'/receipt.jpg';
+    Storage::disk('local')->put($path, 'fake-receipt-content');
+
+    $payment->update([
+        'meta' => array_merge($payment->meta ?? [], [
+            'receipt_path' => $path,
+            'receipt_mime' => 'image/jpeg',
+            'receipt_uploaded_at' => now()->toIso8601String(),
+        ]),
+    ]);
+
+    return $payment->fresh(['order']);
 }
 
 function createDashboardPendingLicense(Order $order): SpotPlayerLicense

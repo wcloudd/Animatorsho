@@ -167,6 +167,7 @@ export type AdminPaymentListItem = {
     canApprove: boolean;
     canReject: boolean;
     rejectionNote: string | null;
+    isInstallmentDownPaymentReceipt: boolean;
     installmentRequestedTerm: string | null;
     installmentNote: string | null;
     installment: AdminPaymentInstallmentSnapshot | null;
@@ -209,6 +210,8 @@ export type AdminInstallmentListItem = {
     installment: AdminPaymentInstallmentSnapshot | null;
     canApprove: boolean;
     canReject: boolean;
+    isInstallmentDownPaymentReceipt: boolean;
+    receiptUrl: string | null;
     createdAt: string | null;
     paymentReviewHref: string | null;
     orderHref: string;

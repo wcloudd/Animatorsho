@@ -14,6 +14,10 @@ type CardToCardDetailsPanelProps = {
     onReceiptChange: (file: File | null) => void;
     receiptError?: string;
     processing?: boolean;
+    amountLabel?: string;
+    instructions?: readonly string[];
+    submitLabel?: string;
+    submitProcessingLabel?: string;
 };
 
 export function CardToCardDetailsPanel({
@@ -23,13 +27,17 @@ export function CardToCardDetailsPanel({
     onReceiptChange,
     receiptError,
     processing = false,
+    amountLabel = 'مبلغ قابل واریز',
+    instructions = CARD_TO_CARD_INSTRUCTIONS,
+    submitLabel = 'ارسال رسید',
+    submitProcessingLabel = 'در حال ارسال رسید...',
 }: CardToCardDetailsPanelProps) {
     return (
         <div className="flex w-full flex-col gap-4 rounded-2xl bg-bg px-4 py-4 ring-1 ring-border">
             {amountLine ? (
                 <div className="grid gap-1.5">
                     <span className="text-xs font-medium text-muted">
-                        مبلغ قابل واریز
+                        {amountLabel}
                     </span>
                     <p className="rounded-xl bg-surface px-3 py-2.5 text-center text-lg font-black text-text ring-1 ring-border">
                         {amountLine}
@@ -61,7 +69,7 @@ export function CardToCardDetailsPanel({
             </div>
 
             <ul className="grid gap-1.5 text-xs font-medium leading-relaxed text-muted">
-                {CARD_TO_CARD_INSTRUCTIONS.map((instruction) => (
+                {instructions.map((instruction) => (
                     <li key={instruction} className="flex gap-2">
                         <span aria-hidden>•</span>
                         <span>{instruction}</span>
@@ -103,10 +111,10 @@ export function CardToCardDetailsPanel({
                 {processing ? (
                     <>
                         <Spinner className="size-4" />
-                        در حال ارسال رسید...
+                        {submitProcessingLabel}
                     </>
                 ) : (
-                    'ارسال رسید'
+                    submitLabel
                 )}
             </button>
         </div>

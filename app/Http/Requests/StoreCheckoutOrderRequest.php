@@ -51,8 +51,7 @@ class StoreCheckoutOrderRequest extends FormRequest
         $isInstallment = $this->input('payment') === 'installment'
             && $this->input('package') === 'full';
 
-        $isCardToCard = $this->input('payment') === 'cash'
-            && $this->input('payment_channel') === 'card_to_card';
+        $isCardToCard = $this->input('payment_channel') === 'card_to_card';
 
         $receiptMaxKb = (int) config('card_to_card.receipt_max_kb', 5120);
 
@@ -99,15 +98,6 @@ class StoreCheckoutOrderRequest extends FormRequest
             $payment = $this->string('payment')->toString();
             $paymentChannel = $this->string('payment_channel')->toString();
             $chapter = $this->input('chapter');
-
-            if ($payment !== 'cash' && $paymentChannel === 'card_to_card') {
-                $validator->errors()->add(
-                    'payment_channel',
-                    'Card-to-card is only available for cash checkout.',
-                );
-
-                return;
-            }
 
             if ($paymentChannel === 'card_to_card' && ! app(PaymentReceiptStorageService::class)->isConfigured()) {
                 $validator->errors()->add(

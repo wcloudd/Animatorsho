@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Enums\ConsultationRequestStatus;
 use App\Enums\ExerciseSubmissionStatus;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\SmsMessageStatus;
@@ -432,10 +433,15 @@ class AdminDashboardService
             ->get()
             ->map(fn (Payment $payment): array => $this->paymentQueueItem(
                 $payment,
-                route('admin.installments.index', [
-                    'status' => 'awaiting_review',
-                    'focus' => $payment->order_id,
-                ]),
+                // A card-to-card down-payment receipt is reviewed on the payments
+                // page (where the receipt image is shown), so link straight there.
+                // Online installment down payments stay on the installments page.
+                $payment->order?->status === OrderStatus::InstallmentDownPaymentReview
+                    ? $this->paymentFocusHref($payment)
+                    : route('admin.installments.index', [
+                        'status' => 'awaiting_review',
+                        'focus' => $payment->order_id,
+                    ]),
             ))
             ->values()
             ->all();

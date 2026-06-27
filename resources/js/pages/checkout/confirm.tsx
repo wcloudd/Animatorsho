@@ -195,6 +195,31 @@ export default function CheckoutConfirm({
                                                 setData={setData}
                                                 errors={errors}
                                                 plans={installmentPlans ?? []}
+                                                selectedPaymentMethod={
+                                                    formSelectedPaymentMethod
+                                                }
+                                                onSelectPaymentMethod={
+                                                    onSelectPaymentMethod
+                                                }
+                                                cardToCardAvailable={
+                                                    cardToCardAvailable
+                                                }
+                                                cardToCardUnavailableMessage={
+                                                    cardToCardUnavailableMessage
+                                                }
+                                                cardToCardTransfer={
+                                                    cardToCardTransfer
+                                                }
+                                                receiptFile={data.receipt_image}
+                                                onReceiptChange={(file) =>
+                                                    setData(
+                                                        'receipt_image',
+                                                        file,
+                                                    )
+                                                }
+                                                receiptError={
+                                                    errors.receipt_image
+                                                }
                                             />
                                         ) : null}
                                     </>

@@ -46,6 +46,13 @@ export const CARD_TO_CARD_INSTRUCTIONS = [
     'بعد از تأیید، دسترسی و لایسنس فعال می‌شود.',
 ] as const;
 
+export const INSTALLMENT_DOWN_PAYMENT_CARD_TO_CARD_INSTRUCTIONS = [
+    'مبلغ پیش‌پرداخت را دقیقاً مطابق همین مقدار واریز کنید.',
+    'تصویر رسید واریز پیش‌پرداخت را بارگذاری کنید.',
+    'پشتیبانی رسید پیش‌پرداخت را بررسی می‌کند.',
+    'بعد از تأیید پیش‌پرداخت، درخواست اقساطی شما برای بررسی نهایی ادامه پیدا می‌کند.',
+] as const;
+
 export const INSTALLMENT_TERM_OPTIONS = [
     { id: 'one_month', label: '۱ ماهه' },
     { id: 'two_months', label: '۲ ماهه' },

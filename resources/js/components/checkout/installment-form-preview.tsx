@@ -1,7 +1,15 @@
 import { Spinner } from '@/components/ui/spinner';
-import { INSTALLMENT_TERM_OPTIONS } from '@/lib/checkout-confirm';
+import { CardToCardDetailsPanel } from '@/components/checkout/card-to-card-details-panel';
+import { PaymentMethodSelector } from '@/components/checkout/payment-method-selector';
+import {
+    INSTALLMENT_DOWN_PAYMENT_CARD_TO_CARD_INSTRUCTIONS,
+    INSTALLMENT_TERM_OPTIONS,
+} from '@/lib/checkout-confirm';
 import type { CheckoutOrderFormRenderProps } from '@/components/checkout/checkout-order-form';
-import type { InstallmentPlan } from '@/lib/checkout-confirm';
+import type {
+    CardToCardTransferDetails,
+    InstallmentPlan,
+} from '@/lib/checkout-confirm';
 import { formatTomanPrice } from '@/lib/format-toman';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +23,12 @@ const installmentTextareaClassName = cn(
 
 type InstallmentFormFieldsProps = CheckoutOrderFormRenderProps & {
     plans?: InstallmentPlan[];
+    cardToCardAvailable?: boolean;
+    cardToCardUnavailableMessage?: string | null;
+    cardToCardTransfer?: CardToCardTransferDetails | null;
+    receiptFile?: File | null;
+    onReceiptChange?: (file: File | null) => void;
+    receiptError?: string;
 };
 
 export function InstallmentFormFields({
@@ -23,9 +37,22 @@ export function InstallmentFormFields({
     setData,
     errors,
     plans = [],
+    selectedPaymentMethod,
+    onSelectPaymentMethod,
+    cardToCardAvailable = false,
+    cardToCardUnavailableMessage = null,
+    cardToCardTransfer = null,
+    receiptFile = null,
+    onReceiptChange,
+    receiptError,
 }: InstallmentFormFieldsProps) {
     const selectedPlan =
         plans.find((plan) => plan.term === data.installment_term) ?? null;
+    const downPaymentAmountLine = selectedPlan
+        ? formatTomanPrice(selectedPlan.downPaymentToman)
+        : null;
+    const isCardToCardDownPayment =
+        selectedPaymentMethod === 'card-to-card' && cardToCardAvailable;
 
     return (
         <section
@@ -42,8 +69,8 @@ export function InstallmentFormFields({
             <p className="rounded-xl bg-purple-soft px-4 py-3 text-center text-sm leading-6 text-text ring-1 ring-purple/20">
                 برای ثبت درخواست اقساطی، ابتدا پیش‌پرداخت
                 {selectedPlan ? ` ${selectedPlan.downPaymentPercent}٪ ` : ' '}
-                را از طریق درگاه پرداخت می‌کنید و سپس درخواست شما برای بررسی
-                پشتیبانی ارسال می‌شود.
+                را به‌صورت آنلاین یا کارت‌به‌کارت پرداخت می‌کنید و سپس درخواست
+                شما برای بررسی پشتیبانی ارسال می‌شود.
             </p>
 
             <div className="grid gap-2">
@@ -137,22 +164,56 @@ export function InstallmentFormFields({
                 </dl>
             ) : null}
 
-            <button
-                type="submit"
-                disabled={processing}
-                className="btn-cta-green flex h-12 w-full items-center justify-center gap-2 rounded-pill text-sm font-bold text-white disabled:opacity-70"
-            >
-                {processing ? (
-                    <>
-                        <Spinner className="size-4" />
-                        در حال انتقال به درگاه...
-                    </>
-                ) : selectedPlan ? (
-                    `پرداخت پیش‌پرداخت ${formatTomanPrice(selectedPlan.downPaymentToman)}`
-                ) : (
-                    'پرداخت پیش‌پرداخت و ثبت درخواست'
-                )}
-            </button>
+            <div className="flex w-full flex-col gap-3 border-t border-border pt-4">
+                <PaymentMethodSelector
+                    selectedPaymentMethod={selectedPaymentMethod}
+                    onSelectPaymentMethod={onSelectPaymentMethod}
+                    cardToCardAvailable={cardToCardAvailable}
+                    embedded
+                />
+
+                {!cardToCardAvailable && cardToCardUnavailableMessage ? (
+                    <p className="rounded-xl bg-gold-soft px-3 py-2.5 text-center text-xs font-medium leading-relaxed text-muted">
+                        {cardToCardUnavailableMessage}
+                    </p>
+                ) : null}
+            </div>
+
+            {isCardToCardDownPayment &&
+            cardToCardTransfer &&
+            onReceiptChange ? (
+                <CardToCardDetailsPanel
+                    transferDetails={cardToCardTransfer}
+                    amountLine={downPaymentAmountLine}
+                    amountLabel="مبلغ پیش‌پرداخت قابل واریز"
+                    instructions={
+                        INSTALLMENT_DOWN_PAYMENT_CARD_TO_CARD_INSTRUCTIONS
+                    }
+                    receiptFile={receiptFile}
+                    onReceiptChange={onReceiptChange}
+                    receiptError={receiptError}
+                    processing={processing}
+                    submitLabel="ارسال رسید پیش‌پرداخت"
+                    submitProcessingLabel="در حال ارسال رسید پیش‌پرداخت..."
+                />
+            ) : (
+                <button
+                    type="submit"
+                    disabled={processing}
+                    className="btn-cta-green flex h-12 w-full items-center justify-center gap-2 rounded-pill text-sm font-bold text-white disabled:opacity-70"
+                >
+                    {processing ? (
+                        <>
+                            <Spinner className="size-4" />
+                            در حال انتقال به درگاه...
+                        </>
+                    ) : selectedPlan ? (
+                        `پرداخت آنلاین پیش‌پرداخت ${formatTomanPrice(selectedPlan.downPaymentToman)}`
+                    ) : (
+                        'پرداخت پیش‌پرداخت و ثبت درخواست'
+                    )}
+                </button>
+            )}
         </section>
     );
 }

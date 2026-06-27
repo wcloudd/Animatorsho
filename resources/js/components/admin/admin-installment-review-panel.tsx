@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
 import { AdminButton } from '@/components/admin/admin-button';
 import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
+import { AdminReceiptPreview } from '@/components/admin/admin-receipt-preview';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import type { AdminPaymentListItem } from '@/types/admin';
@@ -30,6 +31,7 @@ export function AdminInstallmentReviewPanel({
     });
 
     const installment = payment.installment;
+    const isDownPaymentReceipt = payment.isInstallmentDownPaymentReceipt;
 
     return (
         <AdminActionRow
@@ -37,14 +39,31 @@ export function AdminInstallmentReviewPanel({
             className="rounded-xl bg-purple-soft/70 p-3 ring-1 ring-purple/25"
         >
             <p className="text-xs font-bold text-purple">
-                بررسی درخواست خرید اقساطی
+                {isDownPaymentReceipt
+                    ? 'بررسی رسید کارت‌به‌کارت پیش‌پرداخت اقساط'
+                    : 'بررسی درخواست خرید اقساطی'}
             </p>
 
             <p className="text-xs leading-5 text-muted">
-                تأیید یعنی پرداخت/شرایط توافق‌شده به‌صورت دستی تأیید شده و
-                سفارش پرداخت‌شده ثبت می‌شود. لایسنس SpotPlayer در وضعیت
-                «در انتظار فعال‌سازی» ایجاد می‌شود.
+                {isDownPaymentReceipt
+                    ? 'تأیید یعنی رسید پیش‌پرداخت اقساط تأیید می‌شود و سفارش وارد مرحله بررسی نهایی اقساط می‌شود. در این مرحله لایسنس SpotPlayer صادر نمی‌شود.'
+                    : 'تأیید یعنی پرداخت/شرایط توافق‌شده به‌صورت دستی تأیید شده و سفارش پرداخت‌شده ثبت می‌شود. لایسنس SpotPlayer در وضعیت «در انتظار فعال‌سازی» ایجاد می‌شود.'}
             </p>
+
+            {isDownPaymentReceipt ? (
+                <span className="w-fit rounded-pill bg-gold-soft px-2.5 py-1 text-[11px] font-bold text-gold ring-1 ring-gold/30">
+                    پیش‌پرداخت اقساط
+                </span>
+            ) : null}
+
+            {isDownPaymentReceipt ? (
+                <AdminReceiptPreview
+                    receiptUrl={payment.receiptUrl}
+                    orderNumber={payment.orderNumber}
+                    label="رسید کارت‌به‌کارت پیش‌پرداخت"
+                    alt={`رسید پیش‌پرداخت سفارش ${payment.orderNumber}`}
+                />
+            ) : null}
 
             {payment.installmentRequestedTerm ? (
                 <p className="text-sm text-text">
@@ -126,9 +145,21 @@ export function AdminInstallmentReviewPanel({
                         activeKey={confirmKey}
                         onActivate={setConfirmKey}
                         onCancel={() => setConfirmKey(null)}
-                        triggerLabel="تأیید درخواست"
-                        confirmLabel="تأیید درخواست"
-                        message="دسترسی قسطی فعال می‌شود."
+                        triggerLabel={
+                            isDownPaymentReceipt
+                                ? 'تأیید رسید پیش‌پرداخت'
+                                : 'تأیید درخواست'
+                        }
+                        confirmLabel={
+                            isDownPaymentReceipt
+                                ? 'تأیید رسید پیش‌پرداخت'
+                                : 'تأیید درخواست'
+                        }
+                        message={
+                            isDownPaymentReceipt
+                                ? 'پیش‌پرداخت تأیید و سفارش وارد بررسی نهایی اقساط می‌شود (بدون صدور لایسنس).'
+                                : 'دسترسی قسطی فعال می‌شود.'
+                        }
                         href={`/admin/payments/${payment.id}/approve`}
                         triggerVariant="success"
                         confirmVariant="success"

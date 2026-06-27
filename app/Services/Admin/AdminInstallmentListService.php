@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Support\Admin\AdminListFocus;
 use App\Support\Admin\AdminListSearch;
+use App\Services\PaymentReceiptStorageService;
 use App\Support\AdminStatusLabels;
 use App\Support\InstallmentTermLabels;
 use App\Support\ProfileStatusLabels;
@@ -20,6 +21,7 @@ class AdminInstallmentListService
 {
     public function __construct(
         private readonly AdminPaymentReviewService $paymentReview,
+        private readonly PaymentReceiptStorageService $receipts,
     ) {}
 
     /**
@@ -94,7 +96,12 @@ class AdminInstallmentListService
 
         match ($statusFilter) {
             'awaiting_down_payment' => $query->where('status', OrderStatus::InstallmentDownPaymentPending),
-            'awaiting_review' => $query->where('status', OrderStatus::InstallmentReview),
+            // "Awaiting review" covers both the online down payment (InstallmentReview)
+            // and the card-to-card down-payment receipt awaiting approval.
+            'awaiting_review' => $query->whereIn('status', [
+                OrderStatus::InstallmentReview,
+                OrderStatus::InstallmentDownPaymentReview,
+            ]),
             'approved' => $query->where('status', OrderStatus::Paid),
             'rejected' => $query->where('status', OrderStatus::InstallmentRejected),
             default => null,
@@ -144,6 +151,11 @@ class AdminInstallmentListService
             'installment' => $installment,
             'canApprove' => $payment instanceof Payment && $this->paymentReview->canReview($payment),
             'canReject' => $payment instanceof Payment && $this->paymentReview->canReview($payment),
+            'isInstallmentDownPaymentReceipt' => $payment instanceof Payment
+                && $this->paymentReview->isInstallmentDownPaymentReceipt($payment),
+            'receiptUrl' => $payment instanceof Payment && $this->receipts->hasReceipt($payment)
+                ? route('admin.payments.receipt', $payment)
+                : null,
             'createdAt' => $order->created_at?->toIso8601String(),
             'paymentReviewHref' => $payment instanceof Payment
                 ? route('admin.payments.index', ['focus' => $payment->id])

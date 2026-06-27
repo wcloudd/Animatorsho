@@ -1,18 +1,19 @@
 /**
- * Login-only brand wordmark.
+ * Shared auth brand wordmark.
  *
- * Replaces the decorative auth logo mark on the login header with the
- * Animatorsho name styled as a playful sticker text-logo: an animated
- * multi-color gradient fill layered over a cream outline/glow, with a few
- * keyframe-style accent dots and a pencil-stroke underline. Kept separate
- * from the shared `AuthIllustration` so other auth pages are unaffected.
+ * Renders the Animatorsho name as a playful sticker text-logo used across all
+ * authentication pages (login, register, password recovery, OTP verify, ...).
+ * It replaces the old decorative auth logo mark and is wired into the shared
+ * `AuthPageIntro` so every auth page stays consistent.
  *
- * The moving gradient (`.login-brand-text`) and its reduced-motion fallback
- * live in `resources/css/app.css` next to the other gradient-text utilities.
+ * Style: an animated multi-color gradient fill layered over a cream
+ * outline/glow, with keyframe-style accent dots and a pencil-stroke underline.
+ * The moving gradient (`.auth-brand-text`) and its reduced-motion fallback live
+ * in `resources/css/app.css` next to the other gradient-text utilities.
  */
 const BRAND_TEXT = 'انیماتورشو';
 
-export function LoginBrandTitle() {
+export function AuthBrandTitle() {
     return (
         <div
             className="mx-auto flex w-full flex-col items-center gap-2 py-1"
@@ -41,12 +42,12 @@ export function LoginBrandTitle() {
                     {/* cream outline + soft purple sticker shadow, behind the fill */}
                     <span
                         aria-hidden="true"
-                        className="login-brand-outline absolute inset-0 -z-10"
+                        className="auth-brand-outline absolute inset-0 -z-10"
                     >
                         {BRAND_TEXT}
                     </span>
                     {/* animated gradient fill */}
-                    <span className="login-brand-text relative">
+                    <span className="auth-brand-text relative">
                         {BRAND_TEXT}
                     </span>
                 </span>
@@ -55,7 +56,7 @@ export function LoginBrandTitle() {
             {/* playful pencil-motion underline */}
             <span
                 aria-hidden="true"
-                className="login-brand-underline block w-32 sm:w-40"
+                className="auth-brand-underline block w-32 sm:w-40"
             />
         </div>
     );

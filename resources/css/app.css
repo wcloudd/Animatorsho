@@ -344,9 +344,9 @@
         animation: text-gradient-flow 5.5s ease-in-out infinite;
     }
 
-    /* Login-only brand wordmark ("انیماتورشو"). Layered sticker text logo:
+    /* Shared auth brand wordmark ("انیماتورشو"). Layered sticker text logo:
        animated gradient fill + cream outline/glow behind + pencil underline. */
-    .login-brand-text {
+    .auth-brand-text {
         background-image: linear-gradient(
             100deg,
             var(--color-purple) 0%,
@@ -363,7 +363,7 @@
         animation: text-gradient-flow 7s ease-in-out infinite;
     }
 
-    .login-brand-outline {
+    .auth-brand-outline {
         color: var(--color-surface-warm);
         text-shadow:
             1.5px 0 0 var(--color-surface-warm),
@@ -378,7 +378,7 @@
             0 7px 16px rgba(96, 55, 168, 0.3);
     }
 
-    .login-brand-underline {
+    .auth-brand-underline {
         height: 0.55rem;
         border-bottom: 3px solid var(--color-gold);
         border-bottom-left-radius: 50%;
@@ -632,7 +632,7 @@
 
         .text-gradient-animate,
         .text-brand-hero-fill,
-        .login-brand-text,
+        .auth-brand-text,
         .text-gradient-support-title,
         .text-gradient-support-title::before {
             animation: none;

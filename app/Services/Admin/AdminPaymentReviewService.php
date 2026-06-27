@@ -44,7 +44,56 @@ class AdminPaymentReviewService
             throw new InvalidArgumentException($reason);
         }
 
+        // Approving a card-to-card installment down-payment receipt only settles
+        // the down payment and moves the order into the same review state the
+        // online down payment reaches. No license is issued at this step.
+        if ($this->isInstallmentDownPaymentReceipt($payment)) {
+            $this->approveInstallmentDownPayment($payment);
+
+            return null;
+        }
+
         return $this->orderPaymentCompletion->markOrderPaid($payment->order);
+    }
+
+    /**
+     * A card-to-card installment down payment whose receipt is awaiting review.
+     */
+    public function isInstallmentDownPaymentReceipt(Payment $payment): bool
+    {
+        return $payment->method === PaymentMethod::Installment
+            && $payment->order?->status === OrderStatus::InstallmentDownPaymentReview;
+    }
+
+    private function approveInstallmentDownPayment(Payment $payment): void
+    {
+        DB::transaction(function () use ($payment): void {
+            $order = $payment->order;
+
+            $payment->update([
+                // Keep the payment in review: the down payment is now settled,
+                // but the installment request itself still needs final approval.
+                'status' => PaymentStatus::Reviewing,
+                'paid_at' => $payment->paid_at ?? now(),
+                'meta' => array_merge($payment->meta ?? [], [
+                    'down_payment_paid_at' => now()->toIso8601String(),
+                    'down_payment_channel' => 'card_to_card',
+                    'down_payment_receipt_approved_at' => now()->toIso8601String(),
+                ]),
+            ]);
+
+            if ($order !== null) {
+                $order->update([
+                    'status' => OrderStatus::InstallmentReview,
+                ]);
+            }
+        });
+
+        $order = $payment->fresh()?->order;
+
+        if ($order !== null) {
+            $this->smsNotifier->notifyInstallmentRequestSubmitted($order);
+        }
     }
 
     public function reject(Payment $payment, ?string $note = null): void
@@ -56,14 +105,32 @@ class AdminPaymentReviewService
         }
 
         $isInstallment = $payment->method === PaymentMethod::Installment;
+        $isInstallmentDownPaymentReceipt = $this->isInstallmentDownPaymentReceipt($payment);
 
-        DB::transaction(function () use ($payment, $note, $isInstallment): void {
+        DB::transaction(function () use ($payment, $note, $isInstallment, $isInstallmentDownPaymentReceipt): void {
             $order = $payment->order;
 
             $rejectionMeta = array_merge($payment->meta ?? [], array_filter([
                 'rejection_note' => $note,
                 'rejected_at' => now()->toIso8601String(),
             ]));
+
+            if ($isInstallmentDownPaymentReceipt) {
+                // No money was captured for a card-to-card down payment, so fail
+                // the payment (the user can retry) and flag the order rejected.
+                $payment->update([
+                    'status' => PaymentStatus::Failed,
+                    'meta' => $rejectionMeta,
+                ]);
+
+                if ($order !== null && $order->status !== OrderStatus::Paid) {
+                    $order->update([
+                        'status' => OrderStatus::InstallmentRejected,
+                    ]);
+                }
+
+                return;
+            }
 
             if ($isInstallment) {
                 // The down payment was already captured via Zarinpal. Preserve the
@@ -180,8 +247,19 @@ class AdminPaymentReviewService
             return 'Payment order was not found.';
         }
 
-        if ($order->status !== OrderStatus::InstallmentReview) {
+        if (! in_array($order->status, [
+            OrderStatus::InstallmentReview,
+            OrderStatus::InstallmentDownPaymentReview,
+        ], true)) {
             return 'The related order is not awaiting installment review.';
+        }
+
+        // A card-to-card down payment must have its receipt uploaded first.
+        if (
+            $order->status === OrderStatus::InstallmentDownPaymentReview
+            && ! $this->receipts->hasReceipt($payment)
+        ) {
+            return 'A receipt must be uploaded before this payment can be reviewed.';
         }
 
         return null;

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { AdminActionRow } from '@/components/admin/admin-action-row';
 import { AdminButton } from '@/components/admin/admin-button';
 import { AdminConfirmAction } from '@/components/admin/admin-confirm-action';
+import { AdminReceiptPreview } from '@/components/admin/admin-receipt-preview';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import type { AdminPaymentListItem } from '@/types/admin';
@@ -35,34 +36,10 @@ export function AdminPaymentReviewPanel({
         >
             <p className="text-xs font-bold text-gold">بررسی رسید کارت‌به‌کارت</p>
 
-            {payment.receiptUrl ? (
-                <div className="flex flex-col gap-2">
-                    <span className="text-xs font-medium text-muted">
-                        رسید پرداخت
-                    </span>
-                    <a
-                        href={payment.receiptUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="overflow-hidden rounded-xl ring-1 ring-[#e8e0f0]"
-                    >
-                        <img
-                            src={payment.receiptUrl}
-                            alt={`رسید سفارش ${payment.orderNumber}`}
-                            className="max-h-48 w-full bg-bg object-contain"
-                        />
-                    </a>
-                    <AdminButton asChild size="sm" adminVariant="outline">
-                        <a
-                            href={payment.receiptUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            مشاهده رسید
-                        </a>
-                    </AdminButton>
-                </div>
-            ) : null}
+            <AdminReceiptPreview
+                receiptUrl={payment.receiptUrl}
+                orderNumber={payment.orderNumber}
+            />
 
             <div className="flex flex-wrap gap-2">
                 {payment.canApprove ? (

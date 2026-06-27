@@ -299,6 +299,22 @@ class ProfileAccessPresenter
             );
         }
 
+        if ($order->status === OrderStatus::InstallmentDownPaymentReview) {
+            // Card-to-card down payment receipt awaiting admin review. Treated as
+            // an installment request under review (blocking, same as online).
+            return $this->candidate(
+                self::PRIORITY_PAYMENT_REVIEWING,
+                'installment_reviewing',
+                $sortTimestamp,
+                $order->id,
+                $license?->id,
+                $title,
+                $this->paymentMethodLabel($order, $payment),
+                $order->final_amount_toman,
+                null,
+            );
+        }
+
         if ($order->status === OrderStatus::InstallmentRejected) {
             $hasCapturedDownPayment = $this->hasCapturedInstallmentDownPayment($payment);
 

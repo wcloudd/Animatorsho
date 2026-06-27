@@ -124,6 +124,7 @@ class AdminPaymentListService
             'canApprove' => $canReview,
             'canReject' => $canReview,
             'rejectionNote' => $this->rejectionNote($payment->meta),
+            'isInstallmentDownPaymentReceipt' => $this->paymentReview->isInstallmentDownPaymentReceipt($payment),
             'installmentRequestedTerm' => InstallmentTermLabels::fromPaymentMeta($payment->meta),
             'installmentNote' => InstallmentTermLabels::noteFromPaymentMeta($payment->meta),
             'installment' => $this->installmentSnapshot($payment),

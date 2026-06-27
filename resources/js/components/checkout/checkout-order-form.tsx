@@ -71,9 +71,9 @@ export function CheckoutOrderForm({
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const isCardToCard =
-            context.payment === 'cash' &&
-            selectedPaymentMethod === 'card-to-card';
+        // Card-to-card applies to cash checkout and to the installment down
+        // payment; both upload a receipt and submit as a card_to_card channel.
+        const isCardToCard = selectedPaymentMethod === 'card-to-card';
 
         form.transform((data) => ({
             ...data,
