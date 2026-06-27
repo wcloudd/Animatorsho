@@ -9,6 +9,7 @@ import {
 import { AuthInputError } from '@/components/auth/auth-input-error';
 import { AuthThrottleError } from '@/components/auth/auth-throttle-error';
 import { AuthPageIntro } from '@/components/auth/auth-page-intro';
+import { LoginBrandTitle } from '@/components/auth/login-brand-title';
 import { AuthStatusBanner } from '@/components/auth/auth-status-banner';
 import { AuthSupportFallbackCard } from '@/components/auth/auth-support-fallback-card';
 import TextLink from '@/components/text-link';
@@ -54,7 +55,7 @@ export default function Login({ status }: Props) {
                 canonical={canonicalFromPath(page.props.appUrl, '/login')}
             />
 
-            <AuthPageIntro title={copy.title} />
+            <AuthPageIntro title={copy.title} mark={<LoginBrandTitle />} />
 
             {localizedStatus ? (
                 <AuthStatusBanner message={localizedStatus} />
