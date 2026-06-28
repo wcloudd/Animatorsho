@@ -32,6 +32,8 @@ export type CourseChapterMediaSlot = {
     title: string;
     durationLabel: string;
     updateLabel?: string;
+    toolLabel?: string;
+    levelLabel?: string;
     videoSrc: string;
     posterSrc: string;
     lessons: readonly string[];
@@ -42,6 +44,8 @@ export const LANDING_HERO_MEDIA = {
     posterSrc: '/media/landing/hero-poster.webp',
     ariaLabel: 'پیش‌نمایش ویدیو معرفی دوره',
 } as const satisfies LandingVideoSlot;
+
+export const LANDING_HERO_CLICK_VIDEO_SRC = '/media/landing/hero-video-click.mp4?v=1' as const;
 
 export const LANDING_MEET_MEDIA = {
     videoSrc: '/media/landing/videos/meet-intro.mp4',
@@ -87,6 +91,35 @@ export const LANDING_PURCHASE_KEY_IMAGE = {
     ariaLabel: 'تصویر بخش خرید',
 } as const satisfies LandingImageSlot;
 
+export const LANDING_INSTRUCTOR_IMAGE = {
+    src: '/media/landing/posters/teacher-photo.webp',
+    ariaLabel: 'عکس ابوالفضل رستگارمقدم، مدرس دوره انیماتورشو',
+} as const satisfies LandingImageSlot;
+
+export const LANDING_INSTRUCTOR_PORTFOLIO_PREVIEW_MEDIA = {
+    videoSrc: '/media/landing/videos/teacher-portfolio-preview.mp4',
+    posterSrc: '/media/landing/posters/teacher-portfolio-preview.webp',
+    ariaLabel: 'پیش‌نمایش نمونه‌کارهای مدرس',
+} as const satisfies LandingVideoSlot;
+
+export const LANDING_INSTRUCTOR_PORTFOLIO_CLICK_VIDEO_SRC =
+    '/media/landing/videos/teacher-portfolio-click.mp4?v=1' as const;
+
+export const LANDING_AI_SECTION_MEDIA = {
+    videoSrc: '/media/landing/videos/ai-animation-preview.mp4',
+    posterSrc: '/media/landing/posters/ai-animation-preview.webp',
+    ariaLabel: 'پیش‌نمایش انیمیشن بخش هوش مصنوعی',
+} as const satisfies LandingVideoSlot;
+
+export const LANDING_IN_PERSON_COURSE_PREVIEW_MEDIA = {
+    videoSrc: '/media/landing/videos/in-person-course-preview.mp4',
+    posterSrc: '/media/landing/posters/in-person-course-preview.webp',
+    ariaLabel: 'پیش‌نمایش گزارش دوره حضوری',
+} as const satisfies LandingVideoSlot;
+
+export const LANDING_IN_PERSON_COURSE_CLICK_VIDEO_SRC =
+    '/media/landing/videos/in-person-course-click.mp4?v=1' as const;
+
 export const LANDING_STUDENT_WORKS = [
     {
         id: 'student-1',
@@ -114,6 +147,33 @@ export const LANDING_STUDENT_WORKS = [
         videoSrc: '/media/landing/student-works/videos/student-3.mp4',
         posterSrc: '/media/landing/student-works/posters/student-3.webp',
         avatarSrc: '/media/landing/student-works/avatars/student-3.webp',
+    },
+    {
+        id: 'student-4',
+        studentName: 'سارا احمدی',
+        badgeLabel: 'هنرجوی انیماتورشو',
+        projectTitle: 'ورکشاپ کاراکترسازی',
+        videoSrc: '/media/landing/student-works/videos/student-4.mp4',
+        posterSrc: '/media/landing/student-works/posters/student-4.webp',
+        avatarSrc: '/media/landing/student-works/avatars/student-4.webp',
+    },
+    {
+        id: 'student-5',
+        studentName: 'محمد حسینی',
+        badgeLabel: 'هنرجوی انیماتورشو',
+        projectTitle: 'انیمیشن صحنه‌سازی',
+        videoSrc: '/media/landing/student-works/videos/student-5.mp4',
+        posterSrc: '/media/landing/student-works/posters/student-5.webp',
+        avatarSrc: '/media/landing/student-works/avatars/student-5.webp',
+    },
+    {
+        id: 'student-6',
+        studentName: 'فاطمه نجفی',
+        badgeLabel: 'هنرجوی انیماتورشو',
+        projectTitle: 'تمرین بازیگری کاراکتر',
+        videoSrc: '/media/landing/student-works/videos/student-6.mp4',
+        posterSrc: '/media/landing/student-works/posters/student-6.webp',
+        avatarSrc: '/media/landing/student-works/avatars/student-6.webp',
     },
 ] as const satisfies readonly StudentWorkMediaSlot[];
 
@@ -278,30 +338,50 @@ export const LANDING_COURSE_CHAPTERS = [
     {
         id: 'chapter-5',
         shortTab: 'ورکشاپ 1',
-        activeTab: 'دنیای گفتمان ها',
-        title: 'ورکشاپ دنیای گفتمان ها',
-        durationLabel: '۱ ساعت آموزش',
-        updateLabel: 'آپدیت جدید دوره',
+        activeTab: 'ورکشاپ ترن هوایی',
+        title: 'ورکشاپ ترن هوایی',
+        durationLabel: '۳ ساعت آموزش',
+        toolLabel: 'کار با سیستم',
+        levelLabel: 'سطح متوسط',
         videoSrc: '/media/landing/videos/chapter-5.mp4',
         posterSrc: '/media/landing/posters/chapter-5.webp',
         lessons: [
-            'ورکشاپ ونزوئلا قسمت 1',
-            'عیب یابی طرح ارسالی',
-            'ورکشاپ ونزوئلا قسمت 2',
+            'طراحی اجزاء',
+            'متحرک سازی ترن',
         ],
     },
     {
         id: 'chapter-6',
         shortTab: 'ورکشاپ 2',
-        activeTab: 'تبلیغاتی آموزشی',
-        title: 'ورکشاپ 0-100 عربی',
+        activeTab: 'ورکشاپ پرتقال',
+        title: 'ورکشاپ پرتقال',
         durationLabel: '۱ ساعت آموزش',
-        updateLabel: 'در حال بروزرسانی',
+        toolLabel: 'کار با گوشی',
+        levelLabel: 'سطح متوسط',
         videoSrc: '/media/landing/videos/chapter-6.mp4',
         posterSrc: '/media/landing/posters/chapter-6.webp',
         lessons: [
-            'پیدا کردن ایده - قسمت اول',
-            'درحال بروز رسانی',
+            'ترکیب دنیای رئال با دنیای کارتونی (پرتقال)',
+            'پیدا کردن ایده',
+            'آماده سازی استوری برد',
+            'تنظیم و آماده سازی دوربین',
+            'ترک کردن روی گوشی',
+        ],
+    },
+    {
+        id: 'chapter-7',
+        shortTab: 'ورکشاپ 3',
+        activeTab: 'ورکشاپ مگس',
+        title: 'ورکشاپ مگس',
+        durationLabel: '۱ ساعت آموزش',
+        toolLabel: 'کار با گوشی',
+        levelLabel: 'سطح مبتدی',
+        videoSrc: '/media/landing/videos/chapter-7.mp4',
+        posterSrc: '/media/landing/posters/chapter-7.webp',
+        lessons: [
+            'ساخت انیمیشن خطی (مگس)',
+            'پیدا کردن ایده و سناریو',
+            'انجام متحرک سازی مگس',
         ],
     },
 ] as const satisfies readonly CourseChapterMediaSlot[];

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 const cardClassName =
-    'rounded-[28px] bg-surface px-5 py-5 shadow-soft ring-1 ring-border/80';
+    'w-[370px] rounded-[28px] bg-surface px-5 py-5 shadow-soft ring-1 ring-border/80';
 
 export const authSubmitButtonClassName =
     'btn-cta-green h-12 w-full rounded-pill text-sm font-bold text-white';

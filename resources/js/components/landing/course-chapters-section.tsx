@@ -63,7 +63,8 @@ function ChapterContentCard({
                 videoSrc={chapter.videoSrc}
                 posterSrc={chapter.posterSrc}
                 ariaLabel={`ویدیو ${chapter.title}`}
-                aspectClassName="h-[240px]"
+                aspectClassName=""
+                mediaClassName="block w-full h-auto border-0 outline-none"
                 className="rounded-2xl"
                 enabled
             />
@@ -75,6 +76,16 @@ function ChapterContentCard({
                     <span className="rounded-pill bg-purple-soft px-2.5 py-1 text-xs font-medium text-purple">
                         {chapter.durationLabel}
                     </span>
+                    {chapter.toolLabel ? (
+                        <span className="rounded-pill bg-surface px-2.5 py-1 text-xs font-medium text-muted ring-1 ring-border">
+                            {chapter.toolLabel}
+                        </span>
+                    ) : null}
+                    {chapter.levelLabel ? (
+                        <span className="rounded-pill bg-surface px-2.5 py-1 text-xs font-medium text-muted ring-1 ring-border">
+                            {chapter.levelLabel}
+                        </span>
+                    ) : null}
                     {chapter.updateLabel ? (
                         <span className="rounded-pill bg-green-soft px-2.5 py-1 text-xs font-medium text-green">
                             {chapter.updateLabel}
@@ -139,20 +150,22 @@ export function CourseChaptersSection() {
                 <span className="mt-1 block">چی یاد می‌گیری؟</span>
             </h2>
 
-            <div className="w-full min-w-0">
-                <div
-                    role="tablist"
-                    aria-label="سرفصل‌های دوره"
-                    className="-mx-4 flex min-w-0 flex-nowrap gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
-                    {COURSE_CHAPTERS.map((chapter) => (
-                        <ChapterTab
-                            key={chapter.id}
-                            chapter={chapter}
-                            isActive={chapter.id === activeChapterId}
-                            onSelect={() => selectChapter(chapter.id)}
-                        />
-                    ))}
+            <div className="w-full min-w-0 self-stretch">
+                <div className="-mx-4 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div
+                        role="tablist"
+                        aria-label="سرفصل‌های دوره"
+                        className="inline-flex min-w-full flex-nowrap gap-2 px-4"
+                    >
+                        {COURSE_CHAPTERS.map((chapter) => (
+                            <ChapterTab
+                                key={chapter.id}
+                                chapter={chapter}
+                                isActive={chapter.id === activeChapterId}
+                                onSelect={() => selectChapter(chapter.id)}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
 

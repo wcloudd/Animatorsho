@@ -345,7 +345,7 @@
     }
 
     /* Shared auth brand wordmark ("انیماتورشو"). Layered sticker text logo:
-       animated gradient fill + cream outline/glow behind + pencil underline. */
+       animated gradient fill + cream outline/glow behind. */
     .auth-brand-text {
         background-image: linear-gradient(
             100deg,
@@ -376,14 +376,6 @@
             -1.1px -1.1px 0 var(--color-surface-warm),
             0 0 7px rgba(255, 255, 255, 0.7),
             0 7px 16px rgba(96, 55, 168, 0.3);
-    }
-
-    .auth-brand-underline {
-        height: 0.55rem;
-        border-bottom: 3px solid var(--color-gold);
-        border-bottom-left-radius: 50%;
-        border-bottom-right-radius: 50%;
-        opacity: 0.85;
     }
 
     .text-gradient-support-title {

@@ -7,7 +7,7 @@
  * `AuthPageIntro` so every auth page stays consistent.
  *
  * Style: an animated multi-color gradient fill layered over a cream
- * outline/glow, with keyframe-style accent dots and a pencil-stroke underline.
+ * outline/glow, with keyframe-style accent dots.
  * The moving gradient (`.auth-brand-text`) and its reduced-motion fallback live
  * in `resources/css/app.css` next to the other gradient-text utilities.
  */
@@ -52,12 +52,6 @@ export function AuthBrandTitle() {
                     </span>
                 </span>
             </div>
-
-            {/* playful pencil-motion underline */}
-            <span
-                aria-hidden="true"
-                className="auth-brand-underline block w-32 sm:w-40"
-            />
         </div>
     );
 }

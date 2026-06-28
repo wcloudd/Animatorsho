@@ -2,11 +2,7 @@ import { Play } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { LandingVideoModal } from '@/components/landing/landing-video-modal';
 import {
     LANDING_STUDENT_WORKS,
     type StudentWorkMediaSlot,
@@ -102,82 +98,6 @@ function StudentWorkCard({
     );
 }
 
-function StudentWorkVideoModal({
-    work,
-    onClose,
-}: {
-    work: StudentWork | null;
-    onClose: () => void;
-}) {
-    const videoRef = useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-        if (!work) {
-            return;
-        }
-
-        const video = videoRef.current;
-        if (!video) {
-            return;
-        }
-
-        void video.play().catch(() => undefined);
-    }, [work]);
-
-    function handleOpenChange(open: boolean) {
-        if (!open) {
-            const video = videoRef.current;
-            video?.pause();
-
-            try {
-                if (video) {
-                    video.currentTime = 0;
-                }
-            } catch {
-                // Ignore seek errors while metadata is loading.
-            }
-
-            onClose();
-        }
-    }
-
-    return (
-        <Dialog open={work !== null} onOpenChange={handleOpenChange}>
-            <DialogContent
-                className="fixed inset-0 top-0 left-0 h-dvh max-h-dvh w-full max-w-none translate-x-0 translate-y-0 gap-0 rounded-none border-0 bg-black p-0 shadow-none sm:max-w-none [&>button:last-child]:hidden"
-                aria-describedby={undefined}
-            >
-                <DialogTitle className="sr-only">
-                    {work ? `ویدیو ${work.projectTitle} — ${work.studentName}` : 'ویدیو هنرجو'}
-                </DialogTitle>
-                {work ? (
-                    <video
-                        ref={videoRef}
-                        key={work.id}
-                        className="h-full w-full object-contain"
-                        controls
-                        autoPlay
-                        playsInline
-                        preload="none"
-                        poster={work.posterSrc}
-                    >
-                        <source src={work.videoSrc} type="video/mp4" />
-                    </video>
-                ) : null}
-                <button
-                    type="button"
-                    onClick={() => handleOpenChange(false)}
-                    className="absolute top-4 right-4 z-10 flex size-10 items-center justify-center rounded-full bg-black/50 text-white transition-opacity hover:opacity-80"
-                    aria-label="بستن"
-                >
-                    <span className="text-xl leading-none" aria-hidden>
-                        ×
-                    </span>
-                </button>
-            </DialogContent>
-        </Dialog>
-    );
-}
 
 export function StudentWorksSection() {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -311,10 +231,13 @@ export function StudentWorksSection() {
                 </div>
             </div>
 
-            <StudentWorkVideoModal
-                work={selectedWork}
-                onClose={() => setSelectedWork(null)}
-            />
+            {selectedWork && (
+                <LandingVideoModal
+                    videoSrc={selectedWork.videoSrc}
+                    ariaLabel={`ویدیو ${selectedWork.projectTitle} — ${selectedWork.studentName}`}
+                    onClose={() => setSelectedWork(null)}
+                />
+            )}
         </section>
     );
 }
