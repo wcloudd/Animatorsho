@@ -150,6 +150,7 @@ export type CourseHomePageProps = {
     welcome: CourseHomeWelcome;
     progress: CourseHomeProgress;
     onboarding: CourseHomeOnboarding;
+    showGettingStartedSection: boolean;
     notifications: CourseHomeNotifications;
     preview: CourseHomePreview;
 };

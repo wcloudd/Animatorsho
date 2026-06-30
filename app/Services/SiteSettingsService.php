@@ -34,6 +34,14 @@ class SiteSettingsService
         );
     }
 
+    public function isStudentPanelShowGettingStartedSection(): bool
+    {
+        return $this->booleanSetting(
+            Setting::KEY_STUDENT_PANEL_SHOW_GETTING_STARTED,
+            false,
+        );
+    }
+
     public function maintenanceTitle(): string
     {
         $stored = $this->stringSetting(Setting::KEY_MAINTENANCE_TITLE);
@@ -67,7 +75,8 @@ class SiteSettingsService
      *     purchases_enabled?: bool,
      *     maintenance_mode_enabled?: bool,
      *     maintenance_title?: string|null,
-     *     maintenance_message?: string|null
+     *     maintenance_message?: string|null,
+     *     student_panel_show_getting_started_section?: bool
      * }  $data
      */
     public function update(array $data): void
@@ -88,6 +97,10 @@ class SiteSettingsService
             $this->writeNullableString(Setting::KEY_MAINTENANCE_MESSAGE, $data['maintenance_message']);
         }
 
+        if (array_key_exists('student_panel_show_getting_started_section', $data)) {
+            $this->writeBoolean(Setting::KEY_STUDENT_PANEL_SHOW_GETTING_STARTED, (bool) $data['student_panel_show_getting_started_section']);
+        }
+
         $this->resolved = [];
     }
 
@@ -97,7 +110,8 @@ class SiteSettingsService
      *     maintenanceModeEnabled: bool,
      *     maintenanceTitle: string,
      *     maintenanceMessage: string,
-     *     purchasesDisabledMessage: string
+     *     purchasesDisabledMessage: string,
+     *     studentPanelShowGettingStartedSection: bool
      * }
      */
     public function toAdminArray(): array
@@ -108,6 +122,7 @@ class SiteSettingsService
             'maintenanceTitle' => $this->maintenanceTitle(),
             'maintenanceMessage' => $this->maintenanceMessage(),
             'purchasesDisabledMessage' => self::PURCHASES_DISABLED_MESSAGE,
+            'studentPanelShowGettingStartedSection' => $this->isStudentPanelShowGettingStartedSection(),
         ];
     }
 

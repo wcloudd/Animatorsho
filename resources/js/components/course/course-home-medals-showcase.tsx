@@ -1,10 +1,11 @@
 import { Award, BookOpen, Crown, ImagePlay, PenLine, Star, Trophy } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 import { CourseHomeSectionCard } from '@/components/course/course-home-section-card';
 import type {
     CourseHomeEarnedMedalItem,
-    CourseHomeMedalItem,
     CourseHomeMedalsPreview,
+    CourseHomeProgress,
     CourseHomeSectionVisual,
 } from '@/lib/course-home-data';
 import { cn } from '@/lib/utils';
@@ -20,97 +21,106 @@ const MEDAL_ICONS: Record<string, LucideIcon> = {
 
 type CourseHomeMedalsShowcaseProps = {
     medals: CourseHomeMedalsPreview;
+    progress: CourseHomeProgress;
     visual: CourseHomeSectionVisual;
 };
 
-function MedalTile({
-    medal,
-    earned,
-}: {
-    medal: CourseHomeMedalItem | CourseHomeEarnedMedalItem;
-    earned: boolean;
-}) {
+function EarnedMedalTile({ medal }: { medal: CourseHomeEarnedMedalItem }) {
     const Icon = MEDAL_ICONS[medal.key] ?? Award;
-    const earnedAtLabel =
-        earned && 'earnedAtLabel' in medal ? medal.earnedAtLabel : null;
 
     return (
-        <li
-            className={cn(
-                'flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 ring-1',
-                earned
-                    ? 'bg-gold-soft ring-gold/30'
-                    : 'bg-bg ring-border/60',
-            )}
-        >
+        <li className="flex flex-col items-center gap-1.5 rounded-2xl bg-gold-soft px-2 py-3 ring-1 ring-gold/30">
             <span
-                className={cn(
-                    'flex size-10 items-center justify-center rounded-full ring-1',
-                    earned
-                        ? 'bg-gold/15 text-gold ring-gold/25'
-                        : 'bg-purple-soft/50 text-purple/40 ring-purple/10',
-                )}
+                className="flex size-10 items-center justify-center rounded-full bg-gold/15 text-gold ring-1 ring-gold/25"
                 aria-hidden
             >
                 <Icon className="size-4" />
             </span>
-            <span
-                className={cn(
-                    'text-center text-[10px] font-bold leading-snug',
-                    earned ? 'text-gold' : 'text-muted',
-                )}
-            >
+            <span className="text-center text-[10px] font-bold leading-snug text-gold">
                 {medal.title}
             </span>
-            {earnedAtLabel ? (
-                <span className="text-center text-[9px] font-medium leading-snug text-gold/80">
-                    {earnedAtLabel}
-                </span>
-            ) : null}
+            <span className="text-center text-[9px] font-medium leading-snug text-gold/80">
+                {medal.earnedAtLabel}
+            </span>
         </li>
+    );
+}
+
+function XpProgressBox({ progress }: { progress: CourseHomeProgress }) {
+    return (
+        <div className="flex flex-col gap-2 rounded-2xl bg-bg/80 px-3.5 py-3 ring-1 ring-border/60">
+            <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-text">
+                    سطح {progress.level}
+                </span>
+                <span className="text-[11px] font-medium text-muted">
+                    {progress.currentLevelXp} از {progress.xpPerLevel} XP تا سطح بعدی
+                </span>
+            </div>
+            <div
+                className="h-2 overflow-hidden rounded-pill bg-surface ring-1 ring-border/50"
+                role="progressbar"
+                aria-valuenow={progress.progressPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="پیشرفت تا سطح بعد"
+            >
+                <div
+                    className="h-full rounded-pill bg-gradient-to-l from-gold to-purple transition-all"
+                    style={{ width: `${progress.progressPercent}%` }}
+                />
+            </div>
+            <p className="text-[11px] font-medium text-muted/70">
+                مجموع XP: {progress.totalXp}
+            </p>
+        </div>
     );
 }
 
 export function CourseHomeMedalsShowcase({
     medals,
+    progress,
     visual,
 }: CourseHomeMedalsShowcaseProps) {
     const earnedCount = medals.earned.length;
-    const earnedKeys = new Set(medals.earned.map((m) => m.key));
-
-    const allMedals: Array<
-        | { type: 'earned'; medal: CourseHomeEarnedMedalItem }
-        | { type: 'locked'; medal: CourseHomeMedalItem }
-    > = [
-        ...medals.earned.map((m) => ({ type: 'earned' as const, medal: m })),
-        ...medals.locked
-            .filter((m) => !earnedKeys.has(m.key))
-            .map((m) => ({ type: 'locked' as const, medal: m })),
-    ];
 
     return (
         <CourseHomeSectionCard
-            title="مدال‌ها"
-            description="با ارسال و تایید تمرین، مدال می‌گیری"
+            title="باشگاه هنرجوی انیماتورشو"
             visual={visual}
-            placeholderIcon={Award}
+            placeholderIcon={Trophy}
         >
-            <div className="flex flex-col gap-3">
-                <p className="text-xs font-medium text-muted">
-                    {earnedCount > 0
-                        ? `${earnedCount} از ${medals.totalAvailable} مدال کسب‌شده`
-                        : `۰ از ${medals.totalAvailable} مدال — هنوز مدالی نگرفتی`}
-                </p>
+            <div className="flex flex-col gap-4">
+                <XpProgressBox progress={progress} />
 
-                <ul className="grid grid-cols-3 gap-2">
-                    {allMedals.map(({ type, medal }) => (
-                        <MedalTile
-                            key={medal.key}
-                            medal={medal}
-                            earned={type === 'earned'}
-                        />
-                    ))}
-                </ul>
+                <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-2">
+                        <p
+                            className={cn(
+                                'text-xs font-bold',
+                                earnedCount > 0 ? 'text-gold' : 'text-muted',
+                            )}
+                        >
+                            {earnedCount > 0
+                                ? `${earnedCount} مدال دریافت شده`
+                                : 'هیچ مدالی دریافت نکردید'}
+                        </p>
+                        <Link
+                            href="/course/medals"
+                            className="shrink-0 text-xs font-bold text-purple transition-opacity hover:opacity-75"
+                        >
+                            مشاهده همه مدال‌ها
+                        </Link>
+                    </div>
+
+                    {earnedCount > 0 && (
+                        <ul className="grid grid-cols-3 gap-2">
+                            {medals.earned.map((medal) => (
+                                <EarnedMedalTile key={medal.key} medal={medal} />
+                            ))}
+                        </ul>
+                    )}
+                </div>
             </div>
         </CourseHomeSectionCard>
     );

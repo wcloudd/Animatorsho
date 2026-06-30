@@ -6,6 +6,7 @@ use App\Http\Controllers\CheckoutZarinpalCallbackController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\Course\StudentNotificationController;
 use App\Http\Controllers\CourseExercisesController;
+use App\Http\Controllers\CourseMedalsController;
 use App\Http\Controllers\CourseHomeController;
 use App\Http\Controllers\CourseResourcesController;
 use App\Http\Controllers\HomeController;
@@ -24,6 +25,10 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/course', [CourseHomeController::class, 'index'])
     ->middleware('auth')
     ->name('course.home');
+
+Route::get('/course/medals', [CourseMedalsController::class, 'index'])
+    ->middleware('auth')
+    ->name('course.medals');
 
 Route::get('/course/resources', [CourseResourcesController::class, 'index'])
     ->middleware('auth')

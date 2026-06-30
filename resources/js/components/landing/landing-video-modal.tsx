@@ -7,9 +7,10 @@ type LandingVideoModalProps = {
     videoSrc: string;
     ariaLabel: string;
     onClose: () => void;
+    autoPlay?: boolean;
 };
 
-export function LandingVideoModal({ videoSrc, ariaLabel, onClose }: LandingVideoModalProps) {
+export function LandingVideoModal({ videoSrc, ariaLabel, onClose, autoPlay = true }: LandingVideoModalProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const closeRef = useRef(onClose);
     closeRef.current = onClose;
@@ -111,7 +112,7 @@ export function LandingVideoModal({ videoSrc, ariaLabel, onClose }: LandingVideo
                         src={videoSrc}
                         className="h-full w-full object-contain"
                         controls
-                        autoPlay
+                        autoPlay={autoPlay}
                         playsInline
                         preload="metadata"
                     />

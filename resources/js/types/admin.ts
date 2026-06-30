@@ -266,6 +266,7 @@ export type AdminSiteSettings = {
     maintenanceTitle: string;
     maintenanceMessage: string;
     purchasesDisabledMessage: string;
+    studentPanelShowGettingStartedSection: boolean;
 };
 
 export type AdminCardToCardDisplay = {

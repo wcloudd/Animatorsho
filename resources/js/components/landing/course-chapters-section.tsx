@@ -4,6 +4,7 @@ import {
     LANDING_COURSE_CHAPTERS,
     type CourseChapterMediaSlot,
 } from '@/lib/landing-media';
+import { useHorizontalScrollInteractions } from '@/hooks/use-horizontal-scroll-interactions';
 import { cn } from '@/lib/utils';
 
 const LESSONS_INITIAL_COUNT = 7;
@@ -126,6 +127,7 @@ export function CourseChaptersSection() {
         COURSE_CHAPTERS[0].id,
     );
     const [expanded, setExpanded] = useState(false);
+    const tabScrollRef = useHorizontalScrollInteractions();
 
     const activeChapter =
         COURSE_CHAPTERS.find((chapter) => chapter.id === activeChapterId) ??
@@ -151,7 +153,7 @@ export function CourseChaptersSection() {
             </h2>
 
             <div className="w-full min-w-0 self-stretch">
-                <div className="-mx-4 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div ref={tabScrollRef} className="-mx-4 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <div
                         role="tablist"
                         aria-label="سرفصل‌های دوره"

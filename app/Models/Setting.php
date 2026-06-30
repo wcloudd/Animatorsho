@@ -29,4 +29,6 @@ class Setting extends Model
     public const KEY_MAINTENANCE_TITLE = 'maintenance_title';
 
     public const KEY_MAINTENANCE_MESSAGE = 'maintenance_message';
+
+    public const KEY_STUDENT_PANEL_SHOW_GETTING_STARTED = 'student_panel_show_getting_started_section';
 }

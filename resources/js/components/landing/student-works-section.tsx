@@ -7,6 +7,7 @@ import {
     LANDING_STUDENT_WORKS,
     type StudentWorkMediaSlot,
 } from '@/lib/landing-media';
+import { useHorizontalScrollInteractions } from '@/hooks/use-horizontal-scroll-interactions';
 import { cn } from '@/lib/utils';
 
 type StudentWork = StudentWorkMediaSlot;
@@ -102,7 +103,7 @@ function StudentWorkCard({
 export function StudentWorksSection() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [selectedWork, setSelectedWork] = useState<StudentWork | null>(null);
-    const scrollRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useHorizontalScrollInteractions();
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const setCardRef = useCallback(

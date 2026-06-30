@@ -21,6 +21,7 @@ class UpdateSiteSettingsRequest extends FormRequest
             'maintenance_mode_enabled' => ['required', 'boolean'],
             'maintenance_title' => ['nullable', 'string', 'max:120'],
             'maintenance_message' => ['nullable', 'string', 'max:1000'],
+            'student_panel_show_getting_started_section' => ['required', 'boolean'],
         ];
     }
 }

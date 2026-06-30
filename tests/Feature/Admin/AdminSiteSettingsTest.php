@@ -31,6 +31,7 @@ test('admin can view admin site settings page', function () {
             ->has('settings')
             ->has('settings.purchasesEnabled')
             ->has('settings.maintenanceModeEnabled')
+            ->has('settings.studentPanelShowGettingStartedSection')
             ->has('integrations')
             ->has('integrations.zarinpalConfigured')
             ->has('integrations.farazSmsConfigured')
@@ -89,6 +90,7 @@ test('non-admin cannot update admin site settings', function () {
         ->patch(route('admin.site-settings.update'), [
             'purchases_enabled' => false,
             'maintenance_mode_enabled' => true,
+            'student_panel_show_getting_started_section' => false,
         ])
         ->assertForbidden();
 });
@@ -102,12 +104,14 @@ test('admin can update site settings', function () {
             'maintenance_mode_enabled' => true,
             'maintenance_title' => 'در حال بروزرسانی هستیم',
             'maintenance_message' => 'به‌زودی برمی‌گردیم.',
+            'student_panel_show_getting_started_section' => false,
         ])
         ->assertRedirect(route('admin.site-settings.index'));
 
-    expect(Setting::query()->where('group', Setting::GROUP_SITE)->count())->toBe(4)
+    expect(Setting::query()->where('group', Setting::GROUP_SITE)->count())->toBe(5)
         ->and(Setting::query()->where('group', Setting::GROUP_SITE)->where('key', Setting::KEY_PURCHASES_ENABLED)->value('value'))->toBe('false')
-        ->and(Setting::query()->where('group', Setting::GROUP_SITE)->where('key', Setting::KEY_MAINTENANCE_MODE_ENABLED)->value('value'))->toBe('true');
+        ->and(Setting::query()->where('group', Setting::GROUP_SITE)->where('key', Setting::KEY_MAINTENANCE_MODE_ENABLED)->value('value'))->toBe('true')
+        ->and(Setting::query()->where('group', Setting::GROUP_SITE)->where('key', Setting::KEY_STUDENT_PANEL_SHOW_GETTING_STARTED)->value('value'))->toBe('false');
 });
 
 test('integration status reflects missing env configuration', function () {
@@ -233,6 +237,16 @@ test('admin site settings page shows placeholders when card-to-card is not confi
             ->where('cardToCard.cardOwnerName', 'ثبت نشده'));
 });
 
+test('student panel getting started section is disabled by default', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.site-settings.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('settings.studentPanelShowGettingStartedSection', false));
+});
+
 test('admin cannot save card-to-card fields via site settings update', function () {
     config([
         'card_to_card.card_number' => '6037991111111111',
@@ -245,6 +259,7 @@ test('admin cannot save card-to-card fields via site settings update', function 
         ->patch(route('admin.site-settings.update'), [
             'purchases_enabled' => true,
             'maintenance_mode_enabled' => false,
+            'student_panel_show_getting_started_section' => false,
             'card_to_card_number' => '6037992222222222',
             'card_to_card_owner_name' => 'Db Owner',
         ])

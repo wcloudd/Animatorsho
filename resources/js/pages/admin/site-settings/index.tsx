@@ -69,6 +69,7 @@ export default function AdminSiteSettingsIndex({
         maintenance_mode_enabled: settings.maintenanceModeEnabled,
         maintenance_title: settings.maintenanceTitle,
         maintenance_message: settings.maintenanceMessage,
+        student_panel_show_getting_started_section: settings.studentPanelShowGettingStartedSection,
     });
 
     const submit = (event: FormEvent) => {
@@ -165,6 +166,31 @@ export default function AdminSiteSettingsIndex({
                             در جریان و بازیابی سفارش‌های قبلی متأثر نمی‌شوند.
                         </AdminCallout>
                     ) : null}
+                </section>
+
+                <section
+                    className={cn(surfaceCardClassName, 'flex flex-col gap-4 p-4 sm:p-5')}
+                >
+                    <AdminSectionTitle>نمایش بخش‌های پنل هنرجو</AdminSectionTitle>
+
+                    <label className="flex items-center gap-2 text-sm text-text">
+                        <Checkbox
+                            checked={data.student_panel_show_getting_started_section}
+                            onCheckedChange={(checked) =>
+                                setData(
+                                    'student_panel_show_getting_started_section',
+                                    checked === true,
+                                )
+                            }
+                        />
+                        نمایش بخش «مسیر انیماتورشو / از اینجا شروع کن»
+                    </label>
+                    <InputError message={errors.student_panel_show_getting_started_section} />
+
+                    <p className="text-xs leading-relaxed text-muted">
+                        وقتی فعال باشد، بخش راهنمای شروع با لینک ویدئو و دانلود راهنما در پنل هنرجو نمایش داده می‌شود.
+                        پیش‌فرض: غیرفعال.
+                    </p>
                 </section>
 
                 <section

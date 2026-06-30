@@ -5,6 +5,7 @@ namespace App\Services\Course;
 use App\Enums\SpotPlayerLicenseStatus;
 use App\Models\User;
 use App\Services\AnimatorshoCatalogService;
+use App\Services\SiteSettingsService;
 use App\Services\StudentMedalService;
 use App\Services\StudentNotificationService;
 use App\Services\StudentXpService;
@@ -24,6 +25,7 @@ class CourseAccessService
         private readonly StudentXpService $xpService,
         private readonly StudentMedalService $medalService,
         private readonly StudentNotificationService $notificationService,
+        private readonly SiteSettingsService $siteSettings,
     ) {}
 
     public function userHasActiveAccess(User $user): bool
@@ -146,6 +148,7 @@ class CourseAccessService
             ],
             'progress' => $this->xpService->levelProgressForUser($user),
             'onboarding' => StudentPanelMedia::resolvedOnboarding(),
+            'showGettingStartedSection' => $this->siteSettings->isStudentPanelShowGettingStartedSection(),
             'notifications' => $this->notificationService->notificationsForHome($user),
             'preview' => [
                 'updates' => $this->courseUpdates->latestPublishedForHome(),

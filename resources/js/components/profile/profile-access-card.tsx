@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ChevronLeft, MonitorSmartphone, Users } from 'lucide-react';
+import { ChevronLeft, Download, MonitorSmartphone, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type {
@@ -10,6 +10,7 @@ import type {
 } from '@/lib/profile-data';
 import { checkout } from '@/routes';
 import { formatTomanPrice } from '@/lib/format-toman';
+import { LandingVideoModal } from '@/components/landing/landing-video-modal';
 import { ProfileSectionCard } from '@/components/profile/profile-section-card';
 import { ProfileStatusBadge } from '@/components/profile/profile-status-badge';
 import { showCoursePanelComingSoonToast } from '@/components/course/course-home-coming-soon-button';
@@ -202,11 +203,13 @@ function ProfileAccessResourceLink({
     subtitle,
     url,
     icon: Icon,
+    onClick,
 }: {
     title: string;
     subtitle: string;
     url: string | null;
     icon: typeof MonitorSmartphone;
+    onClick?: () => void;
 }) {
     const content = (
         <>
@@ -239,7 +242,7 @@ function ProfileAccessResourceLink({
     return (
         <button
             type="button"
-            onClick={showCoursePanelComingSoonToast}
+            onClick={onClick ?? showCoursePanelComingSoonToast}
             className={compactAccessLinkClassName}
         >
             {content}
@@ -248,10 +251,12 @@ function ProfileAccessResourceLink({
 }
 
 function ProfileAccessResourceLinks({
-    accessLinks,
+    accessLinks: _accessLinks,
 }: {
     accessLinks: ProfileAccessLinks;
 }) {
+    const [showGuide, setShowGuide] = useState(false);
+
     return (
         <div className="flex flex-col gap-2">
             <p className="text-right text-xs font-medium leading-relaxed text-muted">
@@ -259,18 +264,34 @@ function ProfileAccessResourceLinks({
             </p>
             <div className="flex flex-col gap-2">
                 <ProfileAccessResourceLink
+                    title="دانلود اسپات‌پلیر"
+                    subtitle="دانلود نرم‌افزار پخش دوره"
+                    url="https://spotplayer.ir/"
+                    icon={Download}
+                />
+                <ProfileAccessResourceLink
                     title="راهنمای نصب اسپات‌پلیر"
                     subtitle="آموزش نصب و فعال‌سازی"
-                    url={accessLinks.spotplayerInstallGuideUrl}
+                    url={null}
                     icon={MonitorSmartphone}
+                    onClick={() => setShowGuide(true)}
                 />
                 <ProfileAccessResourceLink
                     title="گروه انیماتورشو"
                     subtitle="عضویت در گروه هنرجوها"
-                    url={accessLinks.studentGroupUrl}
+                    url="https://eitaa.com/joinchat/3839165669C51825dc6c7"
                     icon={Users}
                 />
             </div>
+
+            {showGuide && (
+                <LandingVideoModal
+                    videoSrc="/videos/spotplayer-install-guide.mp4"
+                    ariaLabel="راهنمای نصب اسپات‌پلیر"
+                    autoPlay={false}
+                    onClose={() => setShowGuide(false)}
+                />
+            )}
         </div>
     );
 }
