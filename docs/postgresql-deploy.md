@@ -17,6 +17,97 @@ The application schema is defined in Laravel migrations and is compatible with P
 
 ---
 
+## PostgreSQL Compatibility Audit
+
+This audit was performed against the full migration set (34 migrations), seeders, factories, and all application query code. **No application code or migration changes were required** — the schema is already PostgreSQL-compatible.
+
+### Current database assumptions
+
+| Layer | Default | Notes |
+|-------|---------|-------|
+| `DB_CONNECTION` default | `sqlite` | Local dev fallback in `config/database.php` and `.env.example` |
+| Test suite (`phpunit.xml`) | `sqlite` `:memory:` | In-memory database; no SQLite-specific assertions found |
+| Production target | `pgsql` | Fully configured in `config/database.php` |
+
+### What is already compatible
+
+| Area | Status | Detail |
+|------|--------|--------|
+| All 34 migrations | ✅ Compatible | No MySQL-specific DDL; no raw SQL |
+| Raw SQL queries | ✅ Compatible | Two `selectRaw` calls use only standard SQL (`COUNT`, `SUM`, `COALESCE`, `GROUP BY`) — no MySQL functions |
+| JSON columns (8 columns) | ✅ Compatible | Laravel maps `json()` to `jsonb` in PostgreSQL; all columns cast as `array` in PHP |
+| Enums (24 types) | ✅ Compatible | All PHP 8.1 backed enums stored as plain `string` columns — no native PG enum types used |
+| Boolean columns | ✅ Compatible | Laravel maps `boolean()` to native `BOOLEAN` in PostgreSQL |
+| Timestamps / defaults | ✅ Compatible | All use `useCurrent()` or nullable; no MySQL `DEFAULT CURRENT_TIMESTAMP ON UPDATE` syntax |
+| Foreign keys / cascades | ✅ Compatible | All use Eloquent `cascadeOnDelete()`, `restrictOnDelete()`, `nullOnDelete()` — driver-agnostic |
+| Indexes / unique constraints | ✅ Compatible | All defined via Blueprint API |
+| `whereJsonContains` queries | ✅ N/A | Not used anywhere in the codebase |
+| `upsert` / `updateOrCreate` | ✅ Compatible | Seeders use `firstOrCreate` / `updateOrCreate` — Eloquent handles PG conflict resolution |
+| Case-sensitive comparisons | ✅ N/A | No `LIKE` comparisons on user-controlled strings that would differ between drivers |
+
+### Known migration behavior differences (cosmetic only)
+
+These differences do **not** cause migration failures or runtime errors. They are behavioral artifacts of how PostgreSQL handles certain schema operations.
+
+**Column ordering (`->after()`)** — PostgreSQL does not support column positioning in `ALTER TABLE ADD COLUMN`. Laravel 11+ handles this gracefully; columns are added at the end of the table instead of at the specified position. Affected migrations:
+
+- `2026_06_05_084918_add_is_admin_to_users_table.php`
+- `2026_06_06_233846_add_mobile_auth_columns_to_users_table.php`
+- `2026_06_07_001353_add_avatar_preset_to_users_table.php`
+- `2026_06_07_103402_add_spotplayer_fields_to_course_packages_table.php`
+- `2026_06_09_192109_add_username_to_users_table.php`
+- `2026_06_14_115332_add_attachment_fields_to_exercise_submissions_table.php`
+
+This has no effect on application behavior — Eloquent queries columns by name, not position.
+
+**Unsigned integer columns** — PostgreSQL has no unsigned integer modifier. Laravel silently maps these to the nearest signed equivalent:
+
+| Laravel method | MySQL type | PostgreSQL type |
+|----------------|-----------|-----------------|
+| `unsignedTinyInteger()` | `TINYINT UNSIGNED` | `SMALLINT` |
+| `unsignedSmallInteger()` | `SMALLINT UNSIGNED` | `SMALLINT` |
+| `unsignedInteger()` | `INT UNSIGNED` | `INTEGER` |
+| `unsignedBigInteger()` | `BIGINT UNSIGNED` | `BIGINT` |
+
+Affected columns: `attempts` (otp_codes), `reserved_at`/`available_at`/`created_at` (jobs), `chapter_number` (course_packages), `display_order` (multiple tables), `amount_toman` (orders/payments), `size_bytes` (attachments), `source_id` (xp_events, notifications). The unsigned constraint is advisory only — application logic enforces non-negative values.
+
+**Text column size variants** — PostgreSQL maps all text sizes to `TEXT`:
+
+| Laravel method | MySQL type | PostgreSQL type |
+|----------------|-----------|-----------------|
+| `mediumText()` | `MEDIUMTEXT` | `TEXT` (unlimited) |
+| `longText()` | `LONGTEXT` | `TEXT` (unlimited) |
+
+Affected: `payload` (sessions, jobs, failed_jobs), `value` (cache), `options` (job_batches), `exception` (failed_jobs). Functionally equivalent or better than MySQL.
+
+**Column modification (`->change()`)** — Used in `2026_06_06_233846_add_mobile_auth_columns_to_users_table.php` to make `email` and `password` nullable. Laravel 11+ performs this via `ALTER TABLE ... ALTER COLUMN ... DROP NOT NULL` on PostgreSQL without requiring Doctrine DBAL. Compatible.
+
+### Test suite risk assessment
+
+Tests currently use SQLite `:memory:` (via `phpunit.xml`). No SQLite-specific SQL assertions were found — all tests use Eloquent and Laravel HTTP testing helpers. Risk of hidden SQLite-specific behavior is low.
+
+To run tests against a real PostgreSQL instance (optional; for pre-deploy confidence):
+
+```bash
+DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=animatorsho_test DB_USERNAME=animatorsho_app DB_PASSWORD=yourpass php artisan test
+```
+
+Or create a `.env.testing` that overrides the database connection. The in-memory SQLite tests remain the primary CI mechanism.
+
+### `.env` quoting note
+
+Values in `.env` that contain **spaces or special characters must be quoted**. Example:
+
+```
+# Wrong — dotenv parser fails on whitespace:
+CARD_TO_CARD_OWNER_NAME=Account Holder Name
+
+# Correct:
+CARD_TO_CARD_OWNER_NAME="Account Holder Name"
+```
+
+---
+
 ## Local SQLite Safety
 
 Your local SQLite data lives in `database/database.sqlite`. Follow these rules to keep it safe:
