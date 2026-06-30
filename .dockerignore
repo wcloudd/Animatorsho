@@ -1,0 +1,58 @@
+# Version control
+.git
+.gitignore
+
+# Node
+node_modules
+
+# PHP / Composer (installed during Docker build)
+vendor
+
+# Local environment — never bake real secrets into the image
+.env
+.env.*
+!.env.example
+
+# Laravel runtime artifacts (generated or populated at runtime)
+bootstrap/cache/*
+public/build
+public/hot
+public/storage
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/pail
+
+# SQLite local database
+database/database.sqlite
+database/*.sqlite*
+
+# Test / CI artifacts
+.phpunit.cache
+.phpunit.result.cache
+coverage
+
+# Wayfinder generated TypeScript types (regenerated during Docker build)
+resources/js/actions
+resources/js/routes
+resources/js/wayfinder
+
+# IDE and OS
+.idea
+.vscode
+.nova
+.zed
+.fleet
+.DS_Store
+*.code-workspace
+Homestead.json
+Homestead.yaml
+.phpactor.json
+
+# Docker compose files (not needed inside the image, but docker/ dir IS needed for COPY)
+docker-compose*.yml
+
+# Logs and debug files
+npm-debug.log
+yarn-error.log
