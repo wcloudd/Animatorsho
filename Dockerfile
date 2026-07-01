@@ -10,7 +10,8 @@ RUN apk add --no-cache \
         nodejs npm \
         libpng-dev libjpeg-turbo-dev freetype-dev \
         libzip-dev icu-dev \
-        postgresql-dev
+        postgresql-dev \
+        oniguruma-dev
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
  && docker-php-ext-install -j"$(nproc)" \
@@ -65,6 +66,7 @@ RUN apk add --no-cache \
 RUN apk add --no-cache --virtual .build-deps \
         libpng-dev libjpeg-turbo-dev freetype-dev \
         libzip-dev icu-dev postgresql-dev \
+        oniguruma-dev \
  && docker-php-ext-configure gd --with-freetype --with-jpeg \
  && docker-php-ext-install -j"$(nproc)" \
         pdo_pgsql pgsql \
